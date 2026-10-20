@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  TALENT
+  COMPANY
+}
+enum ProblemStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+enum ApplicationStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+enum Category {
+  BUG
+  ISSUE
+  CHALLENGE
+}
+enum Difficulty {
+  small
+  medium
+  expert
+}
+enum FilePurpose {
+  CV
+  APPLICATION
+  PROBLEM_PUBLIC
+  PROBLEM_PRIVATE
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  role Role
+  displayName String
+  displayNameEn String
+  createdAt DateTime @default(now())
+  talent TalentProfile?
+  company CompanyProfile?
+  problems Problem[]
+  applications Application[]
+  comments ProblemComment[]
+  files StoredFile[]
+}
+
+model TalentProfile {
+  userId String @id
+  user User @relation(fields: [userId], references: [id])
+  firstName String @default("")
+  lastName String @default("")
+  educationLevel String @default("")
+  institutionMajor String @default("")
+  experienceLevel String @default("")
+  skills String[]
+  linkedInUrl String @default("")
+  githubUrl String @default("")
+  cvFileId String? @unique
+  cvFile StoredFile? @relation("ProfileCV", fields: [cvFileId], references: [id])
+}
+
+model CompanyProfile {
+  userId String @id
+  user User @relation(fields: [userId], references: [id])
+  name String
+  nameEn String
+  contactEmail String @default("")
+  contactUrl String @default("")
+  shareContact Boolean @default(false)
+}
+
+model Problem {
+  id String @id @default(uuid())
+  companyUserId String
+  company User @relation(fields: [companyUserId], references: [id])
+  title String @default("")
+  titleEn String @default("")
+  summary String @default("")
+  summaryEn String @default("")
+  description String @default("")
+  descriptionEn String @default("")
+  deliverables String[]
+  deliverablesEn String[]
+  constraints String[]
+  constraintsEn String[]
+  criteria String[]
+  criteriaEn String[]
+  skills String[]
+  category Category @default(CHALLENGE)
+  difficulty Difficulty @default(medium)
+  budgetDzd Int @default(0)
+  deadlineAt DateTime?
+  status ProblemStatus @default(DRAFT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  privateDetails ProblemPrivateDetails?
+  applications Application[] @relation("ProblemApplications")
+  acceptedApplicationId String? @unique
+  acceptedApplication Application? @relation("SelectedApplication", fields: [acceptedApplicationId], references: [id])
+  comments ProblemComment[]
+  files StoredFile[]
+  @@index([createdAt, id])
+  @@index([companyUserId])
+}
+
+model ProblemPrivateDetails {
+  problemId String @id
+  problem Problem @relation(fields: [problemId], references: [id])
+  notes String @default("")
+}
+
+model Application {
+  id String @id @default(uuid())
+  problemId String
+  problem Problem @relation("ProblemApplications", fields: [problemId], references: [id])
+  applicantUserId String
+  applicant User @relation(fields: [applicantUserId], references: [id])
+  coverMessage String @default("")
+  deliveryDays Int @default(10)
+  projectUrl String @default("")
+  consent Boolean @default(false)
+  status ApplicationStatus @default(DRAFT)
+  rejectionReason String?
+  decisionCode String?
+  createdAt DateTime @default(now())
+  submittedAt DateTime?
+  decidedAt DateTime?
+  selectedFor Problem? @relation("SelectedApplication")
+  files StoredFile[]
+  @@unique([problemId, applicantUserId])
+  @@index([applicantUserId])
+}
+
+model ProblemComment {
+  id String @id @default(uuid())
+  problemId String
+  problem Problem @relation(fields: [problemId], references: [id])
+  authorUserId String
+  author User @relation(fields: [authorUserId], references: [id])
+  body String
+  bodyEn String @default("")
+  parentId String?
+  parent ProblemComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies ProblemComment[] @relation("CommentReplies")
+  createdAt DateTime @default(now())
+  @@index([problemId, createdAt])
+}
+
+model StoredFile {
+  id String @id @default(uuid())
+  uploaderUserId String
+  uploader User @relation(fields: [uploaderUserId], references: [id])
+  storageKey String @unique
+  originalName String
+  mimeType String
+  byteSize Int
+  purpose FilePurpose
+  problemId String?
+  problem Problem? @relation(fields: [problemId], references: [id])
+  applicationId String?
+  application Application? @relation(fields: [applicationId], references: [id])
+  profile TalentProfile? @relation("ProfileCV")
+  createdAt DateTime @default(now())
+}
+

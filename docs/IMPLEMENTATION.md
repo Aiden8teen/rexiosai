@@ -15,7 +15,7 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 
 ## Progress
 
-- Task 1: in progress — API/database/fixtures.
+- Task 1: complete — migrations and seed applied; seed preservation integration test passed; API TypeScript build passed.
 - Task 2: pending — auth/profile integration.
 - Task 3: pending — posting/browsing.
 - Task 4: pending — applications/review/dashboards.

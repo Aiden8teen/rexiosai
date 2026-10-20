@@ -1,64 +1,24 @@
 # Rexios AI
 
-> منصة الابتكار المفتوح والتحديات الصناعية · Algerian Industrial Open Innovation Platform
+Rexios AI is a demo platform for industrial open challenges and technical talent in Algeria. The core MVP connects company and talent accounts through challenge posting, browsing, applications, review decisions, and problem discussions.
 
-Rexios AI is an open innovation and technical community platform bridging the gap between engineering talent (students, researchers, developers) and industrial enterprises in Algeria.
+The current sample records are synthetic. The standalone community forum remains a frontend preview; only discussions attached to problems are persisted by the core MVP. Google sign-in and password recovery controls remain visible but do not authenticate or change account state.
 
-Industrial facilities post real operational challenges with financial bounties (DZD), and verified technical solvers submit engineering proposals and proof-of-concept solutions.
+## Local development
 
----
+Use Node.js 24, npm, and Docker Compose. The complete setup, packaged demo, environment settings, and sample accounts are documented in [docs/MVP.md](docs/MVP.md).
 
-## Tech Stack
+    Copy-Item .env.example .env
+    Copy-Item server/.env.example server/.env
+    npm ci
+    npm --prefix server ci
+    npm run db:up
+    npm run db:migrate
+    npm run db:seed
 
-- **Frontend**: React 19, TypeScript
-- **Styling**: Tailwind CSS v4
-- **Routing**: React Router v7
-- **Build Tool**: Vite
-- **Icons**: Lucide React
-- **Design Aesthetic**: Retro Neo-Brutalist / Pixel
+Run the API and frontend in separate terminals:
 
----
+    npm run api:dev
+    npm run dev
 
-## Features
-
-- **Industrial Challenges**: Explore real-world industrial problems with categorized difficulty levels, technical constraints, deliverables, and rewards in DZD.
-- **Solver Profiles**: Verification workflow for engineers and students highlighting academic qualifications, skill taxonomies, and technical CVs.
-- **Technical Community**: Dedicated Q&A forum for embedded systems, IoT, industrial automation, and machine learning.
-- **Bilingual (Arabic & English)**: Complete RTL and LTR support with automatic layout adaptation.
-- **Role System**: Seamless access control for Visitors, Members, and Solvers.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js >= 18
-- npm >= 9
-
-### Installation
-
-```bash
-# Clone the repository
-
-https://github.com/Aiden8teen/rexiosai.git
-cd rexiosai
-
-# Install dependencies
-npm install
-
-# Start local development server
-npm run dev
-```
-
-The app will be available at `http://localhost:5173`.
-
-### Production Build
-
-```bash
-# Type check and build
-npm run build
-
-# Preview build locally
-npm run preview
-```
+The Vite development app runs at http://localhost:5173. The packaged Compose demo runs at http://localhost:8080.
