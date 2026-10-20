@@ -17,9 +17,9 @@ User authorized implementation on 2026-10-21. Preserve the design, short demo cr
 ## Progress
 
 - Community persistence/API/seed: complete; metadata, paginated reads/mutations, idempotent reactions/views, locked acceptance and preserving seed verified.
-- Community frontend: in progress (Luna/max).
+- Community frontend: complete (Luna/max); shared feed/detail/create, exact IDs, URL filters, acceptance/reactions, canonical metadata and no runtime mock imports.
 - Notifications API/events and public statistics: complete; recipient-scoped reads, transactional events, read persistence and empty/filtered statistics verified.
-- Notification/presentation frontend: in progress (Luna/max).
+- Notification/presentation frontend: complete (Luna/max); real bell, aggregates, role-aware onboarding and deferred no-op previews.
 - Integrated HTTP/build/lint/packaged verification and final review: pending.
 
 ## Evidence
@@ -28,3 +28,7 @@ User authorized implementation on 2026-10-21. Preserve the design, short demo cr
 - Community tests (5 subchecks plus parent), original marketplace suite and preserving seed test passed. The first notification test run found invalid space-containing fixture email addresses; corrected test data, then all notification/statistics cases passed (3 checks including a fresh isolated zero-stat database).
 - Independent Luna/max backend review found no material privacy/correctness issues. Existing pg8 concurrent-query deprecation is non-failing; no dependency upgrades added.
 - Fixtures seeded into development without resetting problem decisions, deadlines or sessions. Community display totals now come from actual rows.
+- Final full integration run: 19 checks passed, zero failures. Frontend build and lint passed; lint reports two intentional effect-synchronization warnings and the existing Fast Refresh export warning. Vite reports a non-failing 500 kB bundle-size advisory (about 142 kB compressed).
+- Frontend review fixes: bound URL pagination and fetch one requested page; merge answer pages by ID/date; invalidate stale notification snapshots after read; keep preview error checkboxes no-ops; apply committed problem comments immediately with best-effort refresh.
+- Playwright MCP: two independent company/talent sessions created a question, posted an answer, selected it and received/read notifications; direct About aggregates and company-aware Welcome checked. Large page input generated one bounded request. Simulated post-comment refresh failure left the committed comment visible, cleared the input and showed no false error. Narrow Arabic dropdown overflow reproduced and fixed; panel now fits within 375 px.
+- Packaged API migrated and seeded with cached images; both community and marketplace smoke workflows passed at localhost:8080. New web image and packaged restart/seed persistence verification are finishing.

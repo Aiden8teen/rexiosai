@@ -44,11 +44,16 @@ const proposal = { coverMessage: 'I will implement a documented prototype with r
 await talent(`/problems/${problem.id}/application/draft`, 'PUT', proposal);
 assert.equal((await company(`/company/problems/${problem.id}/applications`)).total, 0);
 const application = await talent(`/problems/${problem.id}/applications`, 'POST', proposal, 201);
+const received = (await company('/notifications')).items.find(item => item.type === 'APPLICATION_RECEIVED');
+assert.ok(received);
+await talent(`/notifications/${received.id}/read`, 'PATCH', undefined, 404);
+await company(`/notifications/${received.id}/read`, 'PATCH');
 await company(`/problems/${problem.id}`, 'PATCH', { privateNotes: `Private smoke notes ${marker}: updated` });
 await company(`/applications/${application.id}/decision`, 'POST', { decision: 'ACCEPTED' }, 201);
 assert.equal((await visitor(`/problems/${problem.id}`)).status, 'CLOSED');
 assert.equal((await talent(`/problems/${problem.id}/private`)).notes, `Private smoke notes ${marker}: updated`);
 assert.equal((await talent('/me/applications')).items.find(item => item.id === application.id).status, 'ACCEPTED');
+assert.ok((await talent('/notifications')).items.some(item => item.type === 'APPLICATION_DECIDED'));
 await talent('/auth/logout', 'POST');
 await talent('/auth/me', 'GET', undefined, 401);
 console.log(`MVP smoke passed at ${base}; synthetic closed problem ${problem.id} retained. No existing records were reset.`);

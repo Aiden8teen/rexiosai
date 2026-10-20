@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { TagChip } from '../components/TagChip';
 import { Check, Upload, FileText, X, AlertCircle } from 'lucide-react';
-import { ALL_SKILLS_TAXONOMY } from '../data/mockData';
+import { useMetadata } from '../hooks/useMetadata';
 import { uploadFile } from '../api/files';
 import { apiErrorMessage } from '../api/client';
 
@@ -15,6 +15,7 @@ export const SolverProfilePage: React.FC = () => {
 
 const SolverProfileContent: React.FC = () => {
   const { lang, currentUser, updateSolverProfile } = useApp();
+  const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
   const navigate = useNavigate();
 
   const profile = currentUser.solverProfile;
@@ -36,7 +37,6 @@ const SolverProfileContent: React.FC = () => {
   const [linkedInUrl, setLinkedInUrl] = useState(profile?.linkedInUrl || '');
   const [githubUrl, setGithubUrl] = useState(profile?.githubUrl || '');
 
-  const [simulateErrors, setSimulateErrors] = useState(false);
   const [submittedError, setSubmittedError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -60,7 +60,7 @@ const SolverProfileContent: React.FC = () => {
   if (hasProfileEvidence) completedCount++;
   const completeness = Math.min(100, Math.round((completedCount / 7) * 100));
 
-  const hasErrors = simulateErrors || submittedError;
+  const hasErrors = submittedError;
 
   const handleCvUpload = async (file: File | undefined) => {
     if (!file) return;
@@ -114,8 +114,7 @@ const SolverProfileContent: React.FC = () => {
         <label className="flex items-center gap-2 cursor-pointer font-semibold text-[#0B2A9E]">
           <input
             type="checkbox"
-            checked={simulateErrors}
-            onChange={(e) => setSimulateErrors(e.target.checked)}
+            onChange={() => undefined}
             className="accent-[#E5432A]"
           />
           <span>
@@ -144,8 +143,8 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'تقديم حلول للمشكلات المدفوعة'
-                  : 'Submit solutions to paid company challenges'}
+                  ? 'تقديم مقترحات للتحديات ذات الميزانيات'
+                  : 'Submit proposals to budgeted company challenges'}
               </span>
             </div>
 
@@ -177,8 +176,8 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'مؤشر تطابق المهارات مع كل مشكلة'
-                  : 'Automated skill matching algorithm on each problem'}
+                  ? 'عرض تقريبي لتطابق مهاراتك مع التحديات'
+                  : 'Advisory skill overlap on challenge pages'}
               </span>
             </div>
           </div>
@@ -191,8 +190,8 @@ const SolverProfileContent: React.FC = () => {
             </h1>
             <p className="text-xs text-[#5B5B7B]">
               {lang === 'ar'
-                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة فقط عند تقديمك حلًّا.'
-                : 'Fields marked with * are required. This information is shown to companies only when you submit a solution.'}
+                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة عند تقديم مقترح.'
+                : 'Fields marked with * are required. This information is shown to companies when you submit a proposal.'}
             </p>
           </div>
 
@@ -309,7 +308,7 @@ const SolverProfileContent: React.FC = () => {
                   {lang === 'ar' ? '3+ سنوات خبرة' : '3+ years experience'}
                 </option>
                 <option value="خبير معتمد">
-                  {lang === 'ar' ? 'خبير معتمد' : 'Expert'}
+                  {lang === 'ar' ? 'خبير' : 'Expert'}
                 </option>
               </select>
             </div>
@@ -322,8 +321,8 @@ const SolverProfileContent: React.FC = () => {
               </label>
               <p className="text-[11px] text-[#5B5B7B] mb-3">
                 {lang === 'ar'
-                  ? 'تُستخدم مهاراتك لحساب تطابقك مع كل مشكلة وتحديد أهليتك للمشاركة.'
-                  : 'Your skills drive the eligibility algorithm for company problems.'}
+                  ? 'يظهر تطابق المهارات للاستئناس فقط ولا يمنع تقديم المقترح.'
+                  : 'Your skills are shown as an advisory match on company challenge pages.'}
               </p>
 
               <div
@@ -333,7 +332,7 @@ const SolverProfileContent: React.FC = () => {
                     : 'border-[#12122B]'
                 }`}
               >
-                {ALL_SKILLS_TAXONOMY.map((skill) => {
+                {availableSkills.map((skill) => {
                   const isSelected = skills.includes(skill);
                   return (
                     <TagChip
@@ -345,7 +344,9 @@ const SolverProfileContent: React.FC = () => {
                     />
                   );
                 })}
+                {skillsLoading && <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}
               </div>
+              {skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{lang === 'ar' ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button></div>}
             </div>
 
             <div>

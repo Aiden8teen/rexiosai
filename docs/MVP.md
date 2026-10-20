@@ -2,7 +2,28 @@
 
 The core MVP keeps the existing React/Vite frontend and adds a NestJS API backed by PostgreSQL. Company and talent accounts can use persistent profiles, publish and browse industrial problems, save or submit applications, review decisions, and discuss a problem. The API owns role checks and private data access.
 
-Seeded companies, profiles, discussions, and applications are synthetic demo content. The separate community forum remains a frontend preview; its fixture posts are not stored through the MVP API. Problem discussions are persisted. Google sign-in and password recovery controls remain visible no-ops.
+Seeded companies, profiles, discussions, applications and community posts are synthetic demo content. Both the standalone community and discussions attached to problems use the API. Google sign-in and password recovery controls remain visible no-ops.
+
+## Screens and data
+
+| Area | Data and behavior |
+| --- | --- |
+| Signup/login/logout and profiles | Persistent accounts, sessions, CV and profile evidence |
+| Company posting, browsing and application dashboards | Persistent problems, drafts, decisions and private files |
+| Community feed/detail/ask | Shared questions, answers, per-account reactions and approximate distinct session views |
+| Community sidebar | Actual answer counts, accepted answers and most-used tags |
+| Answer acceptance | Question author chooses one answer; this is not independent expert verification |
+| Notification bell | Recipient-only answer/application/decision/comment events; persisted read state |
+| About figures | Actual company/talent/open budget/selection aggregates; no payout/completion claims |
+| Welcome and landing navigation | Uses the actual account role and profile completeness |
+| Landing illustrations, mission and guidelines | Static explanatory content |
+| Google/recovery and design-preview controls | Visible no-ops; AI/agents are still future work |
+
+Community endpoints are under `/api/community`: `GET/POST questions`, exact-ID question detail, paginated `questions/:id/answers`, idempotent PUT/DELETE question/answer reactions, owner-only `PUT questions/:id/accepted-answer`, `POST questions/:id/view`, and `GET overview`. Guest browsing is public; posting, answering and reacting require a session. Bodies and code render as text. Feed search supports q/tag and latest/active/unanswered sorting; unanswered means zero answers. An unknown question returns 404.
+
+`GET /api/meta` supplies canonical skill options. `GET /api/notifications` and `PATCH /api/notifications/:id/read` are session/recipient scoped. Read state persists; notification text contains no private application details. The bell refreshes on focus and every 30 seconds while visible, rather than using realtime services. `GET /api/public/stats` exposes aggregate totals only.
+
+The community seed keeps existing `q1`–`q3` URLs, inserts missing questions/answers and preserves subsequent edits, accepted-answer changes and removed reactions. Old browser-local forum content is not imported or read; only language preference remains browser-local. Real reaction rows replace decorative mock totals, so seeded counts may be lower than the original screenshots.
 
 ## Local development
 
@@ -113,3 +134,5 @@ With the development API running, npm run smoke:mvp creates a small synthetic co
     $env:SMOKE_BASE_URL = 'http://localhost:8080'
     npm run smoke:mvp
     Remove-Item Env:SMOKE_BASE_URL
+
+`npm run smoke:community` checks separate authenticated users, shared question/answer reads, reactions, owner selection and notification read permissions. It retains clearly labelled synthetic posts. Both smoke scripts support SMOKE_BASE_URL and SMOKE_ORIGIN. For an explicit packaged restart/seed check, set SMOKE_STATE_FILE to a temporary JSON path when first running the community smoke; rerun after restart with SMOKE_VERIFY_STATE set to that path. This temporary file contains only synthetic session cookies and must not be committed.

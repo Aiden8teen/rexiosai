@@ -7,6 +7,8 @@ import { useApp } from '../context/AppContext';
 import { uploadFile } from '../api/files';
 import { apiErrorMessage } from '../api/client';
 import { AlertCircle, FileText, Upload, X } from 'lucide-react';
+import { TagChip } from './TagChip';
+import { useMetadata } from '../hooks/useMetadata';
 
 interface Props { lang: 'ar' | 'en'; initial?: EditableProblem; companyProfile?: CompanyProfile; companyName: string }
 const lines = (value: string | undefined) => (value || '').split('\n').map((line) => line.trim()).filter(Boolean);
@@ -40,6 +42,7 @@ const FilePicker: React.FC<{
 export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, companyName }) => {
   const navigate = useNavigate();
   const { updateCompanyProfile } = useApp();
+  const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
   const isAr = lang === 'ar';
   const publicLocked = Boolean(initial && (initial.status === 'CLOSED' || initial.applicationsCount > 0));
   const originalDeadline = initial?.deadlineAt;
@@ -51,7 +54,7 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
   const [deliverables, setDeliverables] = useState((pick(initial?.deliverables?.join('\n'), initial?.deliverablesEn?.join('\n'))));
   const [constraints, setConstraints] = useState(pick(initial?.constraints?.join('\n'), initial?.constraintsEn?.join('\n')));
   const [criteria, setCriteria] = useState(pick(initial?.criteria?.join('\n'), initial?.criteriaEn?.join('\n')));
-  const [skills, setSkills] = useState((initial?.skills || []).join(', '));
+  const [skills, setSkills] = useState<string[]>(initial?.skills || []);
   const [difficulty, setDifficulty] = useState<ProblemInput['difficulty']>(initial?.difficulty || 'medium');
   const [category, setCategory] = useState<ProblemInput['category']>(initial?.category || 'CHALLENGE');
   const [budget, setBudget] = useState(initial?.budgetDzd ? String(initial.budgetDzd) : '');
@@ -76,7 +79,7 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
     deliverables: isAr ? lines(deliverables) : (initial?.deliverables || []), deliverablesEn: isAr ? (initial?.deliverablesEn || []) : lines(deliverables),
     constraints: isAr ? lines(constraints) : (initial?.constraints || []), constraintsEn: isAr ? (initial?.constraintsEn || []) : lines(constraints),
     criteria: isAr ? lines(criteria) : (initial?.criteria || []), criteriaEn: isAr ? (initial?.criteriaEn || []) : lines(criteria),
-    skills: skills.split(',').map((skill) => skill.trim()).filter(Boolean),
+    skills,
     difficulty, category, budgetDzd: Number(budget) || 0,
     deadlineAt: deadline === initialDeadlineInput && originalDeadline ? originalDeadline : deadline ? new Date(deadline).toISOString() : undefined,
     privateNotes: privateNotes.trim(),
@@ -90,11 +93,15 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
     setter((current) => [...current, ...accepted]);
   };
 
+  const toggleSkill = (skill: string) => setSkills((current) => current.includes(skill)
+    ? current.filter((item) => item !== skill)
+    : current.length < 5 ? [...current, skill] : current);
+
   const save = async (publish: boolean) => {
     setBusy(true); setError('');
     try {
       if (publish && !publicLocked) {
-        if (title.trim().length < 10 || title.trim().length > 160 || summary.trim().length < 10 || summary.trim().length > 500 || description.trim().length < 30 || description.trim().length > 20000 || skills.split(',').map((v) => v.trim()).filter(Boolean).length < 1 || skills.split(',').map((v) => v.trim()).filter(Boolean).length > 10 || !Number.isInteger(Number(budget)) || Number(budget) <= 0 || !deadline || new Date(deadline).getTime() <= Date.now()) {
+        if (title.trim().length < 10 || title.trim().length > 160 || summary.trim().length < 10 || summary.trim().length > 500 || description.trim().length < 30 || description.trim().length > 20000 || skills.length < 1 || skills.length > 5 || new Set(skills).size !== skills.length || !Number.isInteger(Number(budget)) || Number(budget) <= 0 || !deadline || new Date(deadline).getTime() <= Date.now()) {
           throw new Error(isAr ? 'أكمل العنوان والملخص والوصف والمهارات والميزانية وموعدًا مستقبليًا قبل النشر.' : 'Complete the title, summary, description, skills, positive whole-DZD budget, and a future deadline before publishing.');
         }
       }
@@ -127,7 +134,7 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-title" className={labelClass}>{isAr ? 'عنوان المشكلة *' : 'Problem title *'}</label><input id="problem-title" disabled={publicLocked} value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} /></div><div><label htmlFor="problem-category" className={labelClass}>{isAr ? 'الفئة *' : 'Category *'}</label><select id="problem-category" disabled={publicLocked} value={category} onChange={(e) => setCategory(e.target.value as ProblemInput['category'])} className={inputClass + ' bg-[#FFFBF1]'}><option value="BUG">BUG</option><option value="ISSUE">ISSUE</option><option value="CHALLENGE">CHALLENGE</option></select></div></div>
       <div><label htmlFor="problem-summary" className={labelClass}>{isAr ? 'ملخص قصير *' : 'Short summary *'}</label><textarea id="problem-summary" disabled={publicLocked} value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className={inputClass} /></div>
       <div><label htmlFor="problem-description" className={labelClass}>{isAr ? 'وصف المشكلة بالتفصيل *' : 'Detailed problem description *'}</label><textarea id="problem-description" disabled={publicLocked} value={description} onChange={(e) => setDescription(e.target.value)} rows={7} className={inputClass} /></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-skills" className={labelClass}>{isAr ? 'المهارات (افصل بفاصلة) *' : 'Skills (comma separated) *'}</label><input id="problem-skills" disabled={publicLocked} value={skills} onChange={(e) => setSkills(e.target.value)} placeholder="PYTHON, IOT" className={inputClass} /></div><div><label htmlFor="problem-difficulty" className={labelClass}>{isAr ? 'الصعوبة *' : 'Difficulty *'}</label><select id="problem-difficulty" disabled={publicLocked} value={difficulty} onChange={(e) => setDifficulty(e.target.value as ProblemInput['difficulty'])} className={inputClass + ' bg-[#FFFBF1]'}><option value="small">{isAr ? 'صغير' : 'Small'}</option><option value="medium">{isAr ? 'متوسط' : 'Medium'}</option><option value="expert">{isAr ? 'خبير' : 'Expert'}</option></select></div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className={labelClass}>{isAr ? 'المهارات المطلوبة (اختر من 1 إلى 5) *' : 'Required skills (select 1 to 5) *'}</label><div className="flex flex-wrap gap-1.5">{availableSkills.map((skill) => <button key={skill} type="button" aria-pressed={skills.includes(skill)} disabled={publicLocked || skillsLoading} onClick={() => toggleSkill(skill)} className="rounded-full disabled:opacity-60"><TagChip tag={skill} size="sm" selected={skills.includes(skill)} /></button>)}</div>{skillsLoading && <p className="mt-2 text-[11px] text-[#5B5B7B]">{isAr ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}{skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{isAr ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>}<p className="mt-1 text-[10px] text-[#5B5B7B]">{isAr ? `${skills.length} من 5 مختارة` : `${skills.length} of 5 selected`}</p></div><div><label htmlFor="problem-difficulty" className={labelClass}>{isAr ? 'الصعوبة *' : 'Difficulty *'}</label><select id="problem-difficulty" disabled={publicLocked} value={difficulty} onChange={(e) => setDifficulty(e.target.value as ProblemInput['difficulty'])} className={inputClass + ' bg-[#FFFBF1]'}><option value="small">{isAr ? 'صغير' : 'Small'}</option><option value="medium">{isAr ? 'متوسط' : 'Medium'}</option><option value="expert">{isAr ? 'خبير' : 'Expert'}</option></select></div></div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-budget" className={labelClass}>{isAr ? 'الميزانية بالدينار الجزائري *' : 'Budget in DZD *'}</label><input id="problem-budget" disabled={publicLocked} type="number" min="1" step="1" value={budget} onChange={(e) => setBudget(e.target.value)} className={inputClass} /></div><div><label htmlFor="problem-deadline" className={labelClass}>{isAr ? 'الموعد النهائي *' : 'Deadline *'}</label><input id="problem-deadline" disabled={publicLocked} type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} /></div></div>
       <div><label htmlFor="problem-deliverables" className={labelClass}>{isAr ? 'المخرجات المطلوبة (سطر لكل بند)' : 'Deliverables (one per line)'}</label><textarea id="problem-deliverables" disabled={publicLocked} value={deliverables} onChange={(e) => setDeliverables(e.target.value)} rows={4} className={inputClass} /></div>
       <div><label htmlFor="problem-constraints" className={labelClass}>{isAr ? 'القيود الفنية (سطر لكل بند)' : 'Constraints (one per line)'}</label><textarea id="problem-constraints" disabled={publicLocked} value={constraints} onChange={(e) => setConstraints(e.target.value)} rows={4} className={inputClass} /></div>

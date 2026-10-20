@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { DifficultyMeter } from '../components/DifficultyMeter';
 import { TagChip } from '../components/TagChip';
+import { useMetadata } from '../hooks/useMetadata';
 import type { ProblemDifficulty } from '../types';
 import {
   Search,
@@ -16,6 +17,7 @@ import {
 
 export const ProblemsListPage: React.FC = () => {
   const { lang, currentRole, currentUser, problems, problemsLoading, problemsError, loadProblems } = useApp();
+  const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
   const loadProblemsRef = useRef(loadProblems);
   useEffect(() => { loadProblemsRef.current = loadProblems; }, [loadProblems]);
 
@@ -27,8 +29,6 @@ export const ProblemsListPage: React.FC = () => {
   const [sortTab, setSortTab] = useState<'latest' | 'highest_reward' | 'ending_soon'>('latest');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-
-  const filterSkills = ['IOT', 'EMBEDDED', 'PYTHON', 'AI/ML', 'SQL', 'BACKEND', 'REACT'];
 
   const userSkillsUpper = (currentUser.solverProfile?.skills || []).map((s) =>
     s.toUpperCase().trim()
@@ -97,8 +97,8 @@ export const ProblemsListPage: React.FC = () => {
           </h1>
           <p className="text-sm text-[#5B5B7B] mt-1">
             {lang === 'ar'
-              ? 'مشكلات حقيقية من شركات ومصانع جزائرية — حلّها واحصل على المكافأة.'
-              : 'Real-world challenges from Algerian companies — solve them and earn rewards.'}
+              ? 'تحديات منشورة من شركات ومصانع جزائرية بميزانيات ومتطلبات واضحة.'
+              : 'Challenges posted by Algerian companies with listed budgets and clear requirements.'}
           </p>
         </div>
         {currentRole === 'company' && <Link to="/company/problems/new" className="px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-accent">{lang === 'ar' ? 'نشر مشكلة' : 'Post a problem'}</Link>}
@@ -112,8 +112,8 @@ export const ProblemsListPage: React.FC = () => {
             </div>
             <p className="text-xs text-[#12122B] font-semibold leading-relaxed">
               {lang === 'ar'
-                ? 'يمكنك تصفّح المشكلات ومناقشتها الآن. لتقديم حلّ والحصول على المكافأة، أكمل ملف الحلّال.'
-                : 'You can browse and discuss problems now. To submit solutions and claim rewards, complete your solver profile.'}
+                ? 'يمكنك تصفّح المشكلات ومناقشتها الآن. لتقديم مقترح، أكمل ملف المواهب.'
+                : 'You can browse and discuss challenges now. Complete your talent profile to submit proposals.'}
             </p>
           </div>
           <Link
@@ -135,7 +135,7 @@ export const ProblemsListPage: React.FC = () => {
         <div className="card-pixel p-5 text-center bg-[#F0FFC4]">
           <p className="font-tag text-2xl font-bold text-[#12122B]">{problems.reduce((sum, p) => sum + p.rewardAmount, 0).toLocaleString(lang === 'ar' ? 'fr-DZ' : 'en-US')} {lang === 'ar' ? 'د.ج' : 'DZD'}</p>
           <p className="text-xs font-bold text-[#12122B] mt-1">
-            {lang === 'ar' ? 'مكافآت الصفحة الحالية' : 'Rewards on this page'}
+            {lang === 'ar' ? 'مجموع ميزانيات هذه الصفحة' : 'Budget total on this page'}
           </p>
         </div>
         <div className="card-pixel p-5 text-center">
@@ -184,7 +184,7 @@ export const ProblemsListPage: React.FC = () => {
                   : 'bg-[#FFFBF1] text-[#12122B] border border-[#12122B]'
               }`}
             >
-              {lang === 'ar' ? 'الأعلى مكافأة' : 'Highest Reward'}
+              {lang === 'ar' ? 'أعلى ميزانية' : 'Highest Budget'}
             </button>
             <button
               type="button"
@@ -342,7 +342,7 @@ export const ProblemsListPage: React.FC = () => {
                 {lang === 'ar' ? 'المهارات المطلوبة' : 'Required Skills'}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {filterSkills.map((skill) => (
+                {availableSkills.map((skill) => (
                   <TagChip
                     key={skill}
                     tag={skill}
@@ -354,6 +354,8 @@ export const ProblemsListPage: React.FC = () => {
                   />
                 ))}
               </div>
+              {skillsLoading && <p className="mt-2 text-[11px] text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}
+              {skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{lang === 'ar' ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button></div>}
             </div>
 
             <div>
@@ -363,7 +365,7 @@ export const ProblemsListPage: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-between text-xs font-bold text-[#12122B] mb-2">
-                <span>{lang === 'ar' ? 'الحد الأقصى للمكافأة' : 'Maximum Reward'}</span>
+                <span>{lang === 'ar' ? 'الحد الأقصى للميزانية' : 'Maximum Budget'}</span>
                 <span className="font-tag text-[#0B2A9E]">
                   {maxReward.toLocaleString()} {lang === 'ar' ? 'د.ج' : 'DZD'}
                 </span>

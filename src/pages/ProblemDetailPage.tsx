@@ -338,7 +338,7 @@ const ProblemDetailContent: React.FC = () => {
           <div className="card-pixel p-6 flex flex-col gap-5">
             <div className="p-4 bg-[#FFF1CC] border-2 border-[#12122B] rounded-md shadow-pixel-s">
               <span className="text-[11px] font-bold text-[#5B5B7B] uppercase block mb-1">
-                {lang === 'ar' ? 'مكافأة الحل المعتمد' : 'Accepted Solution Reward'}
+                {lang === 'ar' ? 'ميزانية التحدي المنشورة' : 'Listed Challenge Budget'}
               </span>
               <div className="flex items-center gap-2">
                 <Coins className="w-6 h-6 text-[#12122B]" />
@@ -407,7 +407,7 @@ const ProblemDetailContent: React.FC = () => {
                     to={`/problems/${problem.id}/submit`}
                     className="w-full py-2.5 text-center rounded-md font-bold text-xs btn-pixel-accent"
                   >
-                    {lang === 'ar' ? 'قدّم حلك الآن' : 'Submit solution'}
+                    {lang === 'ar' ? 'قدّم مقترحك الآن' : 'Submit proposal'}
                   </Link>}
                 </div>
               )}
@@ -440,8 +440,8 @@ const ProblemDetailContent: React.FC = () => {
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'أنت عضو مسجل، ولكن لتقديم حلول والمنافسة على المكافأة تحتاج لإكمال ملف الحلّال وتحديد مهاراتك.'
-                      : 'You are signed in as a member. Complete your solver profile to unlock proposal submissions.'}
+                ? 'أنت عضو مسجل. أكمل ملف المواهب لتقديم مقترحات للتحديات.'
+                      : 'You are signed in as a member. Complete your talent profile to submit proposals.'}
                   </p>
                   <Link
                     to="/profile/solver"
@@ -483,8 +483,8 @@ const ProblemDetailContent: React.FC = () => {
 
             <p className="text-[11px] text-[#5B5B7B] text-center pt-2 border-t border-[#EFE4CC]">
               {lang === 'ar'
-                ? 'تُحفظ سرية الحلول والبيانات الحساسة بموجب اتفاقية الاستخدام وسياسة الملكية الفكرية.'
-                : 'Proposals are protected under industrial confidentiality and IP guidelines.'}
+                ? 'اتفق مع الشركة على شروط السرية والملكية الفكرية قبل مشاركة بيانات حساسة أو بدء التنفيذ.'
+                : 'Agree with the company on confidentiality and intellectual property terms before sharing sensitive work or starting delivery.'}
             </p>
           </div>
         </div>

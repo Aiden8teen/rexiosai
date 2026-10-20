@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import type { Language, UserRole, User, SolverProfile, CompanyProfile, Question, Problem, SolutionSubmission } from '../types';
-import { INITIAL_USERS, INITIAL_QUESTIONS } from '../data/mockData';
+import type { Language, UserRole, User, SolverProfile, CompanyProfile, Problem, SolutionSubmission, DiscussionComment } from '../types';
+import { GUEST_USER } from '../data/guest';
 import { ApiError } from '../api/client';
 import { login as loginRequest, logout as logoutRequest, register as registerRequest, getCurrentUser } from '../api/auth';
 import { updateMyProfile } from '../api/profiles';
@@ -26,11 +26,6 @@ interface AppContextType {
   logout: () => Promise<void>; refreshAuth: () => Promise<void>;
   updateSolverProfile: (profile: Partial<SolverProfile>) => Promise<void>;
   updateCompanyProfile: (profile: Partial<CompanyProfile>) => Promise<void>;
-  questions: Question[];
-  addQuestion: (title: string, excerpt: string, body: string, tags: string[], code?: string) => string;
-  addAnswer: (questionId: string, body: string) => void;
-  toggleQuestionReaction: (questionId: string, reaction: 'helpful' | 'insight') => void;
-  toggleAnswerReaction: (questionId: string, answerId: string, reaction: 'helpful' | 'insight') => void;
   problems: Problem[]; problemsLoading: boolean; problemsError: string;
   refreshProblems: () => Promise<void>;
   loadProblems: (filters?: ProblemFilters) => Promise<{ items: Problem[]; total: number; page: number; limit: number }>;
@@ -54,24 +49,31 @@ const mapApplication = (application: ApiApplication): SolutionSubmission => ({
   status: application.status === 'DRAFT' ? 'draft' : application.status === 'ACCEPTED' ? 'accepted' : application.status === 'REJECTED' ? 'rejected' : 'under_review',
 });
 
+function includeCommittedComment(
+  discussions: DiscussionComment[],
+  comment: DiscussionComment,
+  parentId?: string,
+): DiscussionComment[] {
+  if (discussions.some((entry) => entry.id === comment.id || entry.replies?.some((reply) => reply.id === comment.id))) return discussions;
+  if (!parentId) return [...discussions, comment];
+  return discussions.map((entry) => entry.id === parentId
+    ? { ...entry, replies: [...(entry.replies || []), comment] }
+    : entry);
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [lang, setLangState] = useState<Language>(() => localStorage.getItem('rexios_lang') === 'en' ? 'en' : 'ar');
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS.visitor);
+  const [currentUser, setCurrentUser] = useState<User>(GUEST_USER);
   const [currentRole, setCurrentRole] = useState<UserRole>('visitor');
   const [authLoading, setAuthLoading] = useState(true);
-  const [questions, setQuestions] = useState<Question[]>(() => {
-    const saved = localStorage.getItem('rexios_questions');
-    if (!saved) return INITIAL_QUESTIONS;
-    try { return JSON.parse(saved); } catch { return INITIAL_QUESTIONS; }
-  });
   const [problems, setProblems] = useState<Problem[]>([]);
   const [problemsLoading, setProblemsLoading] = useState(true);
   const [problemsError, setProblemsError] = useState('');
   const [submissions, setSubmissions] = useState<SolutionSubmission[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const authRefreshSequence = useRef(0);
-  const currentUserIdRef = useRef(INITIAL_USERS.visitor.id);
+  const currentUserIdRef = useRef(GUEST_USER.id);
 
   const setSignedInIdentity = (user: User) => {
     currentUserIdRef.current = user.id;
@@ -82,7 +84,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setLang = (newLang: Language) => { setLangState(newLang); localStorage.setItem('rexios_lang', newLang); };
   const toggleLang = () => setLang(lang === 'ar' ? 'en' : 'ar');
   useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = dir; }, [lang, dir]);
-  useEffect(() => { localStorage.setItem('rexios_questions', JSON.stringify(questions)); }, [questions]);
 
   const refreshApplications = async () => {
     if (currentRole === 'visitor' || currentRole === 'company') { setSubmissions([]); return; }
@@ -116,7 +117,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (error) {
       if (sequence !== authRefreshSequence.current) return;
       if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 404)) throw error;
-      setSignedInIdentity(INITIAL_USERS.visitor); setSubmissions([]); setIsAuthModalOpen(false);
+      setSignedInIdentity(GUEST_USER); setSubmissions([]); setIsAuthModalOpen(false);
     } finally { if (sequence === authRefreshSequence.current) setAuthLoading(false); }
   }, [currentRole, currentUser.id]);
 
@@ -158,7 +159,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const apps = await listMyApplications().catch(() => null);
           if (mounted && apps && currentUserIdRef.current === user.id) setSubmissions(apps.items.map(mapApplication));
         }
-      } else { setSignedInIdentity(INITIAL_USERS.visitor); }
+      } else { setSignedInIdentity(GUEST_USER); }
       if (problemResult.status === 'fulfilled') setProblems(problemResult.value.items.map(mapApiProblem));
       else {
         setProblems([]);
@@ -192,7 +193,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try { await logoutRequest(); }
     finally {
       authRefreshSequence.current++;
-      setSignedInIdentity(INITIAL_USERS.visitor); setSubmissions([]); setProblems([]);
+      setSignedInIdentity(GUEST_USER); setSubmissions([]); setProblems([]);
       void refreshProblems();
     }
   };
@@ -207,40 +208,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const requestedByUserId = currentUserIdRef.current;
     const user = mapApiUser(await updateMyProfile(profile));
     if (currentUserIdRef.current === requestedByUserId) setSignedInIdentity(user);
-  };
-
-  const addQuestion = (title: string, excerpt: string, body: string, tags: string[], code?: string): string => {
-    const id = 'q_' + Date.now();
-    const newQ: Question = {
-      id, title, title_en: title, excerpt, excerpt_en: excerpt, body, body_en: body, codeSnippet: code,
-      author: currentUser.name, author_en: currentUser.name_en, authorAvatar: currentUser.avatarChar,
-      createdAt: 'الآن', createdAt_en: 'Just now', tags, views: 1, answersCount: 0, helpfulCount: 0, insightCount: 0, answers: [],
-    };
-    setQuestions((prev) => [newQ, ...prev]); return id;
-  };
-  const addAnswer = (questionId: string, body: string) => setQuestions((prev) => prev.map((q) => {
-    if (q.id !== questionId) return q;
-    const answer = {
-      id: 'ans_' + Date.now(), author: currentUser.name, author_en: currentUser.name_en,
-      authorRole: currentUser.role === 'solver' ? 'خبير حلول معتمد' : 'عضو في المجتمع',
-      authorRole_en: currentUser.role === 'solver' ? 'Verified Solver' : 'Community Member',
-      authorAvatar: currentUser.avatarChar, createdAt: 'الآن', createdAt_en: 'Just now', body, body_en: body,
-      helpfulCount: 0, insightCount: 0,
-    };
-    return { ...q, answersCount: q.answersCount + 1, answers: [...q.answers, answer] };
-  }));
-  const toggleQuestionReaction = (questionId: string, reaction: 'helpful' | 'insight') => {
-    if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
-    setQuestions((prev) => prev.map((q) => q.id !== questionId ? q : reaction === 'helpful'
-      ? { ...q, helpfulCount: q.helpfulCount + 1 } : { ...q, insightCount: q.insightCount + 1 }));
-  };
-  const toggleAnswerReaction = (questionId: string, answerId: string, reaction: 'helpful' | 'insight') => {
-    if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
-    setQuestions((prev) => prev.map((q) => q.id !== questionId ? q : {
-      ...q,
-      answers: q.answers.map((answer) => answer.id !== answerId ? answer : reaction === 'helpful'
-        ? { ...answer, helpfulCount: answer.helpfulCount + 1 } : { ...answer, insightCount: answer.insightCount + 1 }),
-    }));
   };
 
   const loadProblems = async (filters: ProblemFilters = {}) => {
@@ -265,8 +232,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const addProblemComment = async (problemId: string, body: string, replyToId?: string) => {
     if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
-    await createProblemComment(problemId, body, replyToId);
-    await loadProblem(problemId);
+    const requestedByUserId = currentUserIdRef.current;
+    const createdDiscussionComment = await createProblemComment(problemId, body, replyToId);
+    if (currentUserIdRef.current !== requestedByUserId) return;
+    setProblems((current) => {
+      if (currentUserIdRef.current !== requestedByUserId) return current;
+      return current.map((problem) => problem.id === problemId ? {
+        ...problem,
+        discussions: includeCommittedComment(problem.discussions, createdDiscussionComment, replyToId),
+      } : problem);
+    });
+
+    void getProblem(problemId).then((rawProblem) => {
+      if (currentUserIdRef.current !== requestedByUserId) return;
+      const refreshedProblem = mapApiProblem(rawProblem);
+      refreshedProblem.discussions = includeCommittedComment(refreshedProblem.discussions, createdDiscussionComment, replyToId);
+      setProblems((current) => {
+        if (currentUserIdRef.current !== requestedByUserId) return current;
+        return current.map((problem) => problem.id === problemId ? refreshedProblem : problem);
+      });
+    }).catch(() => undefined);
   };
   const saveApplicationDraft = async (problemId: string, input: ApplicationInput) => {
     const requestedByUserId = currentUserIdRef.current;
@@ -308,7 +293,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const value: AppContextType = {
     lang, dir, setLang, toggleLang, currentUser, currentRole, authLoading, switchRole,
     login, signup, logout, refreshAuth, updateSolverProfile, updateCompanyProfile,
-    questions, addQuestion, addAnswer, toggleQuestionReaction, toggleAnswerReaction,
     problems, problemsLoading, problemsError, refreshProblems, loadProblems, loadProblem, addProblemComment,
     submissions, refreshApplications, saveApplicationDraft, submitApplication, calculateEligibility,
     isAuthModalOpen, openAuthModal: () => setIsAuthModalOpen(true), closeAuthModal: () => setIsAuthModalOpen(false),

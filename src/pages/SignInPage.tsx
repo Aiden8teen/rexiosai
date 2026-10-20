@@ -14,7 +14,6 @@ export const SignInPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole] = useState<UserRole>('member');
-  const [showErrorDemo, setShowErrorDemo] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -213,8 +212,7 @@ export const SignInPage: React.FC = () => {
                 <label className="text-[11px] text-[#5B5B7B] flex items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={showErrorDemo}
-                    onChange={(e) => setShowErrorDemo(e.target.checked)}
+                    onChange={() => undefined}
                     className="accent-[#E5432A]"
                   />
                   <span>

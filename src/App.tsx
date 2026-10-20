@@ -35,10 +35,10 @@ export const App: React.FC = () => {
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/signin" element={<SignInPage />} />
               <Route path="/profile/solver" element={<RequireAuth account="TALENT"><SolverProfilePage /></RequireAuth>} />
-              <Route path="/welcome" element={<WelcomePage />} />
+              <Route path="/welcome" element={<RequireAuth><WelcomePage /></RequireAuth>} />
               <Route path="/community" element={<CommunityFeedPage />} />
               <Route path="/community/:id" element={<QuestionDetailPage />} />
-              <Route path="/community/ask" element={<AskQuestionPage />} />
+              <Route path="/community/ask" element={<RequireAuth><AskQuestionPage /></RequireAuth>} />
               <Route path="/problems" element={<ProblemsListPage />} />
               <Route path="/problems/:id" element={<ProblemDetailPage />} />
               <Route path="/problems/:id/submit" element={<RequireAuth account="TALENT"><ProblemSubmitPage /></RequireAuth>} />

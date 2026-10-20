@@ -1,5 +1,6 @@
 import { apiRequest } from './client';
 import type { ApiProblem, EditableProblem, Page, ProblemFilters, ProblemInput, ProblemPatch } from './contracts';
+import { dispatchNotificationsRefresh } from './notifications';
 
 function queryString(filters: ProblemFilters): string {
   const query = new URLSearchParams();
@@ -21,10 +22,16 @@ export const createProblem = (input: ProblemInput) =>
   apiRequest<{ id: string }>('/problems', { method: 'POST', body: JSON.stringify(input) });
 export const updateProblem = (id: string, input: ProblemPatch) =>
   apiRequest<EditableProblem>(`/problems/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(input) });
-export const publishProblem = (id: string) =>
-  apiRequest<ApiProblem>(`/problems/${encodeURIComponent(id)}/publish`, { method: 'POST' });
-export const closeProblem = (id: string) =>
-  apiRequest<ApiProblem>(`/problems/${encodeURIComponent(id)}/close`, { method: 'POST' });
+export const publishProblem = async (id: string) => {
+  const problem = await apiRequest<ApiProblem>(`/problems/${encodeURIComponent(id)}/publish`, { method: 'POST' });
+  dispatchNotificationsRefresh();
+  return problem;
+};
+export const closeProblem = async (id: string) => {
+  const problem = await apiRequest<ApiProblem>(`/problems/${encodeURIComponent(id)}/close`, { method: 'POST' });
+  dispatchNotificationsRefresh();
+  return problem;
+};
 export const getProblemContact = (id: string) =>
   apiRequest<{ contactEmail: string; contactUrl: string }>(`/problems/${encodeURIComponent(id)}/contact`);
 export const getProblemPrivate = (id: string) =>

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from './MascotRex';
-import { Bell, ChevronDown, LogOut, Award, BriefcaseBusiness, FileText } from 'lucide-react';
+import { ChevronDown, LogOut, Award, BriefcaseBusiness, FileText } from 'lucide-react';
 import type { UserRole } from '../types';
+import { NotificationsDropdown } from './NotificationsDropdown';
 
 export const Navbar: React.FC = () => {
   const { lang, setLang, currentRole, currentUser, switchRole, logout } = useApp();
@@ -128,14 +129,7 @@ export const Navbar: React.FC = () => {
                 {lang === 'ar' ? 'اطرح سؤالًا' : 'Ask a Question'}
               </Link>
 
-              <button
-                type="button"
-                className="relative p-2 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s hover:bg-[#EFE4CC] cursor-pointer"
-                title={lang === 'ar' ? 'الإشعارات' : 'Notifications'}
-              >
-                <Bell className="w-4 h-4 text-[#12122B] stroke-[2.2]" />
-                <span className="absolute -top-1 -end-1 w-2.5 h-2.5 bg-[#E5432A] rounded-full border border-[#FFFBF1]" />
-              </button>
+              <NotificationsDropdown key={currentUser.id} userId={currentUser.id} lang={lang} />
 
               <div className="relative">
                 <button
