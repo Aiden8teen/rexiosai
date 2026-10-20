@@ -41,7 +41,8 @@ Industrial facilities post real operational challenges with financial bounties (
 ```bash
 # Clone the repository
 
-
+https://github.com/Aiden8teen/rexiosai.git
+cd rexiosai
 
 # Install dependencies
 npm install
