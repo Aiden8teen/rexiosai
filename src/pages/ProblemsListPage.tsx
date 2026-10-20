@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { DifficultyMeter } from '../components/DifficultyMeter';
@@ -15,13 +15,18 @@ import {
 } from 'lucide-react';
 
 export const ProblemsListPage: React.FC = () => {
-  const { lang, currentRole, currentUser, problems } = useApp();
+  const { lang, currentRole, currentUser, problems, problemsLoading, problemsError, loadProblems } = useApp();
+  const loadProblemsRef = useRef(loadProblems);
+  useEffect(() => { loadProblemsRef.current = loadProblems; }, [loadProblems]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDifficulties, setSelectedDifficulties] = useState<ProblemDifficulty[]>([]);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [maxReward, setMaxReward] = useState<number>(200000);
   const [sortTab, setSortTab] = useState<'latest' | 'highest_reward' | 'ending_soon'>('latest');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const filterSkills = ['IOT', 'EMBEDDED', 'PYTHON', 'AI/ML', 'SQL', 'BACKEND', 'REACT'];
 
@@ -41,37 +46,47 @@ export const ProblemsListPage: React.FC = () => {
     setSearchQuery('');
     setSelectedDifficulties([]);
     setSelectedSkill(null);
+    setSelectedCategories([]);
     setMaxReward(200000);
     setSortTab('latest');
   };
 
-  const filteredProblems = problems
-    .filter((p) => {
-      const matchSearch =
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.title_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.companyName_en.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.summary_en.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProblems = problems;
 
-      const matchDifficulty =
-        selectedDifficulties.length === 0 || selectedDifficulties.includes(p.difficulty);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      void loadProblemsRef.current({
+        q: searchQuery || undefined,
+        skill: selectedSkill ? [selectedSkill] : undefined,
+        difficulty: selectedDifficulties.length ? selectedDifficulties : undefined,
+        category: selectedCategories.length ? selectedCategories : undefined,
+        maxReward: maxReward < 200000 ? maxReward : undefined,
+        sort: sortTab === 'highest_reward' ? 'reward' : sortTab === 'ending_soon' ? 'deadline' : 'newest',
+        page: 1,
+        limit: 20,
+      }).then((result) => setTotal(result.total)).catch(() => setTotal(0));
+    }, 250);
+    return () => window.clearTimeout(timer);
+    // The ref keeps the latest context action without retriggering for each render.
+  }, [searchQuery, selectedDifficulties, selectedSkill, selectedCategories, maxReward, sortTab]);
 
-      const matchSkill = selectedSkill ? p.tags.includes(selectedSkill) : true;
-      const matchReward = p.rewardAmount <= maxReward;
-
-      return matchSearch && matchDifficulty && matchSkill && matchReward;
-    })
-    .sort((a, b) => {
-      if (sortTab === 'highest_reward') {
-        return b.rewardAmount - a.rewardAmount;
-      }
-      if (sortTab === 'ending_soon') {
-        return a.deadlineDays - b.deadlineDays;
-      }
-      return 0;
-    });
+  const loadNextPage = async () => {
+    const nextPage = page + 1;
+    try {
+      const result = await loadProblems({
+        q: searchQuery || undefined,
+        skill: selectedSkill ? [selectedSkill] : undefined,
+        difficulty: selectedDifficulties.length ? selectedDifficulties : undefined,
+        category: selectedCategories.length ? selectedCategories : undefined,
+        maxReward: maxReward < 200000 ? maxReward : undefined,
+        sort: sortTab === 'highest_reward' ? 'reward' : sortTab === 'ending_soon' ? 'deadline' : 'newest',
+        page: nextPage,
+        limit: 20,
+      });
+      setPage(nextPage); setTotal(result.total);
+    } catch { /* context error state is rendered below */ }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
@@ -86,6 +101,7 @@ export const ProblemsListPage: React.FC = () => {
               : 'Real-world challenges from Algerian companies — solve them and earn rewards.'}
           </p>
         </div>
+        {currentRole === 'company' && <Link to="/company/problems/new" className="px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-accent">{lang === 'ar' ? 'نشر مشكلة' : 'Post a problem'}</Link>}
       </div>
 
       {(currentRole === 'member' || (currentRole === 'solver' && !currentUser.solverProfile?.skills?.length)) && (
@@ -111,21 +127,21 @@ export const ProblemsListPage: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card-pixel p-5 text-center">
-          <p className="font-tag text-2xl font-bold text-[#0B2A9E]">18</p>
+          <p className="font-tag text-2xl font-bold text-[#0B2A9E]">{new Set(problems.map((p) => p.companyUserId || p.companyName_en)).size}</p>
           <p className="text-xs font-semibold text-[#5B5B7B] mt-1">
-            {lang === 'ar' ? 'شركة صناعية شريكة' : 'Partner Companies'}
+            {lang === 'ar' ? 'شركات ضمن النتائج' : 'Companies in results'}
           </p>
         </div>
         <div className="card-pixel p-5 text-center bg-[#F0FFC4]">
-          <p className="font-tag text-2xl font-bold text-[#12122B]">1,250,000 د.ج</p>
+          <p className="font-tag text-2xl font-bold text-[#12122B]">{problems.reduce((sum, p) => sum + p.rewardAmount, 0).toLocaleString(lang === 'ar' ? 'fr-DZ' : 'en-US')} {lang === 'ar' ? 'د.ج' : 'DZD'}</p>
           <p className="text-xs font-bold text-[#12122B] mt-1">
-            {lang === 'ar' ? 'إجمالي حوض المكافآت' : 'Total Reward Pool'}
+            {lang === 'ar' ? 'مكافآت الصفحة الحالية' : 'Rewards on this page'}
           </p>
         </div>
         <div className="card-pixel p-5 text-center">
-          <p className="font-tag text-2xl font-bold text-[#1E9E5A]">24</p>
+          <p className="font-tag text-2xl font-bold text-[#1E9E5A]">{total}</p>
           <p className="text-xs font-semibold text-[#5B5B7B] mt-1">
-            {lang === 'ar' ? 'مشكلة مفتوحة للحل' : 'Active Challenges'}
+            {lang === 'ar' ? 'إجمالي النتائج' : 'Total results'}
           </p>
         </div>
       </div>
@@ -183,8 +199,11 @@ export const ProblemsListPage: React.FC = () => {
             </button>
           </div>
 
+          {problemsError && <div className="p-3 bg-[#FFE3DC] border-2 border-[#E5432A] rounded-md text-xs font-bold text-[#E5432A] flex items-center gap-2"><AlertCircle className="w-4 h-4" />{problemsError}</div>}
           <div className="flex flex-col gap-4">
-            {filteredProblems.length === 0 ? (
+            {problemsLoading && filteredProblems.length === 0 ? (
+              <div className="card-pixel p-10 text-center text-sm text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المشكلات…' : 'Loading problems…'}</div>
+            ) : filteredProblems.length === 0 ? (
               <div className="card-pixel p-10 text-center text-sm text-[#5B5B7B]">
                 {lang === 'ar'
                   ? 'لم يتم العثور على مشكلات تطابق معايير التصفية المحددة.'
@@ -274,6 +293,7 @@ export const ProblemsListPage: React.FC = () => {
               ))
             )}
           </div>
+          {total > problems.length && <button type="button" disabled={problemsLoading} onClick={() => void loadNextPage()} className="self-center px-5 py-2.5 rounded-md text-xs font-bold btn-pixel-secondary">{problemsLoading ? (lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…') : (lang === 'ar' ? 'تحميل المزيد' : 'Load more')}</button>}
         </div>
 
         <div className="lg:col-span-4 flex flex-col gap-6">
@@ -334,6 +354,11 @@ export const ProblemsListPage: React.FC = () => {
                   />
                 ))}
               </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-[#12122B] mb-2">{lang === 'ar' ? 'الفئة' : 'Category'}</p>
+              <div className="flex flex-col gap-2 text-xs">{(['BUG', 'ISSUE', 'CHALLENGE'] as const).map((category) => <label key={category} className="flex items-center justify-between p-2 bg-[#F8F1E1] border border-[#12122B] rounded cursor-pointer"><span>{category}</span><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => setSelectedCategories((current) => current.includes(category) ? current.filter((item) => item !== category) : [...current, category])} className="accent-[#0B2A9E]" /></label>)}</div>
             </div>
 
             <div>

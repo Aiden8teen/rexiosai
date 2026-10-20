@@ -5,41 +5,41 @@ import { MascotRex } from '../components/MascotRex';
 import { TagChip } from '../components/TagChip';
 import { Check, Upload, FileText, X, AlertCircle } from 'lucide-react';
 import { ALL_SKILLS_TAXONOMY } from '../data/mockData';
+import { uploadFile } from '../api/files';
+import { apiErrorMessage } from '../api/client';
 
 export const SolverProfilePage: React.FC = () => {
+  const { currentUser } = useApp();
+  return <SolverProfileContent key={currentUser.id} />;
+};
+
+const SolverProfileContent: React.FC = () => {
   const { lang, currentUser, updateSolverProfile } = useApp();
   const navigate = useNavigate();
 
   const profile = currentUser.solverProfile;
 
-  const [firstName, setFirstName] = useState(profile?.firstName || 'أمين');
-  const [lastName, setLastName] = useState(profile?.lastName || 'بن علي');
+  const [firstName, setFirstName] = useState(profile?.firstName || '');
+  const [lastName, setLastName] = useState(profile?.lastName || '');
   const [educationLevel, setEducationLevel] = useState(
-    profile?.educationLevel || 'السنة الثانية — ليسانس'
+    profile?.educationLevel || ''
   );
   const [institutionMajor, setInstitutionMajor] = useState(
-    profile?.institutionMajor || 'هندسة الحاسوب — USTHB'
+    profile?.institutionMajor || ''
   );
   const [experienceLevel, setExperienceLevel] = useState(
-    profile?.experienceLevel || 'طالب / خريج جديد'
+    profile?.experienceLevel || ''
   );
-  const [skills, setSkills] = useState<string[]>(
-    profile?.skills?.length
-      ? profile.skills
-      : ['IOT', 'EMBEDDED', 'PYTHON', 'C']
-  );
-  const [cvFileName, setCvFileName] = useState(
-    profile?.cvFileName || 'CV-Amine-Ben-Ali.pdf'
-  );
-  const [linkedInUrl, setLinkedInUrl] = useState(
-    profile?.linkedInUrl || 'https://linkedin.com/in/amine-benali'
-  );
-  const [githubUrl, setGithubUrl] = useState(
-    profile?.githubUrl || 'https://github.com/amine-benali'
-  );
+  const [skills, setSkills] = useState<string[]>(profile?.skills || []);
+  const [cvFileName, setCvFileName] = useState(profile?.cvFileName || '');
+  const [cvFileId, setCvFileId] = useState(profile?.cvFileId || '');
+  const [linkedInUrl, setLinkedInUrl] = useState(profile?.linkedInUrl || '');
+  const [githubUrl, setGithubUrl] = useState(profile?.githubUrl || '');
 
   const [simulateErrors, setSimulateErrors] = useState(false);
   const [submittedError, setSubmittedError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const toggleSkill = (skill: string) => {
     if (skills.includes(skill)) {
@@ -56,32 +56,51 @@ export const SolverProfilePage: React.FC = () => {
   if (institutionMajor.trim()) completedCount++;
   if (experienceLevel) completedCount++;
   if (skills.length > 0) completedCount++;
-  if (cvFileName || linkedInUrl || githubUrl) completedCount++;
+  const hasProfileEvidence = Boolean(cvFileId || linkedInUrl.trim() || githubUrl.trim());
+  if (hasProfileEvidence) completedCount++;
   const completeness = Math.min(100, Math.round((completedCount / 7) * 100));
 
   const hasErrors = simulateErrors || submittedError;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCvUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (!/\.(pdf|docx)$/i.test(file.name) || file.size <= 0 || file.size > 5 * 1024 * 1024) {
+      setApiError(lang === 'ar' ? 'اختر ملف PDF أو DOCX بحجم لا يتجاوز 5 ميغابايت.' : 'Choose a PDF or DOCX file up to 5 MB.');
+      return;
+    }
+    setApiError('');
+    try {
+      const uploaded = await uploadFile(file, 'CV');
+      await updateSolverProfile({ cvFileId: uploaded.id });
+      setCvFileId(uploaded.id);
+      setCvFileName(uploaded.originalName);
+    } catch (error) { setApiError(apiErrorMessage(error, lang)); }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (skills.length === 0 || !firstName || !lastName || !institutionMajor) {
+    if (!firstName.trim() || !lastName.trim() || !educationLevel || !institutionMajor.trim() || !experienceLevel || skills.length === 0 || !hasProfileEvidence) {
       setSubmittedError(true);
       return;
     }
 
-    updateSolverProfile({
+    setSaving(true); setApiError('');
+    try {
+      await updateSolverProfile({
       firstName,
       lastName,
       educationLevel,
       institutionMajor,
       experienceLevel,
       skills,
-      cvFileName,
+      cvFileId: cvFileId || undefined,
       linkedInUrl,
       githubUrl,
-      completenessPercent: 100,
-    });
-
-    navigate('/problems');
+      completenessPercent: completeness,
+      });
+      navigate('/problems');
+    } catch (error) { setApiError(apiErrorMessage(error, lang)); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -195,11 +214,12 @@ export const SolverProfilePage: React.FC = () => {
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>
                 {lang === 'ar'
-                  ? 'يرجى تصحيح الحقول المعلّمة بالأحمر قبل المتابعة (المهارات إلزامية).'
-                  : 'Please correct the highlighted fields before proceeding (skills are mandatory).'}
+                  ? 'أكمل جميع الحقول المطلوبة، بما فيها مهارة واحدة على الأقل وسيرة ذاتية أو رابط مهني.'
+                  : 'Complete every required group, including at least one skill and a CV or professional link.'}
               </span>
             </div>
           )}
+          {apiError && <div className="mb-6 p-3.5 bg-[#FFE3DC] border-2 border-[#E5432A] rounded-md text-xs text-[#E5432A] font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" />{apiError}</div>}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -242,8 +262,9 @@ export const SolverProfilePage: React.FC = () => {
                 <select
                   value={educationLevel}
                   onChange={(e) => setEducationLevel(e.target.value)}
-                  className="w-full input-pixel text-xs bg-[#FFFBF1]"
+                  className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !educationLevel ? 'input-pixel-error' : ''}`}
                 >
+                  <option value="">{lang === 'ar' ? 'اختر المستوى الدراسي' : 'Select education level'}</option>
                   <option value="السنة الأولى — ليسانس">السنة الأولى — ليسانس</option>
                   <option value="السنة الثانية — ليسانس">السنة الثانية — ليسانس</option>
                   <option value="السنة الثالثة — ليسانس">السنة الثالثة — ليسانس</option>
@@ -275,8 +296,9 @@ export const SolverProfilePage: React.FC = () => {
               <select
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value)}
-                className="w-full input-pixel text-xs bg-[#FFFBF1]"
+                className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !experienceLevel ? 'input-pixel-error' : ''}`}
               >
+                <option value="">{lang === 'ar' ? 'اختر مستوى الخبرة' : 'Select experience level'}</option>
                 <option value="طالب / خريج جديد">
                   {lang === 'ar' ? 'طالب / خريج جديد' : 'Student / Recent Graduate'}
                 </option>
@@ -328,33 +350,30 @@ export const SolverProfilePage: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-[#12122B] mb-1.5">
-                {lang === 'ar' ? 'السيرة الذاتية (CV) *' : 'Curriculum Vitae (CV) *'}
+                  {lang === 'ar' ? 'السيرة الذاتية (CV) أو رابط مهني *' : 'Curriculum Vitae (CV) or professional link *'}
               </label>
 
-              {cvFileName ? (
+              {cvFileId ? (
                 <div className="p-4 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-[#0B2A9E]" />
                     <div>
                       <p className="text-xs font-bold text-[#12122B]">{cvFileName}</p>
                       <p className="text-[10px] text-[#1E9E5A] font-semibold">
-                        {lang === 'ar' ? '1.2MB — تم الرفع بنجاح' : '1.2MB — Uploaded'}
+                        {cvFileId ? (lang === 'ar' ? 'تم ربط الملف بالملف الشخصي' : 'File linked to your profile') : (lang === 'ar' ? 'ملف محفوظ في الملف الشخصي' : 'Saved on your profile')}
                       </p>
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setCvFileName('')}
+                    onClick={() => undefined}
                     className="p-1 hover:text-[#E5432A] cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <div
-                  onClick={() => setCvFileName('CV-Amine-Ben-Ali.pdf')}
-                  className="p-6 bg-[#FFFBF1] border-2 border-dashed border-[#12122B] rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#EFE4CC] transition-colors"
-                >
+                <label className={`p-6 bg-[#FFFBF1] border-2 border-dashed rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#EFE4CC] transition-colors ${hasErrors && !hasProfileEvidence ? 'border-[#E5432A]' : 'border-[#12122B]'}`}>
                   <Upload className="w-6 h-6 text-[#0B2A9E]" />
                   <p className="text-xs font-bold text-[#12122B]">
                     {lang === 'ar'
@@ -364,7 +383,8 @@ export const SolverProfilePage: React.FC = () => {
                   <p className="text-[10px] text-[#5B5B7B]">
                     PDF, DOCX — Max 5MB
                   </p>
-                </div>
+                  <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={(event) => void handleCvUpload(event.target.files?.[0])} />
+                </label>
               )}
             </div>
 
@@ -378,7 +398,7 @@ export const SolverProfilePage: React.FC = () => {
                   value={linkedInUrl}
                   onChange={(e) => setLinkedInUrl(e.target.value)}
                   placeholder="https://linkedin.com/in/username"
-                  className="w-full input-pixel text-xs"
+                  className={`w-full input-pixel text-xs ${hasErrors && !hasProfileEvidence ? 'input-pixel-error' : ''}`}
                 />
               </div>
 
@@ -391,7 +411,7 @@ export const SolverProfilePage: React.FC = () => {
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   placeholder="https://github.com/username"
-                  className="w-full input-pixel text-xs"
+                  className={`w-full input-pixel text-xs ${hasErrors && !hasProfileEvidence ? 'input-pixel-error' : ''}`}
                 />
               </div>
             </div>
@@ -405,9 +425,10 @@ export const SolverProfilePage: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={saving}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-md font-bold text-xs btn-pixel-accent cursor-pointer"
               >
-                {lang === 'ar' ? 'حفظ ملف الحلّال' : 'Save solver profile'}
+                {saving ? (lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ ملف الحلّال' : 'Save solver profile')}
               </button>
             </div>
           </form>

@@ -1,3 +1,4 @@
+name: rexios-demo
 services:
   db:
     ports: !reset []

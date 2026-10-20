@@ -1,6 +1,6 @@
 export type Language = 'ar' | 'en';
 
-export type UserRole = 'visitor' | 'member' | 'solver';
+export type UserRole = 'visitor' | 'member' | 'solver' | 'company';
 
 export interface SolverProfile {
   firstName: string;
@@ -12,7 +12,16 @@ export interface SolverProfile {
   cvFileName?: string;
   linkedInUrl?: string;
   githubUrl?: string;
+  cvFileId?: string;
   completenessPercent: number;
+}
+
+export interface CompanyProfile {
+  name: string;
+  nameEn?: string;
+  contactEmail?: string;
+  contactUrl?: string;
+  shareContact?: boolean;
 }
 
 export interface User {
@@ -24,6 +33,7 @@ export interface User {
   avatarChar: string;
   avatarBg?: string;
   solverProfile?: SolverProfile;
+  companyProfile?: CompanyProfile;
 }
 
 export interface ReactionCounts {
@@ -117,6 +127,35 @@ export interface Problem {
   deadlineText: string;
   deadlineText_en: string;
   discussions: DiscussionComment[];
+  companyUserId?: string;
+  status?: 'DRAFT' | 'OPEN' | 'CLOSED';
+  category?: 'BUG' | 'ISSUE' | 'CHALLENGE';
+  deadlineAt?: string;
+  createdAt?: string;
+  files?: StoredFile[];
+}
+
+export interface StoredFile {
+  id: string;
+  originalName: string;
+  byteSize?: number;
+  mimeType?: string;
+}
+
+export interface Application {
+  id: string;
+  problemId: string;
+  applicantUserId: string;
+  coverMessage: string;
+  deliveryDays: number;
+  projectUrl?: string;
+  consent: boolean;
+  status: 'DRAFT' | 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED';
+  rejectionReason?: string;
+  submittedAt?: string;
+  problem: { id: string; title: string; titleEn?: string };
+  applicant?: User;
+  files: StoredFile[];
 }
 
 export interface SolutionSubmission {
@@ -128,5 +167,6 @@ export interface SolutionSubmission {
   projectUrl?: string;
   fileName?: string;
   submittedAt: string;
-  status: 'under_review' | 'accepted' | 'rejected';
+  status: 'draft' | 'under_review' | 'accepted' | 'rejected';
+  rejectionReason?: string;
 }

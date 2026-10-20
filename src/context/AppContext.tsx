@@ -1,462 +1,323 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import type {
-  Language,
-  UserRole,
-  User,
-  SolverProfile,
-  Question,
-  Problem,
-  SolutionSubmission,
-} from '../types';
-import {
-  INITIAL_USERS,
-  INITIAL_QUESTIONS,
-  INITIAL_PROBLEMS,
-} from '../data/mockData';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import type { Language, UserRole, User, SolverProfile, CompanyProfile, Question, Problem, SolutionSubmission } from '../types';
+import { INITIAL_USERS, INITIAL_QUESTIONS } from '../data/mockData';
+import { ApiError } from '../api/client';
+import { login as loginRequest, logout as logoutRequest, register as registerRequest, getCurrentUser } from '../api/auth';
+import { updateMyProfile } from '../api/profiles';
+import { createProblemComment } from '../api/comments';
+import { getProblem, listProblems } from '../api/problems';
+import { listMyApplications, saveApplicationDraft as saveDraftRequest, submitApplication as submitRequest } from '../api/applications';
+import { mapApiProblem, mapApiUser } from '../api/mappers';
+import type { AccountType, ApplicationInput, ProblemFilters } from '../api/contracts';
 
 interface EligibilityResult {
   isEligible: boolean;
   matchedSkills: string[];
   matchCount: number;
   totalCount: number;
-  status: 'visitor' | 'needs_profile' | 'mismatch' | 'eligible' | 'submitted';
+  status: 'visitor' | 'company' | 'needs_profile' | 'mismatch' | 'eligible' | 'submitted';
 }
-
 interface AppContextType {
-  lang: Language;
-  dir: 'rtl' | 'ltr';
-  setLang: (lang: Language) => void;
-  toggleLang: () => void;
-
-  currentUser: User;
-  currentRole: UserRole;
+  lang: Language; dir: 'rtl' | 'ltr'; setLang: (lang: Language) => void; toggleLang: () => void;
+  currentUser: User; currentRole: UserRole; authLoading: boolean;
   switchRole: (role: UserRole) => void;
-  login: (email: string, asRole?: UserRole) => void;
-  signup: (name: string, email: string) => void;
-  logout: () => void;
-  updateSolverProfile: (profile: Partial<SolverProfile>) => void;
-
+  login: (email: string, password: string) => Promise<User>;
+  signup: (name: string, email: string, password: string, accountType: AccountType) => Promise<User>;
+  logout: () => Promise<void>; refreshAuth: () => Promise<void>;
+  updateSolverProfile: (profile: Partial<SolverProfile>) => Promise<void>;
+  updateCompanyProfile: (profile: Partial<CompanyProfile>) => Promise<void>;
   questions: Question[];
   addQuestion: (title: string, excerpt: string, body: string, tags: string[], code?: string) => string;
   addAnswer: (questionId: string, body: string) => void;
   toggleQuestionReaction: (questionId: string, reaction: 'helpful' | 'insight') => void;
   toggleAnswerReaction: (questionId: string, answerId: string, reaction: 'helpful' | 'insight') => void;
-
-  problems: Problem[];
-  addProblemComment: (problemId: string, body: string, replyToId?: string) => void;
-
-  submissions: SolutionSubmission[];
-  submitSolution: (problemId: string, data: { summary: string; deliveryTime: string; projectUrl?: string; fileName?: string }) => void;
+  problems: Problem[]; problemsLoading: boolean; problemsError: string;
+  refreshProblems: () => Promise<void>;
+  loadProblems: (filters?: ProblemFilters) => Promise<{ items: Problem[]; total: number; page: number; limit: number }>;
+  loadProblem: (id: string) => Promise<Problem>;
+  addProblemComment: (problemId: string, body: string, replyToId?: string) => Promise<void>;
+  submissions: SolutionSubmission[]; refreshApplications: () => Promise<void>;
+  saveApplicationDraft: (problemId: string, input: ApplicationInput) => Promise<string>;
+  submitApplication: (problemId: string, input: ApplicationInput) => Promise<void>;
   calculateEligibility: (problemId: string, problemTags: string[]) => EligibilityResult;
-
-  isAuthModalOpen: boolean;
-  openAuthModal: () => void;
-  closeAuthModal: () => void;
+  isAuthModalOpen: boolean; openAuthModal: () => void; closeAuthModal: () => void;
 }
-
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+type ApiApplication = Awaited<ReturnType<typeof listMyApplications>>['items'][number];
+const mapApplication = (application: ApiApplication): SolutionSubmission => ({
+  id: application.id, problemId: application.problemId, userId: application.applicantUserId,
+  summary: application.coverMessage, deliveryTime: String(application.deliveryDays) + ' days',
+  projectUrl: application.projectUrl, fileName: application.files?.[0]?.originalName,
+  submittedAt: application.submittedAt || '',
+  rejectionReason: application.rejectionReason,
+  status: application.status === 'DRAFT' ? 'draft' : application.status === 'ACCEPTED' ? 'accepted' : application.status === 'REJECTED' ? 'rejected' : 'under_review',
+});
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLangState] = useState<Language>(() => {
-    const saved = localStorage.getItem('rexios_lang');
-    return saved === 'en' ? 'en' : 'ar';
-  });
-
+  const [lang, setLangState] = useState<Language>(() => localStorage.getItem('rexios_lang') === 'en' ? 'en' : 'ar');
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-  const setLang = (newLang: Language) => {
-    setLangState(newLang);
-    localStorage.setItem('rexios_lang', newLang);
-  };
-
-  const toggleLang = () => {
-    setLang(lang === 'ar' ? 'en' : 'ar');
-  };
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-    document.documentElement.dir = dir;
-  }, [lang, dir]);
-
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    const savedRole = localStorage.getItem('rexios_role') as UserRole;
-    return savedRole || 'visitor';
-  });
-
-  const [currentUser, setCurrentUser] = useState<User>(() => {
-    const savedUser = localStorage.getItem('rexios_user');
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser);
-      } catch {
-      }
-    }
-    return INITIAL_USERS[currentRole] || INITIAL_USERS.visitor;
-  });
-
-  const switchRole = (role: UserRole) => {
-    setCurrentRole(role);
-    const user = INITIAL_USERS[role];
-    setCurrentUser(user);
-    localStorage.setItem('rexios_role', role);
-    localStorage.setItem('rexios_user', JSON.stringify(user));
-  };
-
-  const login = (email: string, asRole: UserRole = 'member') => {
-    const base = INITIAL_USERS[asRole] || INITIAL_USERS.member;
-    const user: User = {
-      ...base,
-      email,
-      role: asRole,
-    };
-    setCurrentRole(asRole);
-    setCurrentUser(user);
-    localStorage.setItem('rexios_role', asRole);
-    localStorage.setItem('rexios_user', JSON.stringify(user));
-  };
-
-  const signup = (name: string, email: string) => {
-    const newUser: User = {
-      id: `usr_${Date.now()}`,
-      name,
-      name_en: name,
-      email,
-      role: 'member',
-      avatarChar: name.trim()[0] || 'م',
-      avatarBg: '#0B2A9E',
-    };
-    setCurrentRole('member');
-    setCurrentUser(newUser);
-    localStorage.setItem('rexios_role', 'member');
-    localStorage.setItem('rexios_user', JSON.stringify(newUser));
-  };
-
-  const logout = () => {
-    switchRole('visitor');
-  };
-
-  const updateSolverProfile = (profileData: Partial<SolverProfile>) => {
-    const existing = currentUser.solverProfile || {
-      firstName: '',
-      lastName: '',
-      educationLevel: '',
-      institutionMajor: '',
-      experienceLevel: '',
-      skills: [],
-      completenessPercent: 0,
-    };
-
-    const updatedProfile: SolverProfile = {
-      ...existing,
-      ...profileData,
-      completenessPercent: 100,
-    };
-
-    const updatedUser: User = {
-      ...currentUser,
-      role: 'solver',
-      solverProfile: updatedProfile,
-    };
-
-    setCurrentRole('solver');
-    setCurrentUser(updatedUser);
-    localStorage.setItem('rexios_role', 'solver');
-    localStorage.setItem('rexios_user', JSON.stringify(updatedUser));
-  };
-
+  const [currentUser, setCurrentUser] = useState<User>(INITIAL_USERS.visitor);
+  const [currentRole, setCurrentRole] = useState<UserRole>('visitor');
+  const [authLoading, setAuthLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>(() => {
     const saved = localStorage.getItem('rexios_questions');
-    return saved ? JSON.parse(saved) : INITIAL_QUESTIONS;
+    if (!saved) return INITIAL_QUESTIONS;
+    try { return JSON.parse(saved); } catch { return INITIAL_QUESTIONS; }
   });
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [problemsLoading, setProblemsLoading] = useState(true);
+  const [problemsError, setProblemsError] = useState('');
+  const [submissions, setSubmissions] = useState<SolutionSubmission[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const authRefreshSequence = useRef(0);
+  const currentUserIdRef = useRef(INITIAL_USERS.visitor.id);
+
+  const setSignedInIdentity = (user: User) => {
+    currentUserIdRef.current = user.id;
+    setCurrentUser(user);
+    setCurrentRole(user.role);
+  };
+
+  const setLang = (newLang: Language) => { setLangState(newLang); localStorage.setItem('rexios_lang', newLang); };
+  const toggleLang = () => setLang(lang === 'ar' ? 'en' : 'ar');
+  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = dir; }, [lang, dir]);
+  useEffect(() => { localStorage.setItem('rexios_questions', JSON.stringify(questions)); }, [questions]);
+
+  const refreshApplications = async () => {
+    if (currentRole === 'visitor' || currentRole === 'company') { setSubmissions([]); return; }
+    const requestedByUserId = currentUserIdRef.current;
+    try {
+      const page = await listMyApplications();
+      if (currentUserIdRef.current === requestedByUserId) setSubmissions(page.items.map(mapApplication));
+    } catch (error) {
+      if (currentUserIdRef.current !== requestedByUserId) return;
+      if (error instanceof ApiError && error.status === 401) setSubmissions([]);
+      else throw error;
+    }
+  };
+
+  const refreshAuth = useCallback(async () => {
+    const sequence = ++authRefreshSequence.current;
+    try {
+      const user = mapApiUser(await getCurrentUser());
+      if (sequence !== authRefreshSequence.current) return;
+      const identityChanged = currentRole === 'visitor' || user.id !== currentUser.id;
+      setSignedInIdentity(user);
+      if (identityChanged) {
+        setSubmissions([]);
+        setIsAuthModalOpen(false);
+        if (user.role !== 'company') {
+          void listMyApplications().then((page) => {
+            if (sequence === authRefreshSequence.current && currentUserIdRef.current === user.id) setSubmissions(page.items.map(mapApplication));
+          }).catch(() => undefined);
+        }
+      }
+    } catch (error) {
+      if (sequence !== authRefreshSequence.current) return;
+      if (!(error instanceof ApiError) || (error.status !== 401 && error.status !== 404)) throw error;
+      setSignedInIdentity(INITIAL_USERS.visitor); setSubmissions([]); setIsAuthModalOpen(false);
+    } finally { if (sequence === authRefreshSequence.current) setAuthLoading(false); }
+  }, [currentRole, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('rexios_questions', JSON.stringify(questions));
-  }, [questions]);
+    const revalidate = () => {
+      if (document.visibilityState === 'visible') void refreshAuth().catch(() => undefined);
+    };
+    window.addEventListener('focus', revalidate);
+    document.addEventListener('visibilitychange', revalidate);
+    return () => {
+      window.removeEventListener('focus', revalidate);
+      document.removeEventListener('visibilitychange', revalidate);
+    };
+  }, [refreshAuth]);
+
+  const refreshProblems = async () => {
+    setProblemsLoading(true); setProblemsError('');
+    try {
+      const page = await listProblems({ page: 1, limit: 50, sort: 'newest' });
+      setProblems(page.items.map(mapApiProblem));
+    } catch (error) {
+      setProblems([]);
+      setProblemsError(error instanceof Error ? error.message : 'Could not load problems.');
+    } finally { setProblemsLoading(false); }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const initialize = async () => {
+      const sequence = authRefreshSequence.current;
+      const [userResult, problemResult] = await Promise.allSettled([
+        getCurrentUser(), listProblems({ page: 1, limit: 50, sort: 'newest' }),
+      ]);
+      if (!mounted || sequence !== authRefreshSequence.current) return;
+      if (userResult.status === 'fulfilled') {
+        const user = mapApiUser(userResult.value);
+        setSignedInIdentity(user);
+        if (user.role !== 'company') {
+          const apps = await listMyApplications().catch(() => null);
+          if (mounted && apps && currentUserIdRef.current === user.id) setSubmissions(apps.items.map(mapApplication));
+        }
+      } else { setSignedInIdentity(INITIAL_USERS.visitor); }
+      if (problemResult.status === 'fulfilled') setProblems(problemResult.value.items.map(mapApiProblem));
+      else {
+        setProblems([]);
+        setProblemsError(problemResult.reason instanceof Error ? problemResult.reason.message : 'Could not load problems.');
+      }
+      if (mounted) { setAuthLoading(false); setProblemsLoading(false); }
+    };
+    void initialize();
+    return () => { mounted = false; };
+  }, []);
+
+  const setSignedInUser = (raw: User) => {
+    const user = mapApiUser(raw);
+    authRefreshSequence.current++;
+    setSignedInIdentity(user); setSubmissions([]); setAuthLoading(false);
+    void refreshProblems();
+    if (user.role !== 'company') {
+      void listMyApplications().then((page) => {
+        if (currentUserIdRef.current === user.id) setSubmissions(page.items.map(mapApplication));
+      }).catch(() => {
+        if (currentUserIdRef.current === user.id) setSubmissions([]);
+      });
+    }
+    return user;
+  };
+  const login = async (email: string, password: string) => setSignedInUser(await loginRequest(email, password));
+  const signup = async (name: string, email: string, password: string, accountType: AccountType) =>
+    setSignedInUser(await registerRequest(name, email, password, accountType));
+  const logout = async () => {
+    authRefreshSequence.current++;
+    try { await logoutRequest(); }
+    finally {
+      authRefreshSequence.current++;
+      setSignedInIdentity(INITIAL_USERS.visitor); setSubmissions([]); setProblems([]);
+      void refreshProblems();
+    }
+  };
+  const switchRole = (_role: UserRole) => { /* visible demo control; account roles are API-derived */ };
+  const updateSolverProfile = async (profile: Partial<SolverProfile>) => {
+    const requestedByUserId = currentUserIdRef.current;
+    const { completenessPercent: _completenessPercent, cvFileName: _cvFileName, ...editable } = profile;
+    const user = mapApiUser(await updateMyProfile(editable));
+    if (currentUserIdRef.current === requestedByUserId) setSignedInIdentity(user);
+  };
+  const updateCompanyProfile = async (profile: Partial<CompanyProfile>) => {
+    const requestedByUserId = currentUserIdRef.current;
+    const user = mapApiUser(await updateMyProfile(profile));
+    if (currentUserIdRef.current === requestedByUserId) setSignedInIdentity(user);
+  };
 
   const addQuestion = (title: string, excerpt: string, body: string, tags: string[], code?: string): string => {
-    const id = `q_${Date.now()}`;
+    const id = 'q_' + Date.now();
     const newQ: Question = {
-      id,
-      title,
-      title_en: title,
-      excerpt,
-      excerpt_en: excerpt,
-      body,
-      body_en: body,
-      codeSnippet: code,
-      author: currentUser.name,
-      author_en: currentUser.name_en,
-      authorAvatar: currentUser.avatarChar,
-      createdAt: 'الآن',
-      createdAt_en: 'Just now',
-      tags,
-      views: 1,
-      answersCount: 0,
-      helpfulCount: 0,
-      insightCount: 0,
-      answers: [],
+      id, title, title_en: title, excerpt, excerpt_en: excerpt, body, body_en: body, codeSnippet: code,
+      author: currentUser.name, author_en: currentUser.name_en, authorAvatar: currentUser.avatarChar,
+      createdAt: 'الآن', createdAt_en: 'Just now', tags, views: 1, answersCount: 0, helpfulCount: 0, insightCount: 0, answers: [],
     };
-    setQuestions((prev) => [newQ, ...prev]);
-    return id;
+    setQuestions((prev) => [newQ, ...prev]); return id;
   };
-
-  const addAnswer = (questionId: string, body: string) => {
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== questionId) return q;
-        const newAns = {
-          id: `ans_${Date.now()}`,
-          author: currentUser.name,
-          author_en: currentUser.name_en,
-          authorRole: currentUser.role === 'solver' ? 'خبير حلول معتمد' : 'عضو في المجتمع',
-          authorRole_en: currentUser.role === 'solver' ? 'Verified Solver' : 'Community Member',
-          authorAvatar: currentUser.avatarChar,
-          createdAt: 'الآن',
-          createdAt_en: 'Just now',
-          body,
-          body_en: body,
-          helpfulCount: 0,
-          insightCount: 0,
-        };
-        return {
-          ...q,
-          answersCount: q.answersCount + 1,
-          answers: [...q.answers, newAns],
-        };
-      })
-    );
-  };
-
+  const addAnswer = (questionId: string, body: string) => setQuestions((prev) => prev.map((q) => {
+    if (q.id !== questionId) return q;
+    const answer = {
+      id: 'ans_' + Date.now(), author: currentUser.name, author_en: currentUser.name_en,
+      authorRole: currentUser.role === 'solver' ? 'خبير حلول معتمد' : 'عضو في المجتمع',
+      authorRole_en: currentUser.role === 'solver' ? 'Verified Solver' : 'Community Member',
+      authorAvatar: currentUser.avatarChar, createdAt: 'الآن', createdAt_en: 'Just now', body, body_en: body,
+      helpfulCount: 0, insightCount: 0,
+    };
+    return { ...q, answersCount: q.answersCount + 1, answers: [...q.answers, answer] };
+  }));
   const toggleQuestionReaction = (questionId: string, reaction: 'helpful' | 'insight') => {
-    if (currentRole === 'visitor') {
-      openAuthModal();
-      return;
-    }
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== questionId) return q;
-        if (reaction === 'helpful') {
-          return { ...q, helpfulCount: q.helpfulCount + 1 };
-        } else {
-          return { ...q, insightCount: q.insightCount + 1 };
-        }
-      })
-    );
+    if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
+    setQuestions((prev) => prev.map((q) => q.id !== questionId ? q : reaction === 'helpful'
+      ? { ...q, helpfulCount: q.helpfulCount + 1 } : { ...q, insightCount: q.insightCount + 1 }));
   };
-
   const toggleAnswerReaction = (questionId: string, answerId: string, reaction: 'helpful' | 'insight') => {
-    if (currentRole === 'visitor') {
-      openAuthModal();
-      return;
-    }
-    setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id !== questionId) return q;
-        return {
-          ...q,
-          answers: q.answers.map((ans) => {
-            if (ans.id !== answerId) return ans;
-            if (reaction === 'helpful') {
-              return { ...ans, helpfulCount: ans.helpfulCount + 1 };
-            } else {
-              return { ...ans, insightCount: ans.insightCount + 1 };
-            }
-          }),
-        };
-      })
-    );
+    if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
+    setQuestions((prev) => prev.map((q) => q.id !== questionId ? q : {
+      ...q,
+      answers: q.answers.map((answer) => answer.id !== answerId ? answer : reaction === 'helpful'
+        ? { ...answer, helpfulCount: answer.helpfulCount + 1 } : { ...answer, insightCount: answer.insightCount + 1 }),
+    }));
   };
 
-  const [problems, setProblems] = useState<Problem[]>(() => {
-    const saved = localStorage.getItem('rexios_problems');
-    return saved ? JSON.parse(saved) : INITIAL_PROBLEMS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('rexios_problems', JSON.stringify(problems));
-  }, [problems]);
-
-  const addProblemComment = (problemId: string, body: string, replyToId?: string) => {
-    if (currentRole === 'visitor') {
-      openAuthModal();
-      return;
-    }
-
-    setProblems((prev) =>
-      prev.map((prob) => {
-        if (prob.id !== problemId) return prob;
-        const newComment = {
-          id: `cmt_${Date.now()}`,
-          author: currentUser.name,
-          author_en: currentUser.name_en,
-          authorAvatar: currentUser.avatarChar,
-          createdAt: 'الآن',
-          createdAt_en: 'Just now',
-          body,
-          body_en: body,
-        };
-
-        if (replyToId) {
-          return {
-            ...prob,
-            discussions: prob.discussions.map((c) => {
-              if (c.id === replyToId) {
-                return {
-                  ...c,
-                  replies: [...(c.replies || []), newComment],
-                };
-              }
-              return c;
-            }),
-          };
-        } else {
-          return {
-            ...prob,
-            discussions: [...prob.discussions, newComment],
-          };
-        }
-      })
-    );
+  const loadProblems = async (filters: ProblemFilters = {}) => {
+    setProblemsLoading(true);
+    setProblemsError('');
+    if (!filters.page || filters.page === 1) setProblems([]);
+    try {
+      const page = await listProblems(filters);
+      const items = page.items.map(mapApiProblem);
+      setProblems((current) => filters.page && filters.page > 1 ? [...current, ...items] : items);
+      return { ...page, items };
+    } catch (error) {
+      setProblems([]);
+      setProblemsError(error instanceof Error ? error.message : 'Could not load problems.');
+      throw error;
+    } finally { setProblemsLoading(false); }
   };
-
-  const [submissions, setSubmissions] = useState<SolutionSubmission[]>(() => {
-    const saved = localStorage.getItem('rexios_submissions');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('rexios_submissions', JSON.stringify(submissions));
-  }, [submissions]);
-
-  const submitSolution = (
-    problemId: string,
-    data: { summary: string; deliveryTime: string; projectUrl?: string; fileName?: string }
-  ) => {
-    const newSubmission: SolutionSubmission = {
-      id: `sub_${Date.now()}`,
-      problemId,
-      userId: currentUser.id,
-      summary: data.summary,
-      deliveryTime: data.deliveryTime,
-      projectUrl: data.projectUrl,
-      fileName: data.fileName || 'Solution_Proposal.pdf',
-      submittedAt: new Date().toISOString(),
-      status: 'under_review',
-    };
-    setSubmissions((prev) => [...prev, newSubmission]);
-
-    setProblems((prev) =>
-      prev.map((p) =>
-        p.id === problemId ? { ...p, proposalsCount: p.proposalsCount + 1 } : p
-      )
-    );
+  const loadProblem = async (id: string) => {
+    const problem = mapApiProblem(await getProblem(id));
+    setProblems((current) => [problem, ...current.filter((item) => item.id !== id)]);
+    return problem;
+  };
+  const addProblemComment = async (problemId: string, body: string, replyToId?: string) => {
+    if (currentRole === 'visitor') { setIsAuthModalOpen(true); return; }
+    await createProblemComment(problemId, body, replyToId);
+    await loadProblem(problemId);
+  };
+  const saveApplicationDraft = async (problemId: string, input: ApplicationInput) => {
+    const requestedByUserId = currentUserIdRef.current;
+    const application = await saveDraftRequest(problemId, input);
+    if (currentUserIdRef.current === requestedByUserId) {
+      setSubmissions((current) => [mapApplication(application), ...current.filter((item) => item.problemId !== problemId)]);
+      void refreshApplications().catch(() => undefined);
+    }
+    return application.id;
+  };
+  const submitApplication = async (problemId: string, input: ApplicationInput) => {
+    const requestedByUserId = currentUserIdRef.current;
+    const application = await submitRequest(problemId, input);
+    if (currentUserIdRef.current === requestedByUserId) {
+      setSubmissions((current) => [mapApplication(application), ...current.filter((item) => item.problemId !== problemId)]);
+      void Promise.allSettled([refreshApplications(), refreshProblems()]);
+    }
   };
 
   const calculateEligibility = (problemId: string, problemTags: string[]): EligibilityResult => {
-    const hasSubmitted = submissions.some((s) => s.problemId === problemId);
-    if (hasSubmitted) {
-      return {
-        isEligible: true,
-        matchedSkills: [],
-        matchCount: 0,
-        totalCount: problemTags.length,
-        status: 'submitted',
-      };
-    }
-
-    if (currentRole === 'visitor') {
-      return {
-        isEligible: false,
-        matchedSkills: [],
-        matchCount: 0,
-        totalCount: problemTags.length,
-        status: 'visitor',
-      };
-    }
-
-    if (currentRole === 'member' || !currentUser.solverProfile?.skills?.length) {
-      return {
-        isEligible: false,
-        matchedSkills: [],
-        matchCount: 0,
-        totalCount: problemTags.length,
-        status: 'needs_profile',
-      };
-    }
-
-    const userSkillsUpper = (currentUser.solverProfile?.skills || []).map((s) =>
-      s.toUpperCase().trim()
-    );
-    const matched = problemTags.filter((t) =>
-      userSkillsUpper.includes(t.toUpperCase().trim())
-    );
-
-    if (matched.length > 0) {
-      return {
-        isEligible: true,
-        matchedSkills: matched,
-        matchCount: matched.length,
-        totalCount: problemTags.length,
-        status: 'eligible',
-      };
-    } else {
-      return {
-        isEligible: false,
-        matchedSkills: [],
-        matchCount: 0,
-        totalCount: problemTags.length,
-        status: 'mismatch',
-      };
-    }
+    const application = submissions.find((item) => item.problemId === problemId);
+    if (application && application.status !== 'draft') return {
+      isEligible: false, matchedSkills: [], matchCount: 0, totalCount: problemTags.length, status: 'submitted',
+    };
+    if (currentRole === 'visitor') return {
+      isEligible: false, matchedSkills: [], matchCount: 0, totalCount: problemTags.length, status: 'visitor',
+    };
+    if (currentRole === 'company') return {
+      isEligible: false, matchedSkills: [], matchCount: 0, totalCount: problemTags.length, status: 'company',
+    };
+    if (currentRole !== 'solver' || currentUser.solverProfile?.completenessPercent !== 100) return {
+      isEligible: false, matchedSkills: [], matchCount: 0, totalCount: problemTags.length, status: 'needs_profile',
+    };
+    const skills = (currentUser.solverProfile.skills || []).map((skill) => skill.trim().toUpperCase());
+    const matched = problemTags.filter((tag) => skills.includes(tag.trim().toUpperCase()));
+    return { isEligible: true, matchedSkills: matched, matchCount: matched.length, totalCount: problemTags.length, status: 'eligible' };
   };
 
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
-  return (
-    <AppContext.Provider
-      value={{
-        lang,
-        dir,
-        setLang,
-        toggleLang,
-
-        currentUser,
-        currentRole,
-        switchRole,
-        login,
-        signup,
-        logout,
-        updateSolverProfile,
-
-        questions,
-        addQuestion,
-        addAnswer,
-        toggleQuestionReaction,
-        toggleAnswerReaction,
-
-        problems,
-        addProblemComment,
-
-        submissions,
-        submitSolution,
-        calculateEligibility,
-
-        isAuthModalOpen,
-        openAuthModal,
-        closeAuthModal,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
-  );
+  const value: AppContextType = {
+    lang, dir, setLang, toggleLang, currentUser, currentRole, authLoading, switchRole,
+    login, signup, logout, refreshAuth, updateSolverProfile, updateCompanyProfile,
+    questions, addQuestion, addAnswer, toggleQuestionReaction, toggleAnswerReaction,
+    problems, problemsLoading, problemsError, refreshProblems, loadProblems, loadProblem, addProblemComment,
+    submissions, refreshApplications, saveApplicationDraft, submitApplication, calculateEligibility,
+    isAuthModalOpen, openAuthModal: () => setIsAuthModalOpen(true), closeAuthModal: () => setIsAuthModalOpen(false),
+  };
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
+  if (!context) throw new Error('useApp must be used within an AppProvider');
   return context;
 };

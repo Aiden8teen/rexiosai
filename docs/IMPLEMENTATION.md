@@ -33,3 +33,8 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 
 - Final review: Luna/max reviewed the full implementation. Important findings are being repaired: private-only edits after submissions, identity-scoped frontend caches, evidence validation, committed-mutation refresh handling, nested title fallback and relative timestamps.
 - Ruling: user requested demo password 123 and short emails; seed intentionally refreshes only known fixture account credentials, preserving ordinary accounts and all problem/application state. Cost: rerunning seed resets fixture logins to configured values.
+
+- Frontend integration and review repairs complete: auth/profile, company pages, application drafts/review/dashboards, private state keyed to identity, safe post-mutation refresh, form date/evidence handling and responsive navbar. Build/lint passed; existing Fast Refresh warning only.
+- Browser verified via Playwright MCP: no-op Google button, short demo logins, company creation/publication, draft persistence on reload, submission, review/acceptance.
+- Ruling: packaged Compose uses project rexios-demo, separate from development rexios, so verification cannot mix databases or file volumes. Cost: a small separate demo database volume.
+- Deferred minor: original standalone marketing/verification wording remains as requested by UI-preservation scope; docs describe actual implemented capabilities.

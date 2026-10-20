@@ -37,7 +37,7 @@ The frontend is available at http://localhost:5173; the API listens on port 3000
 
 ## Packaged demo with Docker Compose
 
-The packaged setup builds the React files with node:24-bookworm-slim, serves them from the cached caddy:2.11.4-alpine image, and uses postgres:18-alpine. Compose publishes the web service on port 8080 by default. The API and database stay private on the Compose network. PostgreSQL data and uploaded files use named volumes.
+The packaged setup builds the React files with node:24-bookworm-slim, serves them from the cached caddy:2.11.4-alpine image, and uses postgres:18-alpine. Compose publishes the web service on port 8080 by default. The API and database stay private on the Compose network. PostgreSQL data and uploaded files use named volumes. The packaged project is named rexios-demo; development uses rexios, so their databases/uploads stay separate.
 
 Copy .env.example to .env. Replace SESSION_SECRET and POSTGRES_PASSWORD with long random hex values before hosting. One way to generate a value is:
 
@@ -91,4 +91,25 @@ Run the seed command to create these accounts. Their initial password is the val
 | s@demo.test | Talent |
 | m@demo.test | Talent |
 
-These identities and sample records are for demonstrations only. They do not represent real companies, users, submissions, or adoption. Change the seeded password before sharing a hosted demo.
+These identities and sample records are for demonstrations. Customize DEMO_PASSWORD if desired; the short default is intentional for the course demo.
+
+## Focused verification
+
+Create a separate integration-test database once:
+
+    docker compose exec -T db psql -U rexios -d rexios -c "CREATE DATABASE rexios_test"
+
+Set TEST_DATABASE_URL in server/.env to that database, then run:
+
+    npm run api:build
+    npm run api:test:integration
+    npm run build
+    npm run lint
+
+The tests require a database name ending in _test and apply migrations without resetting existing application databases. They check account ownership, drafts, concurrent decisions, file permissions, seed preservation, and restart persistence.
+
+With the development API running, npm run smoke:mvp creates a small synthetic company/talent workflow and leaves its closed problem visible. To check the packaged version in PowerShell:
+
+    $env:SMOKE_BASE_URL = 'http://localhost:8080'
+    npm run smoke:mvp
+    Remove-Item Env:SMOKE_BASE_URL

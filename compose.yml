@@ -3,15 +3,15 @@ services:
   db:
     image: postgres:18-alpine
     environment:
-      POSTGRES_USER: rexios
+      POSTGRES_USER: ${POSTGRES_USER:-rexios}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rexios_local}
-      POSTGRES_DB: rexios
+      POSTGRES_DB: ${POSTGRES_DB:-rexios}
     ports:
       - "127.0.0.1:5438:5432"
     volumes:
       - database:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rexios -d rexios"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 3s
       timeout: 3s
       retries: 20

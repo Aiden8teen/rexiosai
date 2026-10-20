@@ -4,6 +4,13 @@ import { randomUUID } from 'node:crypto';
 const base = (process.env.SMOKE_BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const origin = process.env.SMOKE_ORIGIN || new URL(base).origin;
 const marker = randomUUID().slice(0, 8);
+// A local compiler/watch restart may still be opening the listening socket.
+let ready = false;
+for (let attempt = 0; attempt < 40; attempt++) {
+  try { if ((await fetch(`${base}/api/health`)).ok) { ready = true; break; } } catch { /* startup */ }
+  await new Promise(resolve => setTimeout(resolve, 250));
+}
+assert.ok(ready, `API did not become ready at ${base}`);
 function client() {
   let cookie = '';
   return async (path, method = 'GET', body, expected = 200) => {
