@@ -25,3 +25,10 @@ dist-ssr
 *.png
 .playwright-mcp
 *.zip
+
+# Backend local configuration and uploads
+.env
+.env.*
+!.env.example
+server/uploads/
+.superpowers/
