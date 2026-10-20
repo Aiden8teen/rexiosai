@@ -26,7 +26,7 @@ Seed the demo accounts and sample records when desired:
 
     npm run db:seed
 
-Seeding is an explicit operation. It is safe to rerun and does not overwrite existing user edits or decisions.
+Seeding is an explicit operation. It preserves problem edits, deadlines and application decisions. As requested, rerunning the demo seed resets only known fixture accounts to the configured short email/password; ordinary registered accounts are untouched.
 
 Run the API and frontend in separate terminals:
 
@@ -80,15 +80,15 @@ The down command keeps both named volumes. Do not add -v when you want to retain
 
 ## Demo accounts
 
-Run the seed command to create these accounts. Their initial password is the value of DEMO_PASSWORD, which defaults to RexiosDemo123!.
+Run the seed command to create these accounts. Their initial password is the value of DEMO_PASSWORD, which defaults to 123.
 
 | Email | Account type |
 | --- | --- |
-| company@rexios.demo | Company |
-| company2@rexios.demo | Company |
-| company3@rexios.demo | Company |
-| company4@rexios.demo | Company |
-| solver@rexios.demo | Talent |
-| member@rexios.demo | Talent |
+| c@demo.test | Company |
+| c2@demo.test | Company |
+| c3@demo.test | Company |
+| c4@demo.test | Company |
+| s@demo.test | Talent |
+| m@demo.test | Talent |
 
 These identities and sample records are for demonstrations only. They do not represent real companies, users, submissions, or adoption. Change the seeded password before sharing a hosted demo.

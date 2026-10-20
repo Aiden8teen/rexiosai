@@ -30,3 +30,6 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 
 - Task 5 backend: complete — real PDF uploads/downloads, private access, fake/empty/oversized rejection checked. API restart preserves session/decisions. Focused suite: 9 checks passed.
 - Verification storage: server dependencies occupy about 380 MiB; cached base images reused. API image adds only OpenSSL/CA packages (~9 MiB installed) needed by Prisma CLI.
+
+- Final review: Luna/max reviewed the full implementation. Important findings are being repaired: private-only edits after submissions, identity-scoped frontend caches, evidence validation, committed-mutation refresh handling, nested title fallback and relative timestamps.
+- Ruling: user requested demo password 123 and short emails; seed intentionally refreshes only known fixture account credentials, preserving ordinary accounts and all problem/application state. Cost: rerunning seed resets fixture logins to configured values.

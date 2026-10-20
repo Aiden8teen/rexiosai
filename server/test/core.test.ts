@@ -95,6 +95,9 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       assert.equal((await other(`/problems/${problemId}/applications`, 'POST', proposal)).status, 201);
       assert.equal((await outsiderCompany(`/company/problems/${problemId}/applications`)).status, 404);
       assert.equal((await company(`/problems/${problemId}`, 'PATCH', { budgetDzd: 1 })).status, 409);
+      const privateEdit = await company(`/problems/${problemId}`, 'PATCH', { privateNotes: 'Updated confidential notes after receiving applications.' });
+      assert.equal(privateEdit.status, 200, JSON.stringify(privateEdit.data));
+      assert.equal((await company(`/problems/${problemId}/private`)).data.notes, 'Updated confidential notes after receiving applications.');
     });
     await t.test('one company decision wins concurrently and dashboards agree', async () => {
       const list = await company(`/company/problems/${problemId}/applications`);
@@ -107,10 +110,13 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       assert.equal(final.data.items.filter((a: any) => a.status === 'REJECTED').length, 1);
       assert.equal((await visitor(`/problems/${problemId}`)).data.status, 'CLOSED');
       const mine = (await talent('/me/applications')).data.items.find((a: any) => a.problemId === problemId);
+      assert.ok(mine.problem.title, 'English-only content has a fallback title in Arabic views');
       assert.ok(['ACCEPTED', 'REJECTED'].includes(mine.status));
       assert.equal((await talent(`/problems/${problemId}/private`)).status, mine.status === 'ACCEPTED' ? 200 : 404);
       assert.equal((await talent(`/files/${privateFileId}`)).status, mine.status === 'ACCEPTED' ? 200 : 404);
       assert.equal((await visitor(`/problems/${problemId}/private`)).status, 401);
+      assert.equal((await company(`/problems/${problemId}`, 'PATCH', { privateNotes: '' })).status, 200);
+      assert.equal((await company(`/problems/${problemId}/private`)).data.notes, '');
     });
     await t.test('discussion belongs to one problem and logout removes identity', async () => {
       const comment = await talent(`/problems/${problemId}/comments`, 'POST', { body: 'Can you clarify the sensor requirements?' });

@@ -59,7 +59,7 @@ export class FilesService {
   }
   async upload(user: Account, dto: UploadDto, file?: Express.Multer.File) {
     if (!file || file.size === 0) throw new BadRequestException('Choose a non-empty PDF or DOCX up to 5 MiB.');
-    const name = file.originalname.split(/[\\/]/).pop()!.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 160);
+    const name = file.originalname.split(/[\\/]/).pop()!.split('').filter(char => char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127).join('').slice(0, 160);
     const pdf = /\.pdf$/i.test(name) && file.buffer.subarray(0, 5).toString() === '%PDF-';
     const docx = /\.docx$/i.test(name) && await isDocx(file.buffer);
     if (!pdf && !docx) throw new BadRequestException('The file contents must match a PDF or DOCX document.');

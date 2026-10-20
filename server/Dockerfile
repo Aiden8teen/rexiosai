@@ -4,10 +4,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 WORKDIR /app/server
 ENV NODE_ENV=development
 COPY server/package.json server/package-lock.json ./
-RUN npm ci --ignore-scripts --no-audit --no-fund
+RUN --mount=type=cache,id=rexios-npm,target=/root/.npm,sharing=locked \
+    npm ci --prefer-offline --ignore-scripts --no-audit --no-fund --fetch-retries=4
 COPY server/ ./
 RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npm run build \
-    && mkdir -p /app/uploads && chown -R node:node /app/uploads /app/server
+    && mkdir -p /app/uploads && chown node:node /app/uploads
 ENV NODE_ENV=production UPLOAD_DIR=/app/uploads
 USER node
 EXPOSE 3000

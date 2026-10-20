@@ -18,7 +18,7 @@ services:
       UPLOAD_DIR: /app/uploads
       SECURE_COOKIES: "${SECURE_COOKIES:-false}"
       TRUST_PROXY: "${TRUST_PROXY:-false}"
-      DEMO_PASSWORD: "${DEMO_PASSWORD:-RexiosDemo123!}"
+      DEMO_PASSWORD: "${DEMO_PASSWORD:-123}"
     expose:
       - "3000"
     volumes:

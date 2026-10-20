@@ -11,8 +11,8 @@ let passwordHash: string;
 const profiles = new Map<string, string>();
 async function talent(name: string, nameEn: string, id?: string, profile?: Record<string, any>) {
   const key = id || `demo-${nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
-  const email = id === 'demo-member' ? 'member@rexios.demo' : id === 'demo-solver' ? 'solver@rexios.demo' : `${key}@rexios.demo`;
-  await db.user.upsert({ where: { id: key }, update: {}, create: {
+  const email = id === 'demo-member' ? 'm@demo.test' : id === 'demo-solver' ? 's@demo.test' : `t${profiles.size}@demo.test`;
+  await db.user.upsert({ where: { id: key }, update: { email, passwordHash }, create: {
     id: key, email, passwordHash, role: 'TALENT', displayName: name, displayNameEn: nameEn,
     talent: { create: { firstName: profile?.firstName || '', lastName: profile?.lastName || '', educationLevel: profile?.educationLevel || '', institutionMajor: profile?.institutionMajor || '', experienceLevel: profile?.experienceLevel || '', skills: profile?.skills || [], githubUrl: profile?.githubUrl || '', linkedInUrl: profile?.linkedInUrl || '' } },
   } });
@@ -21,7 +21,7 @@ async function talent(name: string, nameEn: string, id?: string, profile?: Recor
 }
 
 async function main() {
- passwordHash = await hash(process.env.DEMO_PASSWORD || 'RexiosDemo123!', 12);
+ passwordHash = await hash(process.env.DEMO_PASSWORD || '123', 12);
  try {
   const member = fixtures.INITIAL_USERS.member, solver = fixtures.INITIAL_USERS.solver;
   await talent(member.name, member.name_en, 'demo-member');
@@ -33,8 +33,9 @@ async function main() {
   }
   for (const [i, source] of fixtures.INITIAL_PROBLEMS.entries()) {
     const companyId = `demo-company-${i + 1}`;
-    await db.user.upsert({ where: { id: companyId }, update: {}, create: {
-      id: companyId, email: i === 0 ? 'company@rexios.demo' : `company${i + 1}@rexios.demo`, passwordHash, role: 'COMPANY', displayName: source.companyName, displayNameEn: source.companyName_en,
+    const email = i === 0 ? 'c@demo.test' : `c${i + 1}@demo.test`;
+    await db.user.upsert({ where: { id: companyId }, update: { email, passwordHash }, create: {
+      id: companyId, email, passwordHash, role: 'COMPANY', displayName: source.companyName, displayNameEn: source.companyName_en,
       company: { create: { name: source.companyName, nameEn: source.companyName_en } },
     } });
     if (await db.problem.findUnique({ where: { id: source.id } })) continue;

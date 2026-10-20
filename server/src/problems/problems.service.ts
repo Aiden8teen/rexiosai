@@ -10,10 +10,10 @@ export class ProblemsService {
   constructor(private readonly db: PrismaService) {}
   async owned(user: Account, id: string) {
     requireRole(user, 'COMPANY');
-    const problem = await this.db.problem.findFirst({ where: { id, companyUserId: user.id }, include: { privateDetails: true, files: { select: { id: true, originalName: true, purpose: true, byteSize: true } } } });
+    const problem = await this.db.problem.findFirst({ where: { id, companyUserId: user.id }, include: { privateDetails: true, _count: { select: { applications: { where: { status: { not: 'DRAFT' } } } } }, files: { select: { id: true, originalName: true, purpose: true, byteSize: true } } } });
     if (!problem) throw new NotFoundException('Problem not found.');
-    const { privateDetails, ...data } = problem;
-    return { ...data, privateNotes: privateDetails?.notes || '' };
+    const { privateDetails, _count, ...data } = problem;
+    return { ...data, privateNotes: privateDetails?.notes || '', applicationsCount: _count.applications };
   }
   async publicOne(id: string) {
     const p = await this.db.problem.findFirst({ where: { id, status: { not: 'DRAFT' } }, include: problemInclude });
@@ -49,7 +49,9 @@ export class ProblemsService {
     await this.owned(user, id);
     await this.db.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM "Problem" WHERE id = ${id} FOR UPDATE`;
-      if (await tx.application.count({ where: { problemId: id, status: { not: 'DRAFT' } } }) && Object.keys(input).some(k => k !== 'privateNotes')) throw new ConflictException('The brief is fixed after applications are submitted.');
+      const lockedProblem = await tx.problem.findUniqueOrThrow({ where: { id } });
+      const briefFixed = lockedProblem.status === 'CLOSED' || await tx.application.count({ where: { problemId: id, status: { not: 'DRAFT' } } }) > 0;
+      if (briefFixed && Object.entries(input).some(([key, value]) => value !== undefined && key !== 'privateNotes')) throw new ConflictException('The brief is fixed after applications are submitted or the problem is closed.');
       await tx.problem.update({ where: { id }, data: this.data(input) });
     });
     return this.owned(user, id);

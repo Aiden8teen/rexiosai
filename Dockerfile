@@ -2,7 +2,8 @@ FROM node:24-bookworm-slim AS frontend-build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN --mount=type=cache,id=rexios-npm,target=/root/.npm,sharing=locked \
+    npm ci --prefer-offline --ignore-scripts --no-audit --no-fund --fetch-retries=4
 
 COPY index.html vite.config.ts tsconfig*.json ./
 COPY src ./src

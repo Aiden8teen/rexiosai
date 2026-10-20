@@ -5,7 +5,7 @@
   "engines": { "node": ">=24 <25" },
   "scripts": {
     "build": "prisma generate && tsc -p tsconfig.json",
-    "dev": "node --watch --env-file=.env dist/main.js",
+    "dev": "node scripts/dev.mjs",
     "start": "node dist/main.js",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",

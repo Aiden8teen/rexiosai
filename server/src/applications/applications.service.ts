@@ -22,7 +22,9 @@ const applicationInclude = {
   files: { select: { id: true, originalName: true, byteSize: true } },
 } as const;
 type LoadedApplication = Prisma.ApplicationGetPayload<{ include: typeof applicationInclude }>;
-function presentApplication(a: LoadedApplication) { return { ...a, applicant: presentUser(a.applicant, false) }; }
+function presentApplication(a: LoadedApplication) {
+  return { ...a, problem: { ...a.problem, title: a.problem.title || a.problem.titleEn, titleEn: a.problem.titleEn || a.problem.title }, applicant: presentUser(a.applicant, false) };
+}
 
 @Injectable()
 export class ApplicationsService {

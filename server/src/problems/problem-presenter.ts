@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { relativeTime } from '../common/relative-time';
 export const problemInclude = {
   company: { select: { displayName: true, displayNameEn: true } },
   _count: { select: { applications: { where: { status: { not: 'DRAFT' as const } } } } },
@@ -7,10 +8,7 @@ export const problemInclude = {
 } as const;
 type LoadedProblem = Prisma.ProblemGetPayload<{ include: typeof problemInclude }>;
 export function presentProblem(p: LoadedProblem) {
-  const relative = (time: Date, locale: string) => {
-    const days = Math.floor((time.getTime() - Date.now()) / 86400000);
-    return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(days, 'day');
-  };
+  const relative = relativeTime;
   const comment = (c: LoadedProblem['comments'][number]): any => ({ id: c.id, author: c.author.displayName, author_en: c.author.displayNameEn, isCompany: c.author.role === 'COMPANY', authorAvatar: c.author.displayName[0], createdAt: relative(c.createdAt, 'ar'), createdAt_en: relative(c.createdAt, 'en'), body: c.body, body_en: c.bodyEn || c.body, replies: p.comments.filter(r => r.parentId === c.id).map(comment) });
   const days = p.deadlineAt ? Math.max(0, Math.ceil((p.deadlineAt.getTime() - Date.now()) / 86400000)) : 0;
   return {
