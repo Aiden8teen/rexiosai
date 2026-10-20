@@ -3,7 +3,7 @@ import { ArrayMaxSize, IsArray, IsBoolean, IsEmail, IsIn, IsOptional, IsString, 
 import { PrismaService, accountInclude } from '../database/prisma.service';
 import { AuthRequest, SessionGuard } from '../common/http';
 import { presentUser } from '../common/present-user';
-export const SKILLS = ['IOT', 'EMBEDDED', 'PYTHON', 'AI/ML', 'ROBOTICS', 'REACT', 'SQL', 'BACKEND', 'C', 'C++', 'JavaScript', 'Arduino'];
+import { SKILLS } from '../common/skills';
 
 class TalentProfileDto {
   @IsOptional() @IsString() @Length(0, 100) firstName?: string;

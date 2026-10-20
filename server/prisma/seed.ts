@@ -31,6 +31,34 @@ async function main() {
       if (!profiles.has(person.author_en)) await talent(person.author, person.author_en);
     }
   }
+  // Insert each fixture independently; reseeding never restores removed reactions
+  // or overwrites edits, timestamps or an author's accepted-answer decision.
+  for (const [i, question] of fixtures.INITIAL_QUESTIONS.entries()) {
+    const existing = await db.communityQuestion.findUnique({ where: { id: question.id } });
+    const createdAt = new Date(Date.now() - (i + 1) * 86400000);
+    const authorUserId = profiles.get(question.author_en)!;
+    if (!existing) {
+      await db.communityQuestion.create({ data: {
+        id: question.id, authorUserId, title: question.title, titleEn: question.title_en,
+        body: question.body, bodyEn: question.body_en, codeSnippet: question.codeSnippet,
+        tags: question.tags, createdAt, lastActivityAt: createdAt,
+      } });
+      const voter = ['demo-member', 'demo-solver'].find(id => id !== authorUserId)!;
+      await db.communityQuestionReaction.create({ data: { targetId: question.id, userId: voter, kind: 'HELPFUL' } });
+    }
+    for (const [j, answer] of question.answers.entries()) {
+      const id = `${question.id}-${answer.id}`;
+      if (await db.communityAnswer.findUnique({ where: { id } })) continue;
+      const answerAuthor = profiles.get(answer.author_en)!;
+      await db.communityAnswer.create({ data: { id, questionId: question.id, authorUserId: answerAuthor, body: answer.body, bodyEn: answer.body_en, createdAt: new Date(createdAt.getTime() + (j + 1) * 3600000) } });
+      const voter = ['demo-member', 'demo-solver'].find(id => id !== answerAuthor)!;
+      await db.communityAnswerReaction.create({ data: { targetId: id, userId: voter, kind: 'INSIGHT' } });
+    }
+    if (!existing) {
+      const accepted = question.answers.find((answer: any) => answer.isVerified);
+      await db.communityQuestion.update({ where: { id: question.id }, data: { acceptedAnswerId: accepted ? `${question.id}-${accepted.id}` : null, lastActivityAt: new Date(createdAt.getTime() + question.answers.length * 3600000) } });
+    }
+  }
   for (const [i, source] of fixtures.INITIAL_PROBLEMS.entries()) {
     const companyId = `demo-company-${i + 1}`;
     const email = i === 0 ? 'c@demo.test' : `c${i + 1}@demo.test`;

@@ -1,6 +1,6 @@
 import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, IsArray, IsDateString, IsIn, IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
-import { SKILLS } from '../profiles/profiles.controller';
+import { SKILLS } from '../common/skills';
 export class ProblemDto {
   @IsOptional() @IsString() @Length(0, 160) title?: string;
   @IsOptional() @IsString() @Length(0, 160) titleEn?: string;

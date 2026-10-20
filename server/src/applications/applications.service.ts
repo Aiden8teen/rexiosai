@@ -5,6 +5,7 @@ import { Account, accountInclude, PrismaService } from '../database/prisma.servi
 import { requireRole } from '../common/http';
 import { presentUser, profileCompleteness } from '../common/present-user';
 import { ListDto } from '../problems/problem.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export class ApplicationDto {
   @IsOptional() @IsString() @Length(0, 20000) coverMessage?: string;
@@ -28,7 +29,7 @@ function presentApplication(a: LoadedApplication) {
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(private readonly db: PrismaService, private readonly notifications: NotificationsService) {}
   async save(user: Account, id: string, input: ApplicationDto, submit: boolean) {
     requireRole(user, 'TALENT');
     if (submit && profileCompleteness(user.talent) !== 100) throw new BadRequestException('Complete your solver profile before applying.');
@@ -44,6 +45,7 @@ export class ApplicationsService {
       data.coverMessage = data.coverMessage.trim();
       if (submit && (data.coverMessage.split(/\s+/).filter(Boolean).length < 10 || !data.consent)) throw new BadRequestException('Write at least 10 words and confirm ownership before submitting.');
       const result = await tx.application.upsert({ where, create: { ...data, problemId: id, applicantUserId: user.id, status: submit ? 'UNDER_REVIEW' : 'DRAFT', submittedAt: submit ? new Date() : null }, update: { ...data, ...(submit ? { status: 'UNDER_REVIEW', submittedAt: new Date() } : {}) }, include: applicationInclude });
+      if (submit) await this.notifications.record(tx, [{ actorUserId: user.id, recipientUserId: p.companyUserId, type: 'APPLICATION_RECEIVED', eventKey: `APPLICATION_RECEIVED:${result.id}`, problemId: p.id }]);
       return presentApplication(result);
     });
   }
@@ -71,10 +73,17 @@ export class ApplicationsService {
       const application = await tx.application.findUniqueOrThrow({ where: { id } });
       if (problem.status !== 'OPEN' || application.status !== 'UNDER_REVIEW') throw new ConflictException('This application has already been decided or the problem is closed.');
       const result = await tx.application.update({ where: { id }, data: { status: input.decision, decidedAt: new Date(), rejectionReason: input.decision === 'REJECTED' ? input.reason?.trim() || null : null, decisionCode: input.decision === 'REJECTED' ? 'MANUAL_REJECTION' : 'SELECTED' }, include: applicationInclude });
+      const affectedApplicants = input.decision === 'ACCEPTED'
+        ? await tx.application.findMany({ where: { problemId: problem.id, status: 'UNDER_REVIEW', id: { not: id } }, select: { id: true, applicantUserId: true } })
+        : [];
       if (input.decision === 'ACCEPTED') {
         await tx.problem.update({ where: { id: problem.id }, data: { status: 'CLOSED', acceptedApplicationId: id } });
         await tx.application.updateMany({ where: { problemId: problem.id, status: 'UNDER_REVIEW', id: { not: id } }, data: { status: 'REJECTED', rejectionReason: 'Another applicant was selected for this problem.', decisionCode: 'OTHER_APPLICANT_SELECTED', decidedAt: new Date() } });
       }
+      await this.notifications.record(tx, [
+        { actorUserId: user.id, recipientUserId: application.applicantUserId, type: 'APPLICATION_DECIDED', eventKey: `APPLICATION_DECIDED:${application.id}`, problemId: problem.id },
+        ...affectedApplicants.map(affected => ({ actorUserId: user.id, recipientUserId: affected.applicantUserId, type: 'APPLICATION_DECIDED' as const, eventKey: `APPLICATION_DECIDED:${affected.id}`, problemId: problem.id })),
+      ]);
       return presentApplication(result);
     });
   }

@@ -22,6 +22,18 @@ test('seed is repeatable and preserves edited fixture data', async () => {
     assert.equal((await db.query('SELECT title FROM "Problem" WHERE id=$1', ['p1'])).rows[0].title, 'Preserved company edit');
     assert.equal((await db.query('SELECT "deadlineAt" FROM "Problem" WHERE id=$1', ['p1'])).rows[0].deadlineAt.toISOString(), originalDeadline);
     assert.equal((await db.query('SELECT "rejectionReason" FROM "Application" WHERE id=$1', ['seed-application-p1'])).rows[0].rejectionReason, 'Preserve this review decision');
+    assert.equal((await db.query('SELECT count(*) FROM "CommunityQuestion" WHERE id IN (\'q1\',\'q2\',\'q3\')')).rows[0].count, '3');
+    await db.query('UPDATE "CommunityQuestion" SET title=$1, "acceptedAnswerId"=NULL WHERE id=\'q1\'', ['Edited community fixture']);
+    await db.query('DELETE FROM "CommunityQuestionReaction" WHERE "targetId"=\'q1\'');
+    const activity = (await db.query('SELECT "lastActivityAt" FROM "CommunityQuestion" WHERE id=\'q1\'')).rows[0].lastActivityAt.toISOString();
+    const notificationCount = (await db.query('SELECT count(*) FROM "Notification"')).rows[0].count;
+    runSeed();
+    const question = (await db.query('SELECT title, "acceptedAnswerId", "lastActivityAt" FROM "CommunityQuestion" WHERE id=\'q1\'')).rows[0];
+    assert.equal(question.title, 'Edited community fixture');
+    assert.equal(question.acceptedAnswerId, null);
+    assert.equal(question.lastActivityAt.toISOString(), activity);
+    assert.equal((await db.query('SELECT count(*) FROM "CommunityQuestionReaction" WHERE "targetId"=\'q1\'')).rows[0].count, '0');
+    assert.equal((await db.query('SELECT count(*) FROM "Notification"')).rows[0].count, notificationCount);
     assert.ok(!readFileSync('prisma/seed.ts', 'utf8').includes('deleteMany'));
   } finally { await db.end(); }
 });

@@ -4,10 +4,11 @@ import { Account, PrismaService } from '../database/prisma.service';
 import { requireRole } from '../common/http';
 import { ListDto, ProblemDto } from './problem.dto';
 import { presentProblem, problemInclude } from './problem-presenter';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ProblemsService {
-  constructor(private readonly db: PrismaService) {}
+  constructor(private readonly db: PrismaService, private readonly notifications: NotificationsService) {}
   async owned(user: Account, id: string) {
     requireRole(user, 'COMPANY');
     const problem = await this.db.problem.findFirst({ where: { id, companyUserId: user.id }, include: { privateDetails: true, _count: { select: { applications: { where: { status: { not: 'DRAFT' } } } } }, files: { select: { id: true, originalName: true, purpose: true, byteSize: true } } } });
@@ -77,8 +78,10 @@ export class ProblemsService {
       await tx.$queryRaw`SELECT id FROM "Problem" WHERE id = ${id} FOR UPDATE`;
       const p = await tx.problem.findUniqueOrThrow({ where: { id } });
       if (p.status !== 'OPEN') throw new ConflictException('Only an open problem can be closed.');
+      const affectedApplicants = await tx.application.findMany({ where: { problemId: id, status: 'UNDER_REVIEW' }, select: { id: true, applicantUserId: true } });
       await tx.problem.update({ where: { id }, data: { status: 'CLOSED' } });
       await tx.application.updateMany({ where: { problemId: id, status: 'UNDER_REVIEW' }, data: { status: 'REJECTED', rejectionReason: 'The company closed this problem.', decisionCode: 'PROBLEM_CLOSED', decidedAt: new Date() } });
+      await this.notifications.record(tx, affectedApplicants.map(application => ({ actorUserId: user.id, recipientUserId: application.applicantUserId, type: 'APPLICATION_DECIDED' as const, eventKey: `APPLICATION_DECIDED:${application.id}`, problemId: id })));
     });
     return this.publicOne(id);
   }

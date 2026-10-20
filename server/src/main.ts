@@ -17,13 +17,20 @@ import { ApplicationsController } from './applications/applications.controller';
 import { ApplicationsService } from './applications/applications.service';
 import { CommentsController } from './comments/comments.controller';
 import { FilesController, FilesService } from './files/files.controller';
+import { CommunityController } from './community/community.controller';
+import { CommunityService } from './community/community.service';
+import { MetaController } from './meta/meta.controller';
+import { NotificationsController } from './notifications/notifications.controller';
+import { NotificationsService } from './notifications/notifications.service';
+import { PublicController } from './public/public.controller';
+import { PublicService } from './public/public.service';
 
 @Controller('health')
 class HealthController {
   constructor(private readonly db: PrismaService) {}
   @Get() async health() { await this.db.$queryRaw`SELECT 1`; return { status: 'ok' }; }
 }
-@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController, FilesController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService, FilesService] })
+@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController, FilesController, CommunityController, MetaController, NotificationsController, PublicController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService, FilesService, CommunityService, NotificationsService, PublicService] })
 class AppModule {}
 
 export async function bootstrap(port = Number(process.env.PORT || 3000)) {

@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { PrismaService, Account, accountInclude } from '../database/prisma.service';
-declare module 'express-session' { interface SessionData { userId?: string } }
+declare module 'express-session' { interface SessionData { userId?: string; communityVisitorId?: string } }
 export type AuthRequest = Request & { user: Account };
 
 @Injectable()
