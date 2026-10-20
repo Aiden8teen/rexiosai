@@ -57,7 +57,7 @@ Set WEB_BIND=0.0.0.0 only when you intend to expose the web port directly. WEB_P
 Build the API and web images, start PostgreSQL, and apply the schema:
 
     docker compose -f compose.yml -f compose.demo.yml build api web
-    docker compose -f compose.yml -f compose.demo.yml up -d db
+    docker compose -f compose.yml -f compose.demo.yml up -d --wait db
     docker compose -f compose.yml -f compose.demo.yml run --rm --no-deps api npm run db:migrate
 
 Seed the sample content once if you want the demo accounts:

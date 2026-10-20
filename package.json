@@ -11,7 +11,7 @@
     "api:build": "npm --prefix server run build",
     "api:dev": "npm --prefix server run build && npm --prefix server run dev",
     "api:test:integration": "npm --prefix server run test:integration",
-    "db:up": "docker compose up -d db",
+    "db:up": "docker compose up -d --wait db",
     "db:migrate": "npm --prefix server run db:migrate",
     "db:seed": "npm --prefix server run db:seed",
     "smoke:mvp": "node scripts/smoke-mvp.mjs"

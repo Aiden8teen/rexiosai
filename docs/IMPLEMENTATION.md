@@ -16,11 +16,11 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 ## Progress
 
 - Task 1: complete — migrations and seed applied; seed preservation integration test passed; API TypeScript build passed.
-- Task 2: pending — auth/profile integration.
-- Task 3: pending — posting/browsing.
-- Task 4: pending — applications/review/dashboards.
-- Task 5: pending — discussions/private files.
-- Task 6: pending — packaging/browser verification/docs.
+- Task 2: complete — persistent auth/profile integration and short fixture logins.
+- Task 3: complete — company drafts/publication, public browsing and filters.
+- Task 4: complete — draft/submitted applications, review decisions and both dashboards.
+- Task 5: complete — persisted discussions, contact opt-in and permission-checked private files.
+- Task 6: complete — packaged runtime, browser verification, focused checks and setup documentation.
 
 - Task 2 backend: complete — registration/login/logout and own-profile validation passed real HTTP checks.
 - Task 3 backend: complete — publishing, private drafts, bilingual fallback and filtering passed.
@@ -31,10 +31,21 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 - Task 5 backend: complete — real PDF uploads/downloads, private access, fake/empty/oversized rejection checked. API restart preserves session/decisions. Focused suite: 9 checks passed.
 - Verification storage: server dependencies occupy about 380 MiB; cached base images reused. API image adds only OpenSSL/CA packages (~9 MiB installed) needed by Prisma CLI.
 
-- Final review: Luna/max reviewed the full implementation. Important findings are being repaired: private-only edits after submissions, identity-scoped frontend caches, evidence validation, committed-mutation refresh handling, nested title fallback and relative timestamps.
+- Final review: Luna/max reviewed the full implementation. Important findings repaired and verified: private-only edits after submissions, identity-scoped frontend caches, evidence validation, committed-mutation refresh handling, nested title fallback and relative timestamps.
 - Ruling: user requested demo password 123 and short emails; seed intentionally refreshes only known fixture account credentials, preserving ordinary accounts and all problem/application state. Cost: rerunning seed resets fixture logins to configured values.
 
 - Frontend integration and review repairs complete: auth/profile, company pages, application drafts/review/dashboards, private state keyed to identity, safe post-mutation refresh, form date/evidence handling and responsive navbar. Build/lint passed; existing Fast Refresh warning only.
 - Browser verified via Playwright MCP: no-op Google button, short demo logins, company creation/publication, draft persistence on reload, submission, review/acceptance.
 - Ruling: packaged Compose uses project rexios-demo, separate from development rexios, so verification cannot mix databases or file volumes. Cost: a small separate demo database volume.
 - Deferred minor: original standalone marketing/verification wording remains as requested by UI-preservation scope; docs describe actual implemented capabilities.
+
+## Final verification
+
+- API and frontend production builds passed; lint passed with one Fast Refresh export warning in AppContext.tsx.
+- All 10 focused integration checks passed against the separate test database. Coverage includes ownership, private files and real bytes, duplicate/concurrent decisions, seed preservation and session persistence.
+- Native and packaged HTTP smoke workflows passed: registration/profile, publication, comments, draft/submission, acceptance, dashboards, private details and logout.
+- Playwright MCP verified the full company/talent flow, cross-account private-state clearing, private edits after acceptance, English/Arabic layouts and narrow-screen overflow.
+- Docker API and database restart preserved the session identity, seeded records and uploaded private PDF bytes; anonymous download remained rejected.
+- Corrected first-start ordering: development and packaged database startup now waits for PostgreSQL health before migration commands.
+- Reused cached base images, avoided a worktree/dependency duplicate, and removed obsolete images created during this task. No external deployment or push performed.
+- AI/agent features remain future work; deferred OAuth/recovery/preview controls remain visible no-ops as requested. Work stays on feat/core-mvp.
