@@ -40,8 +40,8 @@ Industrial facilities post real operational challenges with financial bounties (
 
 ```bash
 # Clone the repository
-git clone https://github.com/moh321min-boop/rexios.ai-project.git
-cd rexios.ai-project
+
+
 
 # Install dependencies
 npm install
