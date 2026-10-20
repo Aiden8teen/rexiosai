@@ -21,3 +21,9 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 - Task 4: pending — applications/review/dashboards.
 - Task 5: pending — discussions/private files.
 - Task 6: pending — packaging/browser verification/docs.
+
+- Task 2 backend: complete — registration/login/logout and own-profile validation passed real HTTP checks.
+- Task 3 backend: complete — publishing, private drafts, bilingual fallback and filtering passed.
+- Task 4 backend: complete — duplicate submissions and concurrent winner decisions passed; 7 integration checks green.
+- Ruling: independent frontend and deployment file tasks delegated to GPT-6 Luna/max while root owns the API; commits are serialized by root after one shared-index overlap. Cost: final cross-layer verification is required.
+- Ruling: use cached Caddy instead of Nginx for identical SPA/API proxy duties. Cost: deployment configuration is a Caddyfile.

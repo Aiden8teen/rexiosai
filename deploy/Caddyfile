@@ -1,14 +1,21 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+	}
+}
+
 :80 {
-  root * /srv
-  encode zstd gzip
+	root * /srv
+	encode zstd gzip
 
-  @api path /api /api/*
-  handle @api {
-    reverse_proxy api:3000
-  }
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy api:3000
+	}
 
-  handle {
-    try_files {path} /index.html
-    file_server
-  }
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
 }

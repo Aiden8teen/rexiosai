@@ -50,7 +50,7 @@ For a local packaged demo, keep APP_ORIGIN at http://localhost:8080,http://127.0
 - Set APP_ORIGIN to the exact public HTTPS origin, such as https://rexios.example.
 - Set SECURE_COOKIES=true and TRUST_PROXY=true.
 - Keep WEB_BIND=127.0.0.1 so only the host reverse proxy can reach the app, and point it at port 8080.
-- Forward the original host and HTTPS scheme through the proxy. Caddy forwards the proxy headers to the API.
+- Forward the original Host, X-Forwarded-For, and X-Forwarded-Proto headers through the host proxy. Caddy trusts those values from private-range proxies, then passes the trusted scheme to the API. Keep the web port bound to loopback so only the host proxy reaches it. If the proxy connects from outside private ranges, adjust the trusted proxy ranges in deploy/Caddyfile.
 
 Set WEB_BIND=0.0.0.0 only when you intend to expose the web port directly. WEB_PORT changes the host port. The public host or HTTPS configuration is deployment-specific.
 

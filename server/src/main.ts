@@ -10,13 +10,19 @@ import { Pool } from 'pg';
 import { DatabaseModule, PrismaService } from './database/prisma.service';
 import { ApiErrorFilter, SessionGuard } from './common/http';
 import { AuthController, AuthService } from './auth/auth.controller';
+import { ProfilesController } from './profiles/profiles.controller';
+import { ProblemsController, CompanyProblemsController } from './problems/problems.controller';
+import { ProblemsService } from './problems/problems.service';
+import { ApplicationsController } from './applications/applications.controller';
+import { ApplicationsService } from './applications/applications.service';
+import { CommentsController } from './comments/comments.controller';
 
 @Controller('health')
 class HealthController {
   constructor(private readonly db: PrismaService) {}
   @Get() async health() { await this.db.$queryRaw`SELECT 1`; return { status: 'ok' }; }
 }
-@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController], providers: [AuthService, SessionGuard] })
+@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService] })
 class AppModule {}
 
 export async function bootstrap(port = Number(process.env.PORT || 3000)) {
