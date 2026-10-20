@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-ui: 'Cairo', system-ui, -apple-system, sans-serif;
+    --font-pixel: 'Pixelify Sans', cursive;
+    --font-tag: 'Silkscreen', monospace;
+    --font-code: 'JetBrains Mono', monospace;
+
+    --color-cream-50: #FFFBF1;
+    --color-cream-100: #F8F1E1;
+    --color-cream-200: #EFE4CC;
+    --color-cream-300: #DCCDAA;
+
+    --color-ink-900: #12122B;
+    --color-ink-700: #34345A;
+    --color-ink-500: #5B5B7B;
+    --color-ink-300: #A3A3BC;
+    --color-ink-100: #E4E4EE;
+
+    --color-cobalt-900: #061A66;
+    --color-cobalt-700: #0B2A9E;
+    --color-cobalt-600: #1B3FC4;
+    --color-cobalt-200: #C9D3FF;
+    --color-cobalt-50: #EEF1FF;
+
+    --color-lime-600: #8FCC00;
+    --color-lime-400: #C6FF3D;
+    --color-lime-100: #F0FFC4;
+
+    --color-coral-600: #E5432A;
+    --color-coral-100: #FFE3DC;
+
+    --color-amber-400: #FFC53D;
+    --color-amber-100: #FFF1CC;
+
+    --color-green-600: #1E9E5A;
+    --color-green-100: #D9F5E5;
+
+    --shadow-dir: -1;
+  }
+
+  html[dir="ltr"] {
+    --shadow-dir: 1;
+  }
+
+  html[dir="rtl"] {
+    --shadow-dir: -1;
+  }
+
+  body {
+    font-family: var(--font-ui);
+    background-color: var(--color-cream-100);
+    color: var(--color-ink-900);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.font-brand {
+  font-family: var(--font-pixel), cursive;
+}
+
+.font-tag {
+  font-family: var(--font-tag), monospace;
+}
+
+.font-code {
+  font-family: var(--font-code), monospace;
+}
+
+.shadow-pixel-s {
+  box-shadow: calc(var(--shadow-dir) * 2px) 2px 0px #12122B;
+}
+
+.shadow-pixel-m {
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #12122B;
+}
+
+.shadow-pixel-l {
+  box-shadow: calc(var(--shadow-dir) * 6px) 6px 0px #12122B;
+}
+
+.shadow-pixel-accent-m {
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #C6FF3D;
+}
+
+.btn-pixel-primary {
+  background-color: #0B2A9E;
+  color: #FFFBF1;
+  border: 2px solid #12122B;
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #12122B;
+  transition: all 0.1s ease-in-out;
+}
+.btn-pixel-primary:hover:not(:disabled) {
+  background-color: #1B3FC4;
+  transform: translate(calc(var(--shadow-dir) * 2px), 2px);
+  box-shadow: calc(var(--shadow-dir) * 2px) 2px 0px #12122B;
+}
+.btn-pixel-primary:active:not(:disabled) {
+  transform: translate(calc(var(--shadow-dir) * 4px), 4px);
+  box-shadow: 0px 0px 0px #12122B;
+}
+.btn-pixel-primary:disabled {
+  background-color: #E4E4EE;
+  color: #A3A3BC;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-pixel-accent {
+  background-color: #C6FF3D;
+  color: #12122B;
+  border: 2px solid #12122B;
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #12122B;
+  transition: all 0.1s ease-in-out;
+}
+.btn-pixel-accent:hover:not(:disabled) {
+  background-color: #8FCC00;
+  transform: translate(calc(var(--shadow-dir) * 2px), 2px);
+  box-shadow: calc(var(--shadow-dir) * 2px) 2px 0px #12122B;
+}
+.btn-pixel-accent:active:not(:disabled) {
+  transform: translate(calc(var(--shadow-dir) * 4px), 4px);
+  box-shadow: 0px 0px 0px #12122B;
+}
+
+.btn-pixel-secondary {
+  background-color: #FFFBF1;
+  color: #12122B;
+  border: 2px solid #12122B;
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #12122B;
+  transition: all 0.1s ease-in-out;
+}
+.btn-pixel-secondary:hover:not(:disabled) {
+  background-color: #EFE4CC;
+  transform: translate(calc(var(--shadow-dir) * 2px), 2px);
+  box-shadow: calc(var(--shadow-dir) * 2px) 2px 0px #12122B;
+}
+.btn-pixel-secondary:active:not(:disabled) {
+  transform: translate(calc(var(--shadow-dir) * 4px), 4px);
+  box-shadow: 0px 0px 0px #12122B;
+}
+
+.card-pixel {
+  background-color: #FFFBF1;
+  border: 2px solid #12122B;
+  border-radius: 8px;
+  box-shadow: calc(var(--shadow-dir) * 4px) 4px 0px #12122B;
+}
+
+.card-pixel-sm {
+  background-color: #FFFBF1;
+  border: 2px solid #12122B;
+  border-radius: 4px;
+  box-shadow: calc(var(--shadow-dir) * 2px) 2px 0px #12122B;
+}
+
+.input-pixel {
+  background-color: #FFFBF1;
+  border: 2px solid #12122B;
+  border-radius: 4px;
+  color: #12122B;
+  padding: 10px 14px;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+.input-pixel:focus {
+  outline: 4px solid #C6FF3D;
+  outline-offset: 1px;
+}
+.input-pixel-error {
+  border-color: #E5432A;
+  background-color: #FFE3DC;
+}
+.input-pixel-error:focus {
+  outline: 4px solid #E5432A;
+}
+
+.scrim-modal {
+  background-color: rgba(18, 18, 43, 0.55);
+}
