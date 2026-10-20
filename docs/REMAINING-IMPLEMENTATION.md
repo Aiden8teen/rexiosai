@@ -20,7 +20,7 @@ User authorized implementation on 2026-10-21. Preserve the design, short demo cr
 - Community frontend: complete (Luna/max); shared feed/detail/create, exact IDs, URL filters, acceptance/reactions, canonical metadata and no runtime mock imports.
 - Notifications API/events and public statistics: complete; recipient-scoped reads, transactional events, read persistence and empty/filtered statistics verified.
 - Notification/presentation frontend: complete (Luna/max); real bell, aggregates, role-aware onboarding and deferred no-op previews.
-- Integrated HTTP/build/lint/packaged verification and final review: pending.
+- Integrated HTTP/build/lint/packaged verification and final review: complete.
 
 ## Evidence
 
@@ -31,4 +31,7 @@ User authorized implementation on 2026-10-21. Preserve the design, short demo cr
 - Final full integration run: 19 checks passed, zero failures. Frontend build and lint passed; lint reports two intentional effect-synchronization warnings and the existing Fast Refresh export warning. Vite reports a non-failing 500 kB bundle-size advisory (about 142 kB compressed).
 - Frontend review fixes: bound URL pagination and fetch one requested page; merge answer pages by ID/date; invalidate stale notification snapshots after read; keep preview error checkboxes no-ops; apply committed problem comments immediately with best-effort refresh.
 - Playwright MCP: two independent company/talent sessions created a question, posted an answer, selected it and received/read notifications; direct About aggregates and company-aware Welcome checked. Large page input generated one bounded request. Simulated post-comment refresh failure left the committed comment visible, cleared the input and showed no false error. Narrow Arabic dropdown overflow reproduced and fixed; panel now fits within 375 px.
-- Packaged API migrated and seeded with cached images; both community and marketplace smoke workflows passed at localhost:8080. New web image and packaged restart/seed persistence verification are finishing.
+- Packaged API and web images rebuilt using cached dependencies; both community and marketplace smoke workflows passed at localhost:8080. API/database restart and subsequent seed rerun preserved the same session identity, question, selected answer, reaction and notification read state.
+- Rebuilt packaged frontend manually verified through Playwright MCP: shared community cards, exact missing-question 404, protected guest Welcome redirect, short company login, account-aware Welcome and real About statistic labels. Scoped second review confirmed all five earlier findings resolved.
+- Ruling: leave the completed work on the existing feat/core-mvp branch, with local commits only. The user's existing authorization requires no merge/push approval flow. No new application dependencies, infrastructure services or browser downloads were needed.
+- Remaining deliberate exclusions: Google OAuth, password recovery, preview controls, AI/agents, payments, public profile/moderation/edit/delete workflows. Static illustrations and explanatory content remain static.

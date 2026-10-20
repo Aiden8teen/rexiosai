@@ -2,6 +2,8 @@
 
 Plan: `docs/superpowers/plans/2026-10-20-mvp-implementation.md`
 
+The 2026-10-21 follow-up integrates the standalone community, notification bell and presentation screens. Its final status and verification are recorded in `docs/REMAINING-IMPLEMENTATION.md`; the earlier local-only community limitation below is superseded by that work.
+
 User authorized continuous implementation and regular local commits on 2026-10-20. Do not push or deploy externally. Preserve the UI; deferred features (including Google OAuth) remain visible and are no-ops. Playwright MCP is authorized for later browser checks; do not use the built-in browser viewer.
 
 ## Decisions
