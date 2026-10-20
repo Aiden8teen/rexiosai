@@ -10,22 +10,31 @@ test('core HTTP workflow enforces account ownership and decision state', async t
   process.env.DATABASE_URL = url;
   execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], { env: process.env, stdio: 'pipe' });
   const { bootstrap } = require('../dist/main');
-  const { app, pool } = await bootstrap(0);
-  const base = await app.getUrl();
+  let { app, pool } = await bootstrap(0);
+  let base = await app.getUrl();
   const origin = (process.env.APP_ORIGIN || 'http://localhost:5173').split(',')[0];
   const client = () => {
     let cookie = '';
     return async (path: string, method = 'GET', body?: unknown) => {
-      const response = await fetch(`${base}/api${path}`, { method, headers: { Origin: origin, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
+      const multipart = body instanceof FormData;
+      const response = await fetch(`${base}/api${path}`, { method, headers: { Origin: origin, ...(body !== undefined && !multipart ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) }, body: body === undefined ? undefined : multipart ? body : JSON.stringify(body) });
       const setCookie = response.headers.get('set-cookie');
       if (setCookie) cookie = setCookie.split(';')[0];
-      return { status: response.status, data: await response.json() };
+      return { status: response.status, data: response.headers.get('content-type')?.includes('application/json') ? await response.json() : Buffer.from(await response.arrayBuffer()) };
     };
   };
   const company = client(), outsiderCompany = client(), talent = client(), other = client(), visitor = client();
   const suffix = randomUUID();
   const password = 'WorkingDemo123!';
   let companyId = '', problemId = '', applicationId = '';
+  let privateFileId = '', applicationFileId = '';
+  const upload = (purpose: string, parent: Record<string, string>, content = '%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n') => {
+    const form = new FormData();
+    form.set('purpose', purpose);
+    for (const [key, value] of Object.entries(parent)) form.set(key, value);
+    form.set('file', new Blob([content], { type: 'application/pdf' }), 'proposal.pdf');
+    return form;
+  };
   try {
     await t.test('auth rejects invalid credentials and sessions survive requests', async () => {
       for (const [call, kind, name] of [[company, 'COMPANY', 'Company'], [outsiderCompany, 'COMPANY', 'Other company'], [talent, 'TALENT', 'Applicant'], [other, 'TALENT', 'Other applicant']] as const) {
@@ -54,6 +63,17 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       assert.equal((await visitor('/problems?q=temperature&skill=PYTHON&difficulty=medium&minReward=40000')).data.items.some((p: any) => p.id === problemId), true);
       assert.equal((await visitor('/problems?limit=1000')).status, 400);
     });
+    await t.test('private problem files require owner access and reject fake PDFs', async () => {
+      const result = await company('/files', 'POST', upload('PROBLEM_PRIVATE', { problemId }));
+      assert.equal(result.status, 201, JSON.stringify(result.data)); privateFileId = result.data.id;
+      const download = await company(`/files/${privateFileId}`);
+      assert.equal(download.status, 200); assert.ok(download.data.toString().startsWith('%PDF-'));
+      assert.equal((await talent(`/files/${privateFileId}`)).status, 404);
+      assert.equal((await outsiderCompany(`/files/${privateFileId}`)).status, 404);
+      assert.equal((await company('/files', 'POST', upload('PROBLEM_PUBLIC', { problemId }, '<script>not a PDF</script>'))).status, 400);
+      assert.equal((await company('/files', 'POST', upload('PROBLEM_PUBLIC', { problemId }, ''))).status, 400);
+      assert.equal((await company('/files', 'POST', upload('PROBLEM_PUBLIC', { problemId }, '%PDF-' + 'x'.repeat(5 * 1024 * 1024)))).status, 413);
+    });
     await t.test('drafts are private and duplicate submission creates one application', async () => {
       for (const call of [talent, other]) {
         const profile = await call('/profiles/me', 'PATCH', { firstName: 'Demo', lastName: 'Engineer', educationLevel: 'Student', institutionMajor: 'Software engineering', experienceLevel: 'Student', skills: ['PYTHON'], githubUrl: 'https://github.com/example' });
@@ -62,10 +82,16 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       }
       const proposal = { coverMessage: 'I will build a practical monitored solution with documentation and a clear delivery plan.', deliveryDays: 10, consent: true, projectUrl: 'https://github.com/example/demo' };
       assert.equal((await talent(`/problems/${problemId}/application/draft`, 'PUT', proposal)).status, 200);
+      const draft = (await talent('/me/applications')).data.items.find((item: any) => item.problemId === problemId);
+      const file = await talent('/files', 'POST', upload('APPLICATION', { applicationId: draft.id }));
+      assert.equal(file.status, 201, JSON.stringify(file.data)); applicationFileId = file.data.id;
+      assert.equal((await company(`/files/${applicationFileId}`)).status, 404);
       assert.equal((await company(`/company/problems/${problemId}/applications`)).data.total, 0);
       const results = await Promise.all([talent(`/problems/${problemId}/applications`, 'POST', proposal), talent(`/problems/${problemId}/applications`, 'POST', proposal)]);
       assert.deepEqual(results.map(r => r.status).sort(), [201, 409]);
       applicationId = results.find(r => r.status === 201)!.data.id;
+      assert.equal((await company(`/files/${applicationFileId}`)).status, 200);
+      assert.equal((await other(`/files/${applicationFileId}`)).status, 404);
       assert.equal((await other(`/problems/${problemId}/applications`, 'POST', proposal)).status, 201);
       assert.equal((await outsiderCompany(`/company/problems/${problemId}/applications`)).status, 404);
       assert.equal((await company(`/problems/${problemId}`, 'PATCH', { budgetDzd: 1 })).status, 409);
@@ -83,6 +109,7 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       const mine = (await talent('/me/applications')).data.items.find((a: any) => a.problemId === problemId);
       assert.ok(['ACCEPTED', 'REJECTED'].includes(mine.status));
       assert.equal((await talent(`/problems/${problemId}/private`)).status, mine.status === 'ACCEPTED' ? 200 : 404);
+      assert.equal((await talent(`/files/${privateFileId}`)).status, mine.status === 'ACCEPTED' ? 200 : 404);
       assert.equal((await visitor(`/problems/${problemId}/private`)).status, 401);
     });
     await t.test('discussion belongs to one problem and logout removes identity', async () => {
@@ -92,6 +119,13 @@ test('core HTTP workflow enforces account ownership and decision state', async t
       assert.equal((await visitor(`/problems/${problemId}/comments`, 'POST', { body: 'Anonymous comment' })).status, 401);
       assert.equal((await talent('/auth/logout', 'POST')).status, 200);
       assert.equal((await talent('/auth/me')).status, 401);
+    });
+    await t.test('sessions and recorded decisions survive an API restart', async () => {
+      await app.close(); await pool.end();
+      ({ app, pool } = await bootstrap(0));
+      base = await app.getUrl();
+      assert.equal((await company('/auth/me')).data.id, companyId);
+      assert.equal((await company(`/company/problems/${problemId}/applications`)).data.items.filter((a: any) => a.status === 'ACCEPTED').length, 1);
     });
   } finally { await app.close(); await pool.end(); }
   assert.ok(companyId);

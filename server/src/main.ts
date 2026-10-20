@@ -16,13 +16,14 @@ import { ProblemsService } from './problems/problems.service';
 import { ApplicationsController } from './applications/applications.controller';
 import { ApplicationsService } from './applications/applications.service';
 import { CommentsController } from './comments/comments.controller';
+import { FilesController, FilesService } from './files/files.controller';
 
 @Controller('health')
 class HealthController {
   constructor(private readonly db: PrismaService) {}
   @Get() async health() { await this.db.$queryRaw`SELECT 1`; return { status: 'ok' }; }
 }
-@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService] })
+@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController, FilesController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService, FilesService] })
 class AppModule {}
 
 export async function bootstrap(port = Number(process.env.PORT || 3000)) {

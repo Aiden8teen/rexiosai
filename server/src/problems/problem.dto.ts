@@ -26,7 +26,7 @@ export class ListDto {
   @IsOptional() @IsString() @Length(0, 200) q?: string;
   @IsOptional() @Transform(list) @IsArray() @IsIn(SKILLS, { each: true }) skill?: string[];
   @IsOptional() @Transform(list) @IsArray() @IsIn(['small', 'medium', 'expert'], { each: true }) difficulty?: ('small' | 'medium' | 'expert')[];
-  @IsOptional() @IsIn(['BUG', 'ISSUE', 'CHALLENGE']) category?: 'BUG' | 'ISSUE' | 'CHALLENGE';
+  @IsOptional() @Transform(list) @IsArray() @IsIn(['BUG', 'ISSUE', 'CHALLENGE'], { each: true }) category?: ('BUG' | 'ISSUE' | 'CHALLENGE')[];
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(2147483647) minReward?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(2147483647) maxReward?: number;
   @IsOptional() @IsIn(['newest', 'reward', 'deadline']) sort?: 'newest' | 'reward' | 'deadline';

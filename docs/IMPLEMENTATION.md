@@ -27,3 +27,6 @@ User authorized continuous implementation and regular local commits on 2026-10-2
 - Task 4 backend: complete — duplicate submissions and concurrent winner decisions passed; 7 integration checks green.
 - Ruling: independent frontend and deployment file tasks delegated to GPT-6 Luna/max while root owns the API; commits are serialized by root after one shared-index overlap. Cost: final cross-layer verification is required.
 - Ruling: use cached Caddy instead of Nginx for identical SPA/API proxy duties. Cost: deployment configuration is a Caddyfile.
+
+- Task 5 backend: complete — real PDF uploads/downloads, private access, fake/empty/oversized rejection checked. API restart preserves session/decisions. Focused suite: 9 checks passed.
+- Verification storage: server dependencies occupy about 380 MiB; cached base images reused. API image adds only OpenSSL/CA packages (~9 MiB installed) needed by Prisma CLI.

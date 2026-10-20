@@ -25,7 +25,7 @@ export class ProblemsService {
     const words = query.q?.trim().split(/\s+/).filter(Boolean) || [];
     const where: Prisma.ProblemWhereInput = {
       ...(owner ? { companyUserId: owner.id } : { status: { not: 'DRAFT' } }),
-      ...(query.category ? { category: query.category } : {}),
+      ...(query.category?.length ? { category: { in: query.category } } : {}),
       ...(query.difficulty?.length ? { difficulty: { in: query.difficulty } } : {}),
       ...(query.skill?.length ? { skills: { hasSome: query.skill } } : {}),
       budgetDzd: { gte: query.minReward, lte: query.maxReward },
