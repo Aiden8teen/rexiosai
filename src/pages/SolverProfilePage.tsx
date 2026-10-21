@@ -4,42 +4,41 @@ import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { TagChip } from '../components/TagChip';
 import { Check, Upload, FileText, X, AlertCircle } from 'lucide-react';
-import { ALL_SKILLS_TAXONOMY } from '../data/mockData';
+import { useMetadata } from '../hooks/useMetadata';
+import { uploadFile } from '../api/files';
+import { apiErrorMessage } from '../api/client';
+import { EDUCATION_LEVEL_OPTIONS, EXPERIENCE_LEVEL_OPTIONS } from '../utils/localizedLabels';
 
 export const SolverProfilePage: React.FC = () => {
+  const { currentUser, lang } = useApp();
+  return <SolverProfileContent key={`${currentUser.id}:${lang}`} />;
+};
+
+const SolverProfileContent: React.FC = () => {
   const { lang, currentUser, updateSolverProfile } = useApp();
+  const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
   const navigate = useNavigate();
 
   const profile = currentUser.solverProfile;
 
-  const [firstName, setFirstName] = useState(profile?.firstName || 'أمين');
-  const [lastName, setLastName] = useState(profile?.lastName || 'بن علي');
+  const [firstName, setFirstName] = useState(lang === 'ar' ? profile?.firstName || '' : profile?.firstNameEn || profile?.firstName || '');
+  const [lastName, setLastName] = useState(lang === 'ar' ? profile?.lastName || '' : profile?.lastNameEn || profile?.lastName || '');
   const [educationLevel, setEducationLevel] = useState(
-    profile?.educationLevel || 'السنة الثانية — ليسانس'
+    profile?.educationLevel || ''
   );
-  const [institutionMajor, setInstitutionMajor] = useState(
-    profile?.institutionMajor || 'هندسة الحاسوب — USTHB'
-  );
+  const [institutionMajor, setInstitutionMajor] = useState(lang === 'ar' ? profile?.institutionMajor || '' : profile?.institutionMajorEn || profile?.institutionMajor || '');
   const [experienceLevel, setExperienceLevel] = useState(
-    profile?.experienceLevel || 'طالب / خريج جديد'
+    profile?.experienceLevel || ''
   );
-  const [skills, setSkills] = useState<string[]>(
-    profile?.skills?.length
-      ? profile.skills
-      : ['IOT', 'EMBEDDED', 'PYTHON', 'C']
-  );
-  const [cvFileName, setCvFileName] = useState(
-    profile?.cvFileName || 'CV-Amine-Ben-Ali.pdf'
-  );
-  const [linkedInUrl, setLinkedInUrl] = useState(
-    profile?.linkedInUrl || 'https://linkedin.com/in/amine-benali'
-  );
-  const [githubUrl, setGithubUrl] = useState(
-    profile?.githubUrl || 'https://github.com/amine-benali'
-  );
+  const [skills, setSkills] = useState<string[]>(profile?.skills || []);
+  const [cvFileName, setCvFileName] = useState(profile?.cvFileName || '');
+  const [cvFileId, setCvFileId] = useState(profile?.cvFileId || '');
+  const [linkedInUrl, setLinkedInUrl] = useState(profile?.linkedInUrl || '');
+  const [githubUrl, setGithubUrl] = useState(profile?.githubUrl || '');
 
-  const [simulateErrors, setSimulateErrors] = useState(false);
   const [submittedError, setSubmittedError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const toggleSkill = (skill: string) => {
     if (skills.includes(skill)) {
@@ -56,32 +55,49 @@ export const SolverProfilePage: React.FC = () => {
   if (institutionMajor.trim()) completedCount++;
   if (experienceLevel) completedCount++;
   if (skills.length > 0) completedCount++;
-  if (cvFileName || linkedInUrl || githubUrl) completedCount++;
+  const hasProfileEvidence = Boolean(cvFileId || linkedInUrl.trim() || githubUrl.trim());
+  if (hasProfileEvidence) completedCount++;
   const completeness = Math.min(100, Math.round((completedCount / 7) * 100));
 
-  const hasErrors = simulateErrors || submittedError;
+  const hasErrors = submittedError;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCvUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (!/\.(pdf|docx)$/i.test(file.name) || file.size <= 0 || file.size > 5 * 1024 * 1024) {
+      setApiError(lang === 'ar' ? 'اختر ملف PDF أو DOCX بحجم لا يتجاوز 5 ميغابايت.' : 'Choose a PDF or DOCX file up to 5 MB.');
+      return;
+    }
+    setApiError('');
+    try {
+      const uploaded = await uploadFile(file, 'CV');
+      await updateSolverProfile({ cvFileId: uploaded.id });
+      setCvFileId(uploaded.id);
+      setCvFileName(uploaded.originalName);
+    } catch (error) { setApiError(apiErrorMessage(error, lang)); }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (skills.length === 0 || !firstName || !lastName || !institutionMajor) {
+    if (!firstName.trim() || !lastName.trim() || !educationLevel || !institutionMajor.trim() || !experienceLevel || skills.length === 0 || !hasProfileEvidence) {
       setSubmittedError(true);
       return;
     }
 
-    updateSolverProfile({
-      firstName,
-      lastName,
+    setSaving(true); setApiError('');
+    try {
+      await updateSolverProfile({
+      ...(lang === 'ar' ? { firstName, lastName, institutionMajor } : { firstNameEn: firstName, lastNameEn: lastName, institutionMajorEn: institutionMajor }),
       educationLevel,
-      institutionMajor,
       experienceLevel,
       skills,
-      cvFileName,
+      cvFileId: cvFileId || undefined,
       linkedInUrl,
       githubUrl,
-      completenessPercent: 100,
-    });
-
-    navigate('/problems');
+      completenessPercent: completeness,
+      });
+      navigate('/problems');
+    } catch (error) { setApiError(apiErrorMessage(error, lang)); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -95,8 +111,7 @@ export const SolverProfilePage: React.FC = () => {
         <label className="flex items-center gap-2 cursor-pointer font-semibold text-[#0B2A9E]">
           <input
             type="checkbox"
-            checked={simulateErrors}
-            onChange={(e) => setSimulateErrors(e.target.checked)}
+            onChange={() => undefined}
             className="accent-[#E5432A]"
           />
           <span>
@@ -125,8 +140,8 @@ export const SolverProfilePage: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'تقديم حلول للمشكلات المدفوعة'
-                  : 'Submit solutions to paid company challenges'}
+                  ? 'تقديم مقترحات للتحديات ذات الميزانيات'
+                  : 'Submit proposals to budgeted company challenges'}
               </span>
             </div>
 
@@ -158,8 +173,8 @@ export const SolverProfilePage: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'مؤشر تطابق المهارات مع كل مشكلة'
-                  : 'Automated skill matching algorithm on each problem'}
+                  ? 'عرض تقريبي لتطابق مهاراتك مع التحديات'
+                  : 'Advisory skill overlap on challenge pages'}
               </span>
             </div>
           </div>
@@ -172,8 +187,8 @@ export const SolverProfilePage: React.FC = () => {
             </h1>
             <p className="text-xs text-[#5B5B7B]">
               {lang === 'ar'
-                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة فقط عند تقديمك حلًّا.'
-                : 'Fields marked with * are required. This information is shown to companies only when you submit a solution.'}
+                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة عند تقديم مقترح.'
+                : 'Fields marked with * are required. This information is shown to companies when you submit a proposal.'}
             </p>
           </div>
 
@@ -195,11 +210,12 @@ export const SolverProfilePage: React.FC = () => {
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>
                 {lang === 'ar'
-                  ? 'يرجى تصحيح الحقول المعلّمة بالأحمر قبل المتابعة (المهارات إلزامية).'
-                  : 'Please correct the highlighted fields before proceeding (skills are mandatory).'}
+                  ? 'أكمل جميع الحقول المطلوبة، بما فيها مهارة واحدة على الأقل وسيرة ذاتية أو رابط مهني.'
+                  : 'Complete every required group, including at least one skill and a CV or professional link.'}
               </span>
             </div>
           )}
+          {apiError && <div className="mb-6 p-3.5 bg-[#FFE3DC] border-2 border-[#E5432A] rounded-md text-xs text-[#E5432A] font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" />{apiError}</div>}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -242,14 +258,12 @@ export const SolverProfilePage: React.FC = () => {
                 <select
                   value={educationLevel}
                   onChange={(e) => setEducationLevel(e.target.value)}
-                  className="w-full input-pixel text-xs bg-[#FFFBF1]"
+                  className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !educationLevel ? 'input-pixel-error' : ''}`}
                 >
-                  <option value="السنة الأولى — ليسانس">السنة الأولى — ليسانس</option>
-                  <option value="السنة الثانية — ليسانس">السنة الثانية — ليسانس</option>
-                  <option value="السنة الثالثة — ليسانس">السنة الثالثة — ليسانس</option>
-                  <option value="ماستر 1 / 2">ماستر 1 / 2</option>
-                  <option value="مهندس دولة">مهندس دولة</option>
-                  <option value="دكتوراه">دكتوراه</option>
+                  <option value="">{lang === 'ar' ? 'اختر المستوى الدراسي' : 'Select education level'}</option>
+                  {EDUCATION_LEVEL_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option[lang]}</option>
+                  ))}
                 </select>
               </div>
 
@@ -261,7 +275,7 @@ export const SolverProfilePage: React.FC = () => {
                   type="text"
                   value={institutionMajor}
                   onChange={(e) => setInstitutionMajor(e.target.value)}
-                  placeholder="e.g. هندسة الحاسوب — USTHB"
+                  placeholder={lang === 'ar' ? 'مثال: هندسة الحاسوب — USTHB' : 'e.g. Computer Engineering — USTHB'}
                   className="w-full input-pixel text-xs"
                   required
                 />
@@ -275,20 +289,12 @@ export const SolverProfilePage: React.FC = () => {
               <select
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value)}
-                className="w-full input-pixel text-xs bg-[#FFFBF1]"
+                className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !experienceLevel ? 'input-pixel-error' : ''}`}
               >
-                <option value="طالب / خريج جديد">
-                  {lang === 'ar' ? 'طالب / خريج جديد' : 'Student / Recent Graduate'}
-                </option>
-                <option value="1–3 سنوات خبرة">
-                  {lang === 'ar' ? '1–3 سنوات خبرة' : '1–3 years experience'}
-                </option>
-                <option value="3+ سنوات خبرة">
-                  {lang === 'ar' ? '3+ سنوات خبرة' : '3+ years experience'}
-                </option>
-                <option value="خبير معتمد">
-                  {lang === 'ar' ? 'خبير معتمد' : 'Expert'}
-                </option>
+                <option value="">{lang === 'ar' ? 'اختر مستوى الخبرة' : 'Select experience level'}</option>
+                {EXPERIENCE_LEVEL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option[lang]}</option>
+                ))}
               </select>
             </div>
 
@@ -300,8 +306,8 @@ export const SolverProfilePage: React.FC = () => {
               </label>
               <p className="text-[11px] text-[#5B5B7B] mb-3">
                 {lang === 'ar'
-                  ? 'تُستخدم مهاراتك لحساب تطابقك مع كل مشكلة وتحديد أهليتك للمشاركة.'
-                  : 'Your skills drive the eligibility algorithm for company problems.'}
+                  ? 'يظهر تطابق المهارات للاستئناس فقط ولا يمنع تقديم المقترح.'
+                  : 'Your skills are shown as an advisory match on company challenge pages.'}
               </p>
 
               <div
@@ -311,7 +317,7 @@ export const SolverProfilePage: React.FC = () => {
                     : 'border-[#12122B]'
                 }`}
               >
-                {ALL_SKILLS_TAXONOMY.map((skill) => {
+                {availableSkills.map((skill) => {
                   const isSelected = skills.includes(skill);
                   return (
                     <TagChip
@@ -323,48 +329,48 @@ export const SolverProfilePage: React.FC = () => {
                     />
                   );
                 })}
+                {skillsLoading && <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}
               </div>
+              {skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{lang === 'ar' ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button></div>}
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[#12122B] mb-1.5">
-                {lang === 'ar' ? 'السيرة الذاتية (CV) *' : 'Curriculum Vitae (CV) *'}
+                  {lang === 'ar' ? 'السيرة الذاتية (CV) أو رابط مهني *' : 'Curriculum Vitae (CV) or professional link *'}
               </label>
 
-              {cvFileName ? (
+              {cvFileId ? (
                 <div className="p-4 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-[#0B2A9E]" />
                     <div>
                       <p className="text-xs font-bold text-[#12122B]">{cvFileName}</p>
                       <p className="text-[10px] text-[#1E9E5A] font-semibold">
-                        {lang === 'ar' ? '1.2MB — تم الرفع بنجاح' : '1.2MB — Uploaded'}
+                        {cvFileId ? (lang === 'ar' ? 'تم ربط الملف بالملف الشخصي' : 'File linked to your profile') : (lang === 'ar' ? 'ملف محفوظ في الملف الشخصي' : 'Saved on your profile')}
                       </p>
                     </div>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setCvFileName('')}
+                    onClick={() => undefined}
                     className="p-1 hover:text-[#E5432A] cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <div
-                  onClick={() => setCvFileName('CV-Amine-Ben-Ali.pdf')}
-                  className="p-6 bg-[#FFFBF1] border-2 border-dashed border-[#12122B] rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#EFE4CC] transition-colors"
-                >
+                <label className={`p-6 bg-[#FFFBF1] border-2 border-dashed rounded-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#EFE4CC] transition-colors ${hasErrors && !hasProfileEvidence ? 'border-[#E5432A]' : 'border-[#12122B]'}`}>
                   <Upload className="w-6 h-6 text-[#0B2A9E]" />
                   <p className="text-xs font-bold text-[#12122B]">
                     {lang === 'ar'
-                      ? 'اسحب ملف السيرة الذاتية هنا أو اضغط للاختيار'
-                      : 'Drag & drop your CV here or click to browse'}
+                      ? 'اختر ملف السيرة الذاتية أو أضف رابطًا مهنيًا أدناه'
+                      : 'Choose a CV file or add a professional link below'}
                   </p>
                   <p className="text-[10px] text-[#5B5B7B]">
-                    PDF, DOCX — Max 5MB
+                    {lang === 'ar' ? 'PDF, DOCX — الحد الأقصى 5 ميغابايت' : 'PDF, DOCX — Max 5 MB'}
                   </p>
-                </div>
+                  <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={(event) => void handleCvUpload(event.target.files?.[0])} />
+                </label>
               )}
             </div>
 
@@ -378,7 +384,7 @@ export const SolverProfilePage: React.FC = () => {
                   value={linkedInUrl}
                   onChange={(e) => setLinkedInUrl(e.target.value)}
                   placeholder="https://linkedin.com/in/username"
-                  className="w-full input-pixel text-xs"
+                  className={`w-full input-pixel text-xs ${hasErrors && !hasProfileEvidence ? 'input-pixel-error' : ''}`}
                 />
               </div>
 
@@ -391,7 +397,7 @@ export const SolverProfilePage: React.FC = () => {
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   placeholder="https://github.com/username"
-                  className="w-full input-pixel text-xs"
+                  className={`w-full input-pixel text-xs ${hasErrors && !hasProfileEvidence ? 'input-pixel-error' : ''}`}
                 />
               </div>
             </div>
@@ -399,15 +405,16 @@ export const SolverProfilePage: React.FC = () => {
             <div className="pt-4 border-t-2 border-[#12122B] flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-[#5B5B7B]">
                 {lang === 'ar'
-                  ? 'يمكنك تعديل ملفك في أي وقت من الإعدادات.'
-                  : 'You can update your profile at any time in settings.'}
+                  ? 'يمكنك تحديث ملفك من هذه الصفحة في أي وقت.'
+                  : 'You can update your profile on this page at any time.'}
               </span>
 
               <button
                 type="submit"
+                disabled={saving}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-md font-bold text-xs btn-pixel-accent cursor-pointer"
               >
-                {lang === 'ar' ? 'حفظ ملف الحلّال' : 'Save solver profile'}
+                {saving ? (lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ ملف الحلّال' : 'Save solver profile')}
               </button>
             </div>
           </form>

@@ -6,8 +6,22 @@ import { TagChip } from '../components/TagChip';
 import { Eye, UserCheck, Award, Check, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { lang, dir } = useApp();
+  const { lang, dir, currentRole } = useApp();
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const primaryTo = currentRole === 'visitor' ? '/signup' : currentRole === 'company' ? '/company/problems' : currentRole === 'solver' ? '/problems' : '/profile/solver';
+  const primaryLabel = currentRole === 'visitor'
+    ? (lang === 'ar' ? 'ابدأ الآن' : 'Get started')
+    : currentRole === 'company'
+      ? (lang === 'ar' ? 'إدارة تحدياتي' : 'Manage challenges')
+      : currentRole === 'solver'
+        ? (lang === 'ar' ? 'تصفّح التحديات' : 'Browse challenges')
+        : (lang === 'ar' ? 'أكمل ملف المواهب' : 'Complete talent profile');
+  const secondaryTo = currentRole === 'solver' ? '/my-applications' : currentRole === 'company' ? '/company/problems/new' : '/community';
+  const secondaryLabel = currentRole === 'solver'
+    ? (lang === 'ar' ? 'طلباتي' : 'My applications')
+    : currentRole === 'company'
+      ? (lang === 'ar' ? 'انشر تحدياً' : 'Post a challenge')
+      : (lang === 'ar' ? 'تصفّح المجتمع' : 'Browse community');
 
   return (
     <div className="flex flex-col gap-16 md:gap-24 py-10">
@@ -16,7 +30,7 @@ export const LandingPage: React.FC = () => {
           <div className="lg:col-span-7 flex flex-col items-start gap-6">
             <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF1FF] border-2 border-[#12122B] rounded-full text-xs font-tag tracking-wider text-[#0B2A9E] font-bold shadow-pixel-s">
               <span className="w-2 h-2 bg-[#0B2A9E] rounded-full animate-pulse" />
-              COMMUNITY · BETA
+              {lang === 'ar' ? 'مجتمع تقني · نسخة تجريبية' : 'COMMUNITY · BETA'}
             </span>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight text-[#12122B]">
@@ -45,17 +59,17 @@ export const LandingPage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto pt-2">
               <Link
-                to="/signup"
+                to={primaryTo}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-md font-bold text-sm btn-pixel-accent"
               >
-                <span>{lang === 'ar' ? 'ابدأ الآن' : 'Get started'}</span>
+                <span>{primaryLabel}</span>
                 <ArrowIcon className="w-4 h-4" />
               </Link>
               <Link
-                to="/community"
+                to={secondaryTo}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-md font-bold text-sm btn-pixel-secondary"
               >
-                <span>{lang === 'ar' ? 'تصفّح كزائر' : 'Browse as a visitor'}</span>
+                <span>{secondaryLabel}</span>
               </Link>
             </div>
 
@@ -151,8 +165,8 @@ export const LandingPage: React.FC = () => {
             </h3>
             <p className="text-sm text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                ? 'أنشئ حسابًا بالبريد الإلكتروني أو Google، ثم اطرح أسئلتك، أجب على زملائك، وناقش تفاصيل المشكلات.'
-                : 'Create an account with email or Google, then ask questions and discuss problems.'}
+                ? 'أنشئ حسابًا بالبريد الإلكتروني، ثم اطرح أسئلتك، أجب على زملائك، وناقش تفاصيل المشكلات.'
+                : 'Create an account with email, then ask questions and discuss problems.'}
             </p>
           </div>
 
@@ -165,8 +179,8 @@ export const LandingPage: React.FC = () => {
             </h3>
             <p className="text-sm text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                ? 'أكمل ملف الحلّال (خلفيتك، مهاراتك، السيرة الذاتية) وقدّم حلولًا للمشكلات الصناعية المدفوعة لتحصل على المكافأة.'
-                : 'Complete your solver profile (background, skills, CV) and submit solutions to paid problems to earn a reward.'}
+                  ? 'أكمل ملف المواهب (الخلفية والمهارات ورابط مهني أو سيرة ذاتية) وقدّم مقترحات للتحديات.'
+                  : 'Complete your talent profile (background, skills and a professional link or CV) to submit challenge proposals.'}
             </p>
           </div>
         </div>
@@ -178,9 +192,9 @@ export const LandingPage: React.FC = () => {
             {lang === 'ar' ? 'ماذا يمكنك أن تفعل؟' : 'What can you do?'}
           </h2>
           <p className="text-sm sm:text-base text-[#5B5B7B]">
-            {lang === 'ar'
-              ? 'الزوّار يقرأون، الأعضاء يشاركون، والحلّالون يحلّون ويكسبون'
-              : 'Visitors read, members participate, solvers solve and earn'}
+              {lang === 'ar'
+                ? 'الزوّار يقرأون، الأعضاء يشاركون، والمواهب تقدّم المقترحات'
+                : 'Visitors read, members participate, and talent submits proposals'}
           </p>
         </div>
 
@@ -189,7 +203,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#E4E4EE] border border-[#12122B] rounded-full">
-                  VISITOR
+                  {lang === 'ar' ? 'زائر' : 'VISITOR'}
                 </span>
                 <span className="text-xs font-semibold text-[#5B5B7B]">
                   {lang === 'ar' ? 'بدون حساب' : 'No account'}
@@ -214,7 +228,7 @@ export const LandingPage: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2.5 text-[#5B5B7B]">
                   <Lock className="w-4 h-4 text-[#A3A3BC]" />
-                  <span>{lang === 'ar' ? 'تقديم حلول للمشكلات المدفوعة' : 'Submit solutions to paid problems'}</span>
+                  <span>{lang === 'ar' ? 'تقديم مقترحات للتحديات ذات الميزانيات' : 'Submit proposals to budgeted challenges'}</span>
                 </li>
               </ul>
             </div>
@@ -231,7 +245,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#EEF1FF] border border-[#0B2A9E] text-[#0B2A9E] rounded-full">
-                  MEMBER
+                  {lang === 'ar' ? 'عضو' : 'MEMBER'}
                 </span>
                 <span className="text-xs font-semibold text-[#5B5B7B]">
                   {lang === 'ar' ? 'بريد فقط' : 'Email only'}
@@ -256,16 +270,16 @@ export const LandingPage: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2.5 text-[#5B5B7B]">
                   <Lock className="w-4 h-4 text-[#A3A3BC]" />
-                  <span>{lang === 'ar' ? 'تقديم حلول للمشكلات المدفوعة' : 'Submit solutions to paid problems'}</span>
+                  <span>{lang === 'ar' ? 'تقديم مقترحات للتحديات ذات الميزانيات' : 'Submit proposals to budgeted challenges'}</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              to="/signup"
+              to={currentRole === 'visitor' ? '/signup' : currentRole === 'company' ? '/company/problems' : currentRole === 'solver' ? '/problems' : '/profile/solver'}
               className="mt-8 w-full py-2.5 px-4 text-center rounded-md font-bold text-xs btn-pixel-primary"
             >
-              {lang === 'ar' ? 'أنشئ حساب عضو' : 'Sign up as member'}
+              {currentRole === 'visitor' ? (lang === 'ar' ? 'أنشئ حساب عضو' : 'Sign up as member') : currentRole === 'company' ? (lang === 'ar' ? 'إدارة تحدياتي' : 'Manage challenges') : currentRole === 'solver' ? (lang === 'ar' ? 'تصفّح التحديات' : 'Browse challenges') : (lang === 'ar' ? 'أكمل ملف المواهب' : 'Complete talent profile')}
             </Link>
           </div>
 
@@ -273,14 +287,14 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#C6FF3D] border border-[#12122B] text-[#12122B] rounded-full">
-                  SOLVER
+                  {lang === 'ar' ? 'خبير حلول' : 'SOLVER'}
                 </span>
                 <span className="text-xs font-semibold text-[#12122B] font-bold">
                   {lang === 'ar' ? 'ملف كامل' : 'Complete profile'}
                 </span>
               </div>
               <h3 className="text-xl font-bold text-[#12122B] mb-5">
-                {lang === 'ar' ? 'حلّال معتمد' : 'Solver'}
+                {lang === 'ar' ? 'ملف مواهب مكتمل' : 'Complete talent profile'}
               </h3>
 
               <ul className="flex flex-col gap-3.5 text-sm text-[#12122B]">
@@ -298,16 +312,16 @@ export const LandingPage: React.FC = () => {
                 </li>
                 <li className="flex items-center gap-2.5 font-bold">
                   <Check className="w-4 h-4 text-[#1E9E5A] stroke-[3]" />
-                  <span>{lang === 'ar' ? 'تقديم حلول والحصول على مكافآت' : 'Submit solutions & earn rewards'}</span>
+                  <span>{lang === 'ar' ? 'تقديم مقترحات للتحديات' : 'Submit proposals to challenges'}</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              to="/profile/solver"
+              to={currentRole === 'visitor' ? '/signup' : currentRole === 'company' ? '/company/problems/new' : currentRole === 'solver' ? '/problems' : '/profile/solver'}
               className="mt-8 w-full py-2.5 px-4 text-center rounded-md font-bold text-xs btn-pixel-accent"
             >
-              {lang === 'ar' ? 'أكمل ملف الحلّال' : 'Complete solver profile'}
+              {currentRole === 'visitor' ? (lang === 'ar' ? 'أنشئ حساباً للبدء' : 'Create an account to start') : currentRole === 'company' ? (lang === 'ar' ? 'انشر تحدياً' : 'Post a challenge') : currentRole === 'solver' ? (lang === 'ar' ? 'تصفّح التحديات' : 'Browse challenges') : (lang === 'ar' ? 'أكمل ملف المواهب' : 'Complete talent profile')}
             </Link>
           </div>
         </div>
@@ -321,23 +335,23 @@ export const LandingPage: React.FC = () => {
             </h2>
             <p className="text-sm sm:text-base text-[#C9D3FF]">
               {lang === 'ar'
-                ? 'أنشئ حسابك في أقل من دقيقة وابدأ بالمشاركة وحل التحديات الهندسية الحقيقية.'
-                : 'Create your account in under a minute and start participating.'}
+                ? 'استكشف التحديات والنقاشات التقنية، وشارك حسب نوع حسابك.'
+                : 'Explore challenges and technical discussions, then take the next step for your account.'}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              to="/signup"
+              to={primaryTo}
               className="px-6 py-3 rounded-md font-bold text-sm btn-pixel-accent"
             >
-              {lang === 'ar' ? 'أنشئ حسابًا مجانيًا' : 'Create a free account'}
+              {primaryLabel}
             </Link>
             <Link
-              to="/community"
+              to={secondaryTo}
               className="px-6 py-3 rounded-md font-bold text-sm bg-[#FFFBF1] text-[#12122B] border-2 border-[#12122B] shadow-pixel-s hover:bg-[#EFE4CC]"
             >
-              {lang === 'ar' ? 'تصفّح كزائر' : 'Browse as a visitor'}
+              {secondaryLabel}
             </Link>
           </div>
         </div>

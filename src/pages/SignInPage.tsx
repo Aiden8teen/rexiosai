@@ -1,56 +1,35 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { AlertCircle } from 'lucide-react';
 import type { UserRole } from '../types';
+import { apiErrorMessage } from '../api/client';
 
 export const SignInPage: React.FC = () => {
   const { lang, setLang, login } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [email, setEmail] = useState('amine.benali@univ-alger.dz');
-  const [password, setPassword] = useState('password123');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('member');
-  const [showErrorDemo, setShowErrorDemo] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [selectedRole] = useState<UserRole>('member');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (showErrorDemo) {
-      setError(
-        lang === 'ar'
-          ? 'كلمة المرور غير صحيحة. حاول مرة أخرى.'
-          : 'Incorrect password. Try again.'
-      );
-      return;
+    setBusy(true);
+    try {
+      const user = await login(email, password);
+      const from = (location.state as { from?: string } | null)?.from;
+      navigate(from || (user.role === 'company' ? '/company/problems' : '/community'), { replace: true });
+    } catch (apiError) {
+      setError(apiErrorMessage(apiError, lang));
+    } finally {
+      setBusy(false);
     }
-
-    if (!email || !password) {
-      setError(
-        lang === 'ar'
-          ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور'
-          : 'Please enter both email and password'
-      );
-      return;
-    }
-
-    login(email, selectedRole);
-    navigate('/community');
-  };
-
-  const handleQuickDemo = (role: UserRole) => {
-    setSelectedRole(role);
-    if (role === 'solver') {
-      setEmail('sara.khasmi@rexios.dz');
-    } else {
-      setEmail('amine.benali@univ-alger.dz');
-    }
-    setPassword('password123');
-    setShowErrorDemo(false);
-    setError('');
   };
 
   return (
@@ -87,7 +66,7 @@ export const SignInPage: React.FC = () => {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickDemo('member')}
+                onClick={() => undefined}
                 className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer ${
                   selectedRole === 'member'
                     ? 'bg-[#FFFBF1] text-[#0B2A9E]'
@@ -98,7 +77,7 @@ export const SignInPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => handleQuickDemo('solver')}
+                onClick={() => undefined}
                 className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer ${
                   selectedRole === 'solver'
                     ? 'bg-[#C6FF3D] text-[#12122B]'
@@ -114,7 +93,7 @@ export const SignInPage: React.FC = () => {
         <div className="md:col-span-7 bg-[#FFFBF1] p-6 sm:p-10 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-6">
             <span className="font-brand text-xs font-bold text-[#5B5B7B] uppercase">
-              Rexios Auth
+              {lang === 'ar' ? 'حساب Rexios' : 'Rexios Account'}
             </span>
             <div className="flex items-center bg-[#EFE4CC] border-2 border-[#12122B] rounded-full p-0.5 text-xs font-bold">
               <button
@@ -150,10 +129,7 @@ export const SignInPage: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => {
-                login('google.user@example.dz', selectedRole);
-                navigate('/community');
-              }}
+              onClick={() => undefined}
               className="w-full py-2.5 px-4 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#12122B] shadow-pixel-s hover:bg-[#EFE4CC] flex items-center justify-center gap-2 cursor-pointer mb-5"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -212,20 +188,13 @@ export const SignInPage: React.FC = () => {
                   <label className="block text-xs font-semibold text-[#12122B]">
                     {lang === 'ar' ? 'كلمة المرور *' : 'Password *'}
                   </label>
-                  <a
-                    href="#forgot"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert(
-                        lang === 'ar'
-                          ? 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك'
-                          : 'Password reset link sent to your email'
-                      );
-                    }}
+                  <button
+                    type="button"
+                    onClick={() => undefined}
                     className="text-[11px] text-[#0B2A9E] hover:underline"
                   >
                     {lang === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
-                  </a>
+                  </button>
                 </div>
                 <input
                   type="password"
@@ -243,8 +212,7 @@ export const SignInPage: React.FC = () => {
                 <label className="text-[11px] text-[#5B5B7B] flex items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={showErrorDemo}
-                    onChange={(e) => setShowErrorDemo(e.target.checked)}
+                    onChange={() => undefined}
                     className="accent-[#E5432A]"
                   />
                   <span>
@@ -257,16 +225,17 @@ export const SignInPage: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full py-2.5 mt-2 rounded-md font-bold text-xs btn-pixel-accent cursor-pointer"
               >
-                {lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}
+                {busy ? (lang === 'ar' ? 'جارٍ تسجيل الدخول…' : 'Signing in…') : (lang === 'ar' ? 'تسجيل الدخول' : 'Sign in')}
               </button>
             </form>
           </div>
 
           <div className="pt-6 text-center text-xs text-[#5B5B7B]">
             <span>{lang === 'ar' ? 'ليس لديك حساب؟ ' : "Don't have an account? "}</span>
-            <Link to="/signup" className="font-bold text-[#0B2A9E] underline">
+            <Link to="/signup" state={location.state} className="font-bold text-[#0B2A9E] underline">
               {lang === 'ar' ? 'أنشئ حسابًا' : 'Create an account'}
             </Link>
           </div>

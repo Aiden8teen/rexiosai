@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from './MascotRex';
-import { Bell, ChevronDown, LogOut, Award } from 'lucide-react';
+import { ChevronDown, LogOut, Award, BriefcaseBusiness, FileText } from 'lucide-react';
 import type { UserRole } from '../types';
+import { NotificationsDropdown } from './NotificationsDropdown';
 
 export const Navbar: React.FC = () => {
   const { lang, setLang, currentRole, currentUser, switchRole, logout } = useApp();
@@ -21,22 +22,23 @@ export const Navbar: React.FC = () => {
     visitor: { ar: 'زائر', en: 'Visitor' },
     member: { ar: 'عضو', en: 'Member' },
     solver: { ar: 'خبير حلول', en: 'Solver' },
+    company: { ar: 'شركة', en: 'Company' },
   };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#FFFBF1] border-b-2 border-[#12122B] shadow-pixel-s">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-        <div className="flex items-center gap-6 sm:gap-8">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="p-1.5 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s group-hover:scale-105 transition-transform">
-              <MascotRex width={36} height={27} />
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 h-18 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-3 lg:gap-6 xl:gap-8">
+          <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-3 group whitespace-nowrap">
+            <div className="p-1 sm:p-1.5 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s group-hover:scale-105 transition-transform">
+              <MascotRex width={30} height={23} className="sm:w-9 sm:h-[27px]" />
             </div>
-            <span className="font-brand text-2xl font-bold tracking-tight text-[#12122B]">
+            <span className="font-brand text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-[#12122B] whitespace-nowrap">
               REXIOS AI
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex shrink-0 items-center gap-1">
             {navLinks.map((link) => {
               const isActive =
                 link.to === '/'
@@ -60,7 +62,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center bg-[#EFE4CC] border-2 border-[#12122B] rounded-full p-0.5 text-xs">
+          <div className="hidden xl:flex items-center bg-[#EFE4CC] border-2 border-[#12122B] rounded-full p-0.5 text-xs">
             {(['visitor', 'member', 'solver'] as UserRole[]).map((r) => (
               <button
                 key={r}
@@ -119,22 +121,15 @@ export const Navbar: React.FC = () => {
               </Link>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <Link
                 to="/community/ask"
-                className="hidden sm:inline-flex px-3.5 py-1.5 text-xs font-bold rounded-md btn-pixel-primary"
+                className="hidden lg:inline-flex px-3.5 py-1.5 text-xs font-bold rounded-md btn-pixel-primary"
               >
                 {lang === 'ar' ? 'اطرح سؤالًا' : 'Ask a Question'}
               </Link>
 
-              <button
-                type="button"
-                className="relative p-2 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md shadow-pixel-s hover:bg-[#EFE4CC] cursor-pointer"
-                title={lang === 'ar' ? 'الإشعارات' : 'Notifications'}
-              >
-                <Bell className="w-4 h-4 text-[#12122B] stroke-[2.2]" />
-                <span className="absolute -top-1 -end-1 w-2.5 h-2.5 bg-[#E5432A] rounded-full border border-[#FFFBF1]" />
-              </button>
+              <NotificationsDropdown key={currentUser.id} userId={currentUser.id} lang={lang} />
 
               <div className="relative">
                 <button
@@ -146,7 +141,9 @@ export const Navbar: React.FC = () => {
                     className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-[#FFFBF1]"
                     style={{ backgroundColor: currentUser.avatarBg || '#0B2A9E' }}
                   >
-                    {currentUser.avatarChar}
+                    {lang === 'ar'
+                      ? currentUser.avatarChar
+                      : currentUser.name_en?.trim().slice(0, 1) || currentUser.avatarChar}
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-[#12122B] me-1" />
                 </button>
@@ -158,7 +155,7 @@ export const Navbar: React.FC = () => {
                   >
                     <div className="px-3 py-2 border-b border-[#EFE4CC] mb-1">
                       <p className="font-bold text-xs text-[#12122B]">
-                        {lang === 'ar' ? currentUser.name : currentUser.name_en}
+                        {lang === 'ar' ? currentUser.name : (currentUser.name_en || currentUser.name)}
                       </p>
                       <p className="text-[11px] text-[#5B5B7B] truncate">
                         {currentUser.email}
@@ -168,17 +165,27 @@ export const Navbar: React.FC = () => {
                       </span>
                     </div>
 
-                    <Link
-                      to="/profile/solver"
-                      className="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-[#12122B] hover:bg-[#EFE4CC]"
-                    >
-                      <Award className="w-4 h-4 text-[#0B2A9E]" />
-                      <span>{lang === 'ar' ? 'ملف خبير الحلول' : 'Solver Profile'}</span>
-                    </Link>
+                    {currentRole === 'company' ? (
+                      <Link to="/company/problems" className="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-[#12122B] hover:bg-[#EFE4CC]">
+                        <BriefcaseBusiness className="w-4 h-4 text-[#0B2A9E]" />
+                        <span>{lang === 'ar' ? 'مشكلاتي' : 'My Problems'}</span>
+                      </Link>
+                    ) : (
+                      <>
+                        <Link to="/my-applications" className="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-[#12122B] hover:bg-[#EFE4CC]">
+                          <FileText className="w-4 h-4 text-[#0B2A9E]" />
+                          <span>{lang === 'ar' ? 'طلباتي' : 'My Applications'}</span>
+                        </Link>
+                        <Link to="/profile/solver" className="flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-[#12122B] hover:bg-[#EFE4CC]">
+                          <Award className="w-4 h-4 text-[#0B2A9E]" />
+                          <span>{lang === 'ar' ? 'ملف خبير الحلول' : 'Solver Profile'}</span>
+                        </Link>
+                      </>
+                    )}
 
                     <button
                       type="button"
-                      onClick={logout}
+                      onClick={() => { void logout(); }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded text-xs font-semibold text-[#E5432A] hover:bg-[#FFE3DC] cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />

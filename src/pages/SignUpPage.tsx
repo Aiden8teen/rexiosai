@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { AlertCircle } from 'lucide-react';
+import { apiErrorMessage } from '../api/client';
+import type { AccountType } from '../api/contracts';
 
 export const SignUpPage: React.FC = () => {
   const { lang, setLang, signup } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -14,8 +17,10 @@ export const SignUpPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [error, setError] = useState('');
+  const [accountType, setAccountType] = useState<AccountType>('TALENT');
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -55,14 +60,17 @@ export const SignUpPage: React.FC = () => {
       return;
     }
 
-    const displayName = name.trim() || email.split('@')[0];
-    signup(displayName, email);
-    navigate('/welcome');
-  };
-
-  const handleGoogleAuth = () => {
-    signup('مستخدم تجريبي Google', 'google.user@example.dz');
-    navigate('/welcome');
+    const displayName = name.trim();
+    setBusy(true);
+    try {
+      const user = await signup(displayName, email, password, accountType);
+      const from = (location.state as { from?: string } | null)?.from;
+      navigate(from || (user.role === 'company' ? '/company/problems' : '/welcome'), { replace: true });
+    } catch (apiError) {
+      setError(apiErrorMessage(apiError, lang));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -102,7 +110,7 @@ export const SignUpPage: React.FC = () => {
         <div className="md:col-span-7 bg-[#FFFBF1] p-6 sm:p-10 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-6">
             <span className="font-brand text-xs font-bold text-[#5B5B7B] uppercase">
-              Rexios Auth
+              {lang === 'ar' ? 'حساب Rexios' : 'Rexios Account'}
             </span>
             <div className="flex items-center bg-[#EFE4CC] border-2 border-[#12122B] rounded-full p-0.5 text-xs font-bold">
               <button
@@ -136,7 +144,7 @@ export const SignUpPage: React.FC = () => {
 
             <button
               type="button"
-              onClick={handleGoogleAuth}
+              onClick={() => undefined}
               className="w-full py-2.5 px-4 bg-[#FFFBF1] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#12122B] shadow-pixel-s hover:bg-[#EFE4CC] flex items-center justify-center gap-2 cursor-pointer mb-5"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -206,6 +214,20 @@ export const SignUpPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-[#12122B] mb-1">
+                  {lang === 'ar' ? 'نوع الحساب *' : 'Account type *'}
+                </label>
+                <select
+                  value={accountType}
+                  onChange={(e) => setAccountType(e.target.value as AccountType)}
+                  className="w-full input-pixel text-xs bg-[#FFFBF1]"
+                >
+                  <option value="TALENT">{lang === 'ar' ? 'موهبة / خبير حلول' : 'Talent / Solver'}</option>
+                  <option value="COMPANY">{lang === 'ar' ? 'شركة' : 'Company'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#12122B] mb-1">
                   {lang === 'ar' ? 'كلمة المرور *' : 'Password *'}
                 </label>
                 <input
@@ -253,16 +275,17 @@ export const SignUpPage: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full py-2.5 mt-2 rounded-md font-bold text-xs btn-pixel-accent cursor-pointer"
               >
-                {lang === 'ar' ? 'إنشاء حساب' : 'Create account'}
+                {busy ? (lang === 'ar' ? 'جارٍ إنشاء الحساب…' : 'Creating account…') : (lang === 'ar' ? 'إنشاء حساب' : 'Create account')}
               </button>
             </form>
           </div>
 
           <div className="pt-6 text-center text-xs text-[#5B5B7B]">
             <span>{lang === 'ar' ? 'لديك حساب بالفعل؟ ' : 'Already have an account? '}</span>
-            <Link to="/signin" className="font-bold text-[#0B2A9E] underline">
+            <Link to="/signin" state={location.state} className="font-bold text-[#0B2A9E] underline">
               {lang === 'ar' ? 'تسجيل الدخول' : 'Sign in'}
             </Link>
           </div>

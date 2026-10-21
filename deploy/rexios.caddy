@@ -1,0 +1,6 @@
+# Add this block to the EXISTING shared proxy's source Caddyfile.
+# Do not replace its current sites, globals or security-header snippets.
+# The proxy and rexios-web must share the configured external edge network.
+rexios.duckdns.org {
+	reverse_proxy rexios-web:80
+}

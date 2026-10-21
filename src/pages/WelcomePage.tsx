@@ -2,11 +2,30 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
-import { Check, Lock, Award, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, Check, FileText, Lock, UserRound } from 'lucide-react';
 
 export const WelcomePage: React.FC = () => {
-  const { lang, dir } = useApp();
+  const { lang, dir, currentRole, currentUser, authLoading } = useApp();
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const isCompany = currentRole === 'company';
+  const isCompleteTalent = currentRole === 'solver' || currentUser.solverProfile?.completenessPercent === 100;
+  const accountName = lang === 'ar' ? currentUser.name : (currentUser.name_en || currentUser.name);
+
+  if (authLoading) {
+    return <div className="max-w-7xl mx-auto px-4 py-16 text-center text-sm text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل حسابك…' : 'Loading your account…'}</div>;
+  }
+
+  const heading = lang === 'ar' ? `مرحباً، ${accountName}` : `Welcome, ${accountName}`;
+  const description = isCompany
+    ? (lang === 'ar' ? 'يمكنك نشر التحديات الصناعية ومتابعة المقترحات من لوحة الشركة.' : 'Post industrial challenges and review proposals from your company dashboard.')
+    : isCompleteTalent
+      ? (lang === 'ar' ? 'ملفك مكتمل. استكشف التحديات وتابع طلباتك ومقترحاتك.' : 'Your profile is complete. Browse challenges and keep track of your applications.')
+      : (lang === 'ar' ? 'أكمل ملف المواهب لتتمكن من تقديم مقترحات للتحديات الصناعية.' : 'Complete your talent profile to submit proposals to industrial challenges.');
+  const accountTitle = isCompany
+    ? (lang === 'ar' ? 'حساب شركة' : 'Company account')
+    : isCompleteTalent
+      ? (lang === 'ar' ? 'ملف المواهب مكتمل' : 'Talent profile complete')
+      : (lang === 'ar' ? 'أكمل ملف المواهب' : 'Complete talent profile');
 
   return (
     <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 sm:px-6">
@@ -15,87 +34,57 @@ export const WelcomePage: React.FC = () => {
           <MascotRex width={80} height={60} />
         </div>
 
-        <h1 className="text-3xl font-bold text-[#12122B] mb-2">
-          {lang === 'ar' ? 'تم إنشاء حسابك!' : 'Account created!'}
-        </h1>
-        <p className="text-sm text-[#5B5B7B] max-w-lg mb-8 leading-relaxed">
-          {lang === 'ar'
-            ? 'أنت الآن عضو رسمي في مجتمع Rexios AI. يمكنك طرح الأسئلة، كتابة الإجابات، ومناقشة المشكلات الصناعية مع زملائك.'
-            : 'You are now an official member of the Rexios AI community. You can ask questions, write answers, and discuss industrial engineering challenges.'}
-        </p>
+        <h1 className="text-3xl font-bold text-[#12122B] mb-2">{heading}</h1>
+        <p className="text-sm text-[#5B5B7B] max-w-lg mb-8 leading-relaxed">{description}</p>
 
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-start">
           <div className="p-5 bg-[#F0FFC4] border-2 border-[#12122B] rounded-md shadow-pixel-s flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="font-tag text-[11px] font-bold text-[#12122B] uppercase">
-                  {lang === 'ar' ? 'حسابك الحالي' : 'Current tier'}
-                </span>
-                <span className="w-2.5 h-2.5 bg-[#1E9E5A] rounded-full" />
+                <span className="font-tag text-[11px] font-bold text-[#12122B] uppercase">{lang === 'ar' ? 'حالة الحساب' : 'Account status'}</span>
+                {isCompany ? <BriefcaseBusiness className="w-4 h-4 text-[#12122B]" /> : isCompleteTalent ? <Check className="w-4 h-4 text-[#1E9E5A]" /> : <UserRound className="w-4 h-4 text-[#12122B]" />}
               </div>
-              <h3 className="text-base font-bold text-[#12122B] mb-3">
-                {lang === 'ar' ? 'عضو في المجتمع' : 'Community Member'}
-              </h3>
-              <ul className="flex flex-col gap-2.5 text-xs text-[#12122B]">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#1E9E5A] stroke-[3]" />
-                  <span>{lang === 'ar' ? 'طرح الأسئلة والإجابة' : 'Ask questions and answer'}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-[#1E9E5A] stroke-[3]" />
-                  <span>{lang === 'ar' ? 'التعليق على المشكلات' : 'Comment on problems'}</span>
-                </li>
-              </ul>
+              <h2 className="text-base font-bold text-[#12122B] mb-3">{accountTitle}</h2>
+              <p className="text-xs text-[#5B5B7B] leading-relaxed">
+                {isCompany
+                  ? (lang === 'ar' ? 'أدر التحديات المنشورة واستقبل طلبات المواهب.' : 'Manage posted challenges and receive applications from talent.')
+                  : isCompleteTalent
+                    ? (lang === 'ar' ? 'يمكنك تقديم مقترحات ومتابعة قرارات الشركات.' : 'You can submit proposals and track company decisions.')
+                    : (lang === 'ar' ? 'أضف خلفيتك ومهاراتك ورابطاً مهنياً أو سيرة ذاتية.' : 'Add your background, skills and a professional link or CV.')}
+              </p>
             </div>
           </div>
 
           <div className="p-5 bg-[#FFFBF1] border-2 border-[#0B2A9E] rounded-md shadow-pixel-s flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <span className="font-tag text-[11px] font-bold text-[#0B2A9E] uppercase">
-                  {lang === 'ar' ? 'المستوى القادم' : 'Next tier'}
-                </span>
-                <Award className="w-4 h-4 text-[#0B2A9E]" />
+                <span className="font-tag text-[11px] font-bold text-[#0B2A9E] uppercase">{lang === 'ar' ? 'خطوتك التالية' : 'Next steps'}</span>
+                {isCompany ? <BriefcaseBusiness className="w-4 h-4 text-[#0B2A9E]" /> : <FileText className="w-4 h-4 text-[#0B2A9E]" />}
               </div>
-              <h3 className="text-base font-bold text-[#12122B] mb-3">
-                {lang === 'ar' ? 'حلّال معتمد (ملف كامل)' : 'Verified Solver'}
-              </h3>
+              <h2 className="text-base font-bold text-[#12122B] mb-3">
+                {isCompany ? (lang === 'ar' ? 'إدارة التحديات' : 'Manage challenges') : isCompleteTalent ? (lang === 'ar' ? 'استكشف الفرص' : 'Explore opportunities') : (lang === 'ar' ? 'إكمال الملف' : 'Finish your profile')}
+              </h2>
               <ul className="flex flex-col gap-2.5 text-xs text-[#5B5B7B]">
-                <li className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-[#0B2A9E]" />
-                  <span>{lang === 'ar' ? 'تقديم حلول للمشكلات المدفوعة' : 'Submit solutions to paid problems'}</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-[#0B2A9E]" />
-                  <span>{lang === 'ar' ? 'مؤشر تطابق المهارات الآلي' : 'Automated skill-match score'}</span>
-                </li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-[#1E9E5A]" /><span>{isCompany ? (lang === 'ar' ? 'نشر تحدٍ جديد أو تعديل تحدياتك' : 'Post a challenge or edit existing ones') : isCompleteTalent ? (lang === 'ar' ? 'تصفح التحديات وقدم المقترحات' : 'Browse challenges and submit proposals') : (lang === 'ar' ? 'حدد مهارة واحدة على الأقل' : 'Choose at least one skill')}</span></li>
+                <li className="flex items-center gap-2">{isCompleteTalent || isCompany ? <Check className="w-4 h-4 text-[#1E9E5A]" /> : <Lock className="w-4 h-4 text-[#0B2A9E]" />}<span>{isCompany ? (lang === 'ar' ? 'راجع المقترحات الواردة' : 'Review incoming applications') : isCompleteTalent ? (lang === 'ar' ? 'تابع طلباتك وقرارات الشركات' : 'Track your applications and decisions') : (lang === 'ar' ? 'أضف سيرة ذاتية أو رابطاً مهنياً' : 'Add a CV or professional link')}</span></li>
               </ul>
             </div>
           </div>
         </div>
 
         <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            to="/profile/solver"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-bold text-xs btn-pixel-accent"
-          >
-            <span>{lang === 'ar' ? 'أكمل ملف الحلّال الآن' : 'Complete solver profile now'}</span>
-            <ArrowIcon className="w-4 h-4" />
-          </Link>
-
-          <Link
-            to="/problems"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-md font-bold text-xs btn-pixel-secondary"
-          >
-            {lang === 'ar' ? 'تصفّح المشكلات' : 'Browse problems'}
-          </Link>
-
-          <Link
-            to="/community"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-md font-bold text-xs btn-pixel-primary"
-          >
-            {lang === 'ar' ? 'استكشف المجتمع' : 'Explore community'}
-          </Link>
+          {isCompany ? (
+            <>
+              <Link to="/company/problems/new" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-bold text-xs btn-pixel-accent"><span>{lang === 'ar' ? 'انشر تحدياً' : 'Post a challenge'}</span><ArrowIcon className="w-4 h-4" /></Link>
+              <Link to="/company/problems" className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-md font-bold text-xs btn-pixel-secondary">{lang === 'ar' ? 'إدارة تحدياتي' : 'Manage my challenges'}</Link>
+            </>
+          ) : (
+            <>
+              {!isCompleteTalent && <Link to="/profile/solver" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-bold text-xs btn-pixel-accent"><span>{lang === 'ar' ? 'أكمل ملف المواهب' : 'Complete talent profile'}</span><ArrowIcon className="w-4 h-4" /></Link>}
+              <Link to="/problems" className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-md font-bold text-xs btn-pixel-secondary">{lang === 'ar' ? 'تصفّح التحديات' : 'Browse challenges'}</Link>
+              {isCompleteTalent && <Link to="/my-applications" className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-md font-bold text-xs btn-pixel-primary">{lang === 'ar' ? 'طلباتي' : 'My applications'}</Link>}
+            </>
+          )}
         </div>
       </div>
     </div>

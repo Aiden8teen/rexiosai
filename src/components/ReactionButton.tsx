@@ -7,6 +7,9 @@ interface ReactionButtonProps {
   count: number;
   onClick: () => void;
   className?: string;
+  active?: boolean;
+  pending?: boolean;
+  disabled?: boolean;
 }
 
 export const ReactionButton: React.FC<ReactionButtonProps> = ({
@@ -14,6 +17,9 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({
   count,
   onClick,
   className = '',
+  active = false,
+  pending = false,
+  disabled = false,
 }) => {
   const { lang } = useApp();
 
@@ -32,7 +38,10 @@ export const ReactionButton: React.FC<ReactionButtonProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1 bg-[#FFFBF1] border-2 border-[#12122B] rounded-full text-xs font-semibold text-[#12122B] shadow-pixel-s transition-all active:translate-y-0.5 ${activeColor} cursor-pointer ${className}`}
+      disabled={disabled || pending}
+      aria-pressed={active}
+      aria-busy={pending}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 border-2 border-[#12122B] rounded-full text-xs font-semibold text-[#12122B] shadow-pixel-s transition-all ${active ? 'bg-[#C6FF3D]' : 'bg-[#FFFBF1]'} ${activeColor} ${disabled || pending ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:translate-y-0.5'} ${className}`}
     >
       <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
       <span>{labels[type][lang]}</span>

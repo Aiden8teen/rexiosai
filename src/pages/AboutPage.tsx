@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
+import { usePublicStats } from '../hooks/usePublicStats';
 import {
   Factory,
   Cpu,
@@ -17,28 +18,31 @@ import {
 
 export const AboutPage: React.FC = () => {
   const { lang, dir } = useApp();
+  const { data: publicStats, loading: statsLoading, error: statsError, retry: retryStats } = usePublicStats();
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
+  const formatCount = (value: number | undefined) => value === undefined ? '—' : value.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
+  const formatBudget = (value: number | undefined) => value === undefined ? '—' : value.toLocaleString(lang === 'ar' ? 'ar-DZ' : 'en-US');
   const stats = [
     {
-      num: '+45',
-      label: { ar: 'مؤسسة ومصنع شريك', en: 'Partner Enterprises' },
-      detail: { ar: 'في مختلف المناطق الصناعية', en: 'Across Algerian industrial zones' },
+      num: formatCount(publicStats?.companiesWithPublishedProblems),
+      label: { ar: 'شركات تنشر تحديات', en: 'Companies posting challenges' },
+      detail: { ar: 'لديها تحدٍ منشور واحد على الأقل', en: 'With at least one published challenge' },
     },
     {
-      num: '+1,200',
-      label: { ar: 'مهندس وخبير حلول', en: 'Engineers & Solvers' },
-      detail: { ar: 'من كبرى الجامعات والمدارس', en: 'Top graduates & practitioners' },
+      num: formatCount(publicStats?.talentAccounts),
+      label: { ar: 'حسابات المواهب', en: 'Talent accounts' },
+      detail: { ar: 'حسابات مسجلة من نوع المواهب', en: 'Registered talent accounts' },
     },
     {
-      num: '3.8M+',
-      label: { ar: 'د.ج مكافآت مرصودة', en: 'DZD Bounties Pool' },
-      detail: { ar: 'تمويل مباشر للحلول الفائزة', en: 'Direct funding for selected solutions' },
+      num: formatBudget(publicStats?.openBudgetDzd),
+      label: { ar: 'ميزانيات التحديات المفتوحة (د.ج)', en: 'Open challenge budgets (DZD)' },
+      detail: { ar: 'ميزانيات مفتوحة بموعد نهائي قادم', en: 'Open budgets with a future deadline' },
     },
     {
-      num: '85+',
-      label: { ar: 'تحدياً هندسياً تم حله', en: 'Challenges Resolved' },
-      detail: { ar: 'في الأتمتة، الـ IoT، والبرمجيات', en: 'In automation, IoT & industrial AI' },
+      num: formatCount(publicStats?.problemsWithSelectedApplicant),
+      label: { ar: 'متقدمون تم اختيارهم', en: 'Applicants selected' },
+      detail: { ar: 'تحديات اختارت فيها الشركة متقدماً', en: 'Challenges with an applicant selected' },
     },
   ];
 
@@ -49,28 +53,28 @@ export const AboutPage: React.FC = () => {
       bg: '#EEF1FF',
       title: { ar: 'توطين الحلول الصناعية', en: 'Localizing Industrial Innovation' },
       description: {
-        ar: 'مساعدة المصانع والوحدات الإنتاجية على استبدال التراخيص الأجنبية المكلفة بحلول هندسية وطنية مصممة ومبرمجة بأيدي كفاءات جزائرية.',
-        en: 'Enabling manufacturing facilities to overcome expensive proprietary imports with locally engineered, maintained hardware & software.',
+        ar: 'مساعدة المصانع على استكشاف حلول هندسية محلية للتحديات التقنية التي تواجهها.',
+        en: 'Helping industrial teams explore local engineering approaches to the technical challenges they face.',
       },
     },
     {
       icon: Cpu,
       color: '#1E9E5A',
       bg: '#D9F5E5',
-      title: { ar: 'الخبرة العملية المثبتة', en: 'Proof-of-Work Expertise' },
+      title: { ar: 'الملف والمهارات التقنية', en: 'Profile & Technical Skills' },
       description: {
-        ar: 'تجاوز السير الذاتية التقليدية؛ نمنح المهندسين والطلاب مساحة لإثبات براعتهم عبر حل مشكلات واقعية وبناء سجل إنجازات هندسي موثق.',
-        en: 'Moving beyond theoretical resumes; engineers demonstrate real capabilities by solving operational problems and establishing verified track records.',
+        ar: 'توضح الملفات الشخصية خلفية المواهب ومهاراتها، وتتيح النقاشات والمقترحات وصف الخبرات ذات الصلة.',
+        en: 'Profiles show education and skills, while challenge discussions and proposals let contributors describe relevant work.',
       },
     },
     {
       icon: ShieldCheck,
       color: '#E5432A',
       bg: '#FFE3DC',
-      title: { ar: 'حماية الملكية والسرية', en: 'IP Protection & Governance' },
+      title: { ar: 'إدارة الوصول للبيانات الخاصة', en: 'Private Data Access' },
       description: {
-        ar: 'بيئة عمل آمنة تضمن سرية البيانات التشغيلية للمصانع، وتحمي حقوق الملكية الفكرية للحلول الهندسية التي يقدمها الخبراء وفق عقود واضحة.',
-        en: 'Secure environment protecting proprietary plant data and strictly honoring intellectual property rights of solvers under transparent frameworks.',
+        ar: 'تستطيع الشركات مشاركة ملاحظات وملفات خاصة لا تظهر إلا للشركة والمتقدم المختار. ناقش شروط السرية والملكية الفكرية مباشرة قبل مشاركة بيانات حساسة.',
+        en: 'Companies can share private notes and files visible to the company and selected applicant. Agree on confidentiality and intellectual property terms before sharing sensitive work.',
       },
     },
     {
@@ -79,8 +83,8 @@ export const AboutPage: React.FC = () => {
       bg: '#FFF1CC',
       title: { ar: 'مجتمع تقني مفتوح', en: 'Open Engineering Community' },
       description: {
-        ar: 'منتدى تخصصي متقدم يطرح فيه المطورون والمهندسون تساؤلاتهم حول الأنظمة المدمجة، والـ IoT، والذكاء الاصطناعي مع إجابات موثقة وتفاعل ثري.',
-        en: 'A focused peer community where technical practitioners discuss embedded firmware, industrial IoT, AI inference, and hardware debugging.',
+        ar: 'مساحة نقاش يطرح فيها المطورون والمهندسون أسئلتهم حول الأنظمة المدمجة وإنترنت الأشياء والذكاء الاصطناعي.',
+        en: 'A focused peer community for discussion about embedded systems, industrial IoT, AI inference and hardware debugging.',
       },
     },
   ];
@@ -90,8 +94,8 @@ export const AboutPage: React.FC = () => {
       step: '01',
       title: { ar: 'طرح التحدي الهندسي', en: 'Challenge Publishing' },
       desc: {
-        ar: 'تقوم المؤسسة الصناعية بنشر التحدي مع تفاصيل المحددات الفنية، المخرجات المطلوبة، وقيمة المكافأة المرصودة بالدينار الجزائري.',
-        en: 'The industrial enterprise defines its operational challenge, required technical deliverables, constraints, and reward in DZD.',
+        ar: 'تنشر الشركة التحدي مع القيود الفنية والمخرجات المطلوبة والميزانية بالدينار الجزائري.',
+        en: 'The company publishes its challenge, technical requirements, deliverables and listed budget in DZD.',
       },
     },
     {
@@ -106,16 +110,16 @@ export const AboutPage: React.FC = () => {
       step: '03',
       title: { ar: 'تقديم مقترح الحل (PoC)', en: 'Technical Proposal Submission' },
       desc: {
-        ar: 'يقدم خبراء الحلول المعتمدون مخططات التوصيل، الأكواد البرمجية، روابط النماذج التجريبية، والجدول الزمني التقديري للتنفيذ.',
-        en: 'Verified solvers submit schematics, firmware code, Proof-of-Concept prototypes, and estimated implementation timelines.',
+        ar: 'يستطيع أصحاب الحسابات المكتملة تقديم المقترحات والملفات والجدول الزمني التقديري للتنفيذ.',
+        en: 'Talent accounts with a complete profile can submit proposals, files and an estimated delivery timeline.',
       },
     },
     {
       step: '04',
-      title: { ar: 'التحكيم وصرف المكافأة', en: 'Evaluation & Payout' },
+      title: { ar: 'مراجعة المقترحات والاختيار', en: 'Review & Selection' },
       desc: {
-        ar: 'تراجع اللجنة الفنية للمصنع الحلول المقترحة وفق معايير الدقة والجدوى، ويحصل المقترح الفائز على المكافأة مع اعتماد التطبيق الفعلي.',
-        en: 'The enterprise evaluates submissions based on performance and feasibility; the winning solver receives the reward and implementation partnership.',
+        ar: 'تراجع الشركة المقترحات وتختار متقدماً. يتم الاتفاق على التنفيذ وأي ترتيبات مالية خارج المنصة.',
+        en: 'The company reviews proposals and selects an applicant. Any delivery and payment arrangements are made outside the platform.',
       },
     },
   ];
@@ -150,8 +154,8 @@ export const AboutPage: React.FC = () => {
 
             <p className="text-base sm:text-lg text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                ? 'Rexios AI هي منصة وطنية متخصصة تهدف إلى ربط نخبة المهندسين والباحثين والمطورين في الجزائر بالمؤسسات والمصانع الإنتاجية، لحل التحديات الهندسية المعقدة بمكافآت مالية تحفيزية وتبادل المعرفة في بيئة تقنية رصينة.'
-                : 'Rexios AI is Algeria’s open innovation platform connecting engineering professionals, students, and researchers with manufacturing facilities to solve real operational bottlenecks for financial rewards and peer recognition.'}
+                ? 'Rexios AI منصة تربط المواهب التقنية في الجزائر بالمؤسسات والمصانع عبر تحديات هندسية منشورة وبيئة لتبادل المعرفة.'
+                : 'Rexios AI connects technical talent in Algeria with companies through published engineering challenges and a space to share knowledge.'}
             </p>
 
             <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -185,7 +189,7 @@ export const AboutPage: React.FC = () => {
               className="card-pixel bg-[#FFFBF1] p-5 sm:p-6 text-center flex flex-col items-center justify-center gap-1.5"
             >
               <span className="font-brand text-3xl sm:text-4xl font-bold text-[#0B2A9E]">
-                {s.num}
+                {statsLoading ? '—' : s.num}
               </span>
               <span className="font-bold text-xs sm:text-sm text-[#12122B]">
                 {s.label[lang]}
@@ -193,6 +197,7 @@ export const AboutPage: React.FC = () => {
               <span className="text-[11px] text-[#5B5B7B]">
                 {s.detail[lang]}
               </span>
+              {statsError && idx === 0 && <button type="button" onClick={() => void retryStats()} className="mt-1 text-[10px] font-bold text-[#0B2A9E] underline">{lang === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button>}
             </div>
           ))}
         </div>
@@ -242,12 +247,12 @@ export const AboutPage: React.FC = () => {
               <p>
                 {lang === 'ar'
                   ? 'في المقابل، تمتلك الجامعات والمدارس العليا الجزائرية (مثل جامعة باب الزوار USTHB، المدرسة الوطنية متعددة التقنيات ENP وغيرها) كفاءات شابة متميزة في مجالات الأنظمة المدمجة، وإنترنت الأشياء (IoT)، والذكاء الاصطناعي ومعالجة الإشارات، ولكنهم يفتقرون لمنصة مباشرة تمكنهم من تطبيق علمهم وتحقيق دخل مجزٍ.'
-                  : 'At the same time, top Algerian universities and polytechnic institutes graduate brilliant talents in embedded engineering, robotics, and machine learning who lack direct pathways to monetize their skills on domestic challenges.'}
+                  : 'At the same time, Algerian universities and polytechnic institutes graduate talent in embedded engineering, robotics and machine learning that can benefit from more direct engagement with domestic challenges.'}
               </p>
               <p className="font-semibold text-[#12122B]">
                 {lang === 'ar'
-                  ? 'Rexios AI تضع حداً لهذه المفارقة: تحويل مشاكل المصانع إلى تحديات تنافسية ذات مكافآت بالدينار الجزائري، وتحويل المهندسين إلى خبراء حلول معتمدين.'
-                  : 'Rexios AI closes this loop: turning operational industrial pain points into incentivized engineering challenges with DZD bounties, transforming talent into verified solvers.'}
+                  ? 'تساعد Rexios AI الشركات على نشر مشكلاتها بميزانيات ومتطلبات واضحة، وتمنح المواهب مساحة لعرض مهاراتها ومقترحاتها.'
+                  : 'Rexios AI helps companies post challenges with clear budgets and requirements, giving talent a place to share skills and proposals.'}
               </p>
             </div>
           </div>
@@ -327,7 +332,7 @@ export const AboutPage: React.FC = () => {
                 </p>
               </div>
               <div className="w-full pt-3 border-t border-[#E4E4EE] flex items-center justify-between text-xs font-bold text-[#0B2A9E]">
-                <span>{lang === 'ar' ? 'خطوة معتمدة' : 'Verified step'}</span>
+                <span>{lang === 'ar' ? 'خطوة في المنصة' : 'Platform step'}</span>
                 <CheckCircle2 className="w-4 h-4 text-[#1E9E5A]" />
               </div>
             </div>
@@ -361,24 +366,24 @@ export const AboutPage: React.FC = () => {
           <div className="card-pixel bg-[#FFFBF1] p-5 sm:p-6">
             <h4 className="font-bold text-base text-[#12122B] mb-2 flex items-center gap-2">
               <HelpCircle className="w-4 h-4 text-[#0B2A9E]" />
-              {lang === 'ar' ? 'من هو "خبير الحلول" (Solver) وكيف أصبح معتمداً؟' : 'Who is a "Solver" and how do I become verified?'}
+              {lang === 'ar' ? 'من هو "خبير الحلول" (Solver)؟' : 'Who is a "Solver"?'}
             </h4>
             <p className="text-xs sm:text-sm text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                ? 'خبير الحلول هو مهندس أو تقني أو طالب دراسات عليا أكمل ملف كفاءته (المستوى التعليمي، التخصص، والمهارات التقنية والسيرة الذاتية). يمنحه هذا الاعتماد حق تقديم مقترحات الحلول الفنية للتحديات الصناعية والمنافسة على المكافآت المالية.'
-                : 'A Solver is a verified technical contributor who completed their qualification profile (education, institution, key skills, and CV). Solvers unlock the ability to submit technical solution proposals and win cash bounties.'}
+                ? 'خبير الحلول هو حساب مواهب أكمل ملفه الشخصي، بما يشمل الخلفية والمهارات ودليل الخبرة. يتيح الملف المكتمل تقديم مقترحات للتحديات.'
+                : 'A Solver is a talent account with a complete profile covering background, skills and profile evidence. A complete profile can submit proposals to challenges.'}
             </p>
           </div>
 
           <div className="card-pixel bg-[#FFFBF1] p-5 sm:p-6">
             <h4 className="font-bold text-base text-[#12122B] mb-2 flex items-center gap-2">
               <HelpCircle className="w-4 h-4 text-[#0B2A9E]" />
-              {lang === 'ar' ? 'كيف تُضمن حقوق الملكية الفكرية؟' : 'How is intellectual property protected?'}
+              {lang === 'ar' ? 'ماذا عن الملكية الفكرية؟' : 'What about intellectual property?'}
             </h4>
             <p className="text-xs sm:text-sm text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                ? 'تخضع جميع المقترحات المقدمة لاتفاقية سرية وحماية متبادلة؛ تظل حقوق المقترحات غير الفائزة ملكاً لأصحابها، بينما تنتقل حقوق الحل المعتمد والفائز للمؤسسة الصناعية بموجب صرف المكافأة التعاقدية.'
-                : 'All submissions are governed by mutual IP and confidentiality terms. Solvers retain rights to unselected proposals, while winning solutions are formally transferred to the partner enterprise upon reward disbursement.'}
+                ? 'تعرض المنصة متطلبات التحدي وملفاته. اتفق مع الشركة على شروط السرية والملكية الفكرية قبل مشاركة أعمال حساسة أو بدء التنفيذ.'
+                : 'The platform displays challenge requirements and files. Agree with the company on confidentiality and intellectual property terms before sharing sensitive work or starting delivery.'}
             </p>
           </div>
         </div>
@@ -398,8 +403,8 @@ export const AboutPage: React.FC = () => {
             </h2>
             <p className="text-sm sm:text-base text-[#C9D3FF] leading-relaxed">
               {lang === 'ar'
-                ? 'أنشئ حسابك اليوم، فعّل ملف خبير الحلول، وابدأ في حل مشكلات حقيقية وتطوير مسيرتك المهنية.'
-                : 'Create your account today, verify your solver profile, and start engineering real-world solutions for real rewards.'}
+                ? 'أنشئ حساباً، أكمل ملفك عند الحاجة، واستكشف التحديات والنقاشات التقنية.'
+                : 'Create an account, complete your profile when needed, and explore challenges and technical discussions.'}
             </p>
           </div>
 

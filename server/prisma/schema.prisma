@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  TALENT
+  COMPANY
+}
+enum ProblemStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+enum ApplicationStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+enum Category {
+  BUG
+  ISSUE
+  CHALLENGE
+}
+enum Difficulty {
+  small
+  medium
+  expert
+}
+enum FilePurpose {
+  CV
+  APPLICATION
+  PROBLEM_PUBLIC
+  PROBLEM_PRIVATE
+}
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  role Role
+  displayName String
+  displayNameEn String
+  createdAt DateTime @default(now())
+  talent TalentProfile?
+  company CompanyProfile?
+  problems Problem[]
+  applications Application[]
+  comments ProblemComment[]
+  files StoredFile[]
+  communityQuestions CommunityQuestion[]
+  communityAnswers CommunityAnswer[]
+  questionReactions CommunityQuestionReaction[]
+  answerReactions CommunityAnswerReaction[]
+  notifications Notification[] @relation("NotificationRecipient")
+}
+
+model TalentProfile {
+  userId String @id
+  user User @relation(fields: [userId], references: [id])
+  firstName String @default("")
+  lastName String @default("")
+  firstNameEn String @default("")
+  lastNameEn String @default("")
+  educationLevel String @default("")
+  institutionMajor String @default("")
+  institutionMajorEn String @default("")
+  experienceLevel String @default("")
+  skills String[]
+  linkedInUrl String @default("")
+  githubUrl String @default("")
+  cvFileId String? @unique
+  cvFile StoredFile? @relation("ProfileCV", fields: [cvFileId], references: [id])
+}
+
+model CompanyProfile {
+  userId String @id
+  user User @relation(fields: [userId], references: [id])
+  name String
+  nameEn String
+  contactEmail String @default("")
+  contactUrl String @default("")
+  shareContact Boolean @default(false)
+}
+
+model Problem {
+  id String @id @default(uuid())
+  companyUserId String
+  company User @relation(fields: [companyUserId], references: [id])
+  title String @default("")
+  titleEn String @default("")
+  summary String @default("")
+  summaryEn String @default("")
+  description String @default("")
+  descriptionEn String @default("")
+  deliverables String[]
+  deliverablesEn String[]
+  constraints String[]
+  constraintsEn String[]
+  criteria String[]
+  criteriaEn String[]
+  skills String[]
+  category Category @default(CHALLENGE)
+  difficulty Difficulty @default(medium)
+  budgetDzd Int @default(0)
+  deadlineAt DateTime?
+  status ProblemStatus @default(DRAFT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  privateDetails ProblemPrivateDetails?
+  applications Application[] @relation("ProblemApplications")
+  acceptedApplicationId String? @unique
+  acceptedApplication Application? @relation("SelectedApplication", fields: [acceptedApplicationId], references: [id])
+  comments ProblemComment[]
+  files StoredFile[]
+  notifications Notification[] @relation("NotificationProblem")
+  @@index([createdAt, id])
+  @@index([companyUserId])
+}
+
+model ProblemPrivateDetails {
+  problemId String @id
+  problem Problem @relation(fields: [problemId], references: [id])
+  notes String @default("")
+  notesEn String @default("")
+}
+
+model Application {
+  id String @id @default(uuid())
+  problemId String
+  problem Problem @relation("ProblemApplications", fields: [problemId], references: [id])
+  applicantUserId String
+  applicant User @relation(fields: [applicantUserId], references: [id])
+  coverMessage String @default("")
+  coverMessageEn String @default("")
+  deliveryDays Int @default(10)
+  projectUrl String @default("")
+  consent Boolean @default(false)
+  status ApplicationStatus @default(DRAFT)
+  rejectionReason String?
+  rejectionReasonEn String?
+  decisionCode String?
+  createdAt DateTime @default(now())
+  submittedAt DateTime?
+  decidedAt DateTime?
+  selectedFor Problem? @relation("SelectedApplication")
+  files StoredFile[]
+  @@unique([problemId, applicantUserId])
+  @@index([applicantUserId])
+}
+
+model ProblemComment {
+  id String @id @default(uuid())
+  problemId String
+  problem Problem @relation(fields: [problemId], references: [id])
+  authorUserId String
+  author User @relation(fields: [authorUserId], references: [id])
+  body String
+  bodyEn String @default("")
+  parentId String?
+  parent ProblemComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies ProblemComment[] @relation("CommentReplies")
+  createdAt DateTime @default(now())
+  @@index([problemId, createdAt])
+}
+
+model StoredFile {
+  id String @id @default(uuid())
+  uploaderUserId String
+  uploader User @relation(fields: [uploaderUserId], references: [id])
+  storageKey String @unique
+  originalName String
+  mimeType String
+  byteSize Int
+  purpose FilePurpose
+  problemId String?
+  problem Problem? @relation(fields: [problemId], references: [id])
+  applicationId String?
+  application Application? @relation(fields: [applicationId], references: [id])
+  profile TalentProfile? @relation("ProfileCV")
+  createdAt DateTime @default(now())
+}
+
+enum CommunityReactionKind {
+  HELPFUL
+  INSIGHT
+}
+
+enum NotificationType {
+  COMMUNITY_ANSWER
+  ANSWER_ACCEPTED
+  APPLICATION_RECEIVED
+  APPLICATION_DECIDED
+  PROBLEM_COMMENT
+}
+
+model CommunityQuestion {
+  id String @id @default(uuid())
+  authorUserId String
+  author User @relation(fields: [authorUserId], references: [id])
+  title String @default("")
+  titleEn String @default("")
+  body String @default("")
+  bodyEn String @default("")
+  codeSnippet String?
+  tags String[]
+  createdAt DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+  acceptedAnswerId String? @unique
+  acceptedAnswer CommunityAnswer? @relation("AcceptedCommunityAnswer", fields: [acceptedAnswerId], references: [id])
+  answers CommunityAnswer[] @relation("CommunityAnswers")
+  reactions CommunityQuestionReaction[]
+  views CommunityQuestionView[]
+  notifications Notification[] @relation("NotificationQuestion")
+  @@index([createdAt, id])
+  @@index([lastActivityAt, id])
+}
+
+model CommunityAnswer {
+  id String @id @default(uuid())
+  questionId String
+  question CommunityQuestion @relation("CommunityAnswers", fields: [questionId], references: [id])
+  authorUserId String
+  author User @relation(fields: [authorUserId], references: [id])
+  body String @default("")
+  bodyEn String @default("")
+  createdAt DateTime @default(now())
+  selectedFor CommunityQuestion? @relation("AcceptedCommunityAnswer")
+  reactions CommunityAnswerReaction[]
+  notifications Notification[] @relation("NotificationAnswer")
+  @@index([questionId, createdAt, id])
+}
+
+model CommunityQuestionReaction {
+  targetId String
+  target CommunityQuestion @relation(fields: [targetId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  kind CommunityReactionKind
+  createdAt DateTime @default(now())
+  @@id([targetId, userId, kind])
+}
+
+model CommunityAnswerReaction {
+  targetId String
+  target CommunityAnswer @relation(fields: [targetId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  kind CommunityReactionKind
+  createdAt DateTime @default(now())
+  @@id([targetId, userId, kind])
+}
+
+model CommunityQuestionView {
+  questionId String
+  question CommunityQuestion @relation(fields: [questionId], references: [id])
+  viewerKey String
+  createdAt DateTime @default(now())
+  @@id([questionId, viewerKey])
+}
+
+model Notification {
+  id String @id @default(uuid())
+  recipientUserId String
+  recipient User @relation("NotificationRecipient", fields: [recipientUserId], references: [id])
+  type NotificationType
+  eventKey String
+  problemId String?
+  problem Problem? @relation("NotificationProblem", fields: [problemId], references: [id])
+  questionId String?
+  question CommunityQuestion? @relation("NotificationQuestion", fields: [questionId], references: [id])
+  answerId String?
+  answer CommunityAnswer? @relation("NotificationAnswer", fields: [answerId], references: [id])
+  createdAt DateTime @default(now())
+  readAt DateTime?
+  @@unique([recipientUserId, eventKey])
+  @@index([recipientUserId, readAt, createdAt, id])
+}
+
+model SeedContentRevision {
+  id String @id
+  appliedAt DateTime @default(now())
+}
+

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { DifficultyMeter } from '../components/DifficultyMeter';
@@ -14,36 +14,99 @@ import {
   ChevronLeft,
   Send,
   Check,
+  FileText,
 } from 'lucide-react';
+import { getProblemContact, getProblemPrivate } from '../api/problems';
+import { apiErrorMessage } from '../api/client';
+import { fileUrl } from '../api/files';
 
-export const ProblemDetailPage: React.FC = () => {
+const ProblemDetailContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const {
     lang,
     dir,
     currentRole,
+    currentUser,
     problems,
     addProblemComment,
     calculateEligibility,
     openAuthModal,
+    loadProblem,
+    submissions,
   } = useApp();
+  const loadProblemRef = useRef(loadProblem);
+  useEffect(() => { loadProblemRef.current = loadProblem; }, [loadProblem]);
 
   const [commentInput, setCommentInput] = useState('');
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [commentError, setCommentError] = useState('');
+  const [contact, setContact] = useState<{ contactEmail: string; contactUrl: string } | null>(null);
+  const [privateDetails, setPrivateDetails] = useState<{ notes: string; notesEn?: string; files: { id: string; originalName: string }[] } | null>(null);
+  const contactRequestSequence = useRef(0);
+  const privateRequestSequence = useRef(0);
+  const [detailLoading, setDetailLoading] = useState(true);
+  const [detailError, setDetailError] = useState('');
   const ChevronIcon = dir === 'rtl' ? ChevronLeft : ChevronRight;
 
-  const problem = problems.find((p) => p.id === id) || problems[0];
-  const eligibility = calculateEligibility(problem.id, problem.tags);
+  const problem = problems.find((p) => p.id === id);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (!id) { setDetailLoading(false); return; }
+      setDetailLoading(true); setDetailError('');
+      void loadProblemRef.current(id).catch((reason) => { if (active) setDetailError(apiErrorMessage(reason, lang)); })
+        .finally(() => { if (active) setDetailLoading(false); });
+    }, 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [id, lang]);
+  const eligibility = problem ? calculateEligibility(problem.id, problem.tags) : null;
 
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!problem) return;
     if (!commentInput.trim()) return;
     if (currentRole === 'visitor') {
       openAuthModal();
       return;
     }
-    addProblemComment(problem.id, commentInput.trim());
-    setCommentInput('');
+    setCommentBusy(true); setCommentError('');
+    try { await addProblemComment(problem.id, commentInput.trim()); setCommentInput(''); }
+    catch (reason) { setCommentError(apiErrorMessage(reason, lang)); }
+    finally { setCommentBusy(false); }
   };
+
+  const loadContact = async () => {
+    const sequence = ++contactRequestSequence.current;
+    setContact(null);
+    try {
+      const result = await getProblemContact(problem!.id);
+      if (sequence === contactRequestSequence.current) setContact(result);
+    } catch (reason) {
+      if (sequence === contactRequestSequence.current) {
+        setContact(null);
+        setCommentError(apiErrorMessage(reason, lang));
+      }
+    }
+  };
+  const loadPrivate = async () => {
+    const sequence = ++privateRequestSequence.current;
+    setPrivateDetails(null);
+    try {
+      const details = await getProblemPrivate(problem!.id);
+      if (sequence === privateRequestSequence.current) setPrivateDetails({ notes: details.notes || '', notesEn: details.notesEn || '', files: details.files || [] });
+    }
+    catch (reason) {
+      if (sequence === privateRequestSequence.current) {
+        setPrivateDetails(null);
+        setCommentError(apiErrorMessage(reason, lang));
+      }
+    }
+  };
+
+  if (detailLoading && !problem) return <div className="max-w-7xl mx-auto px-4 py-16 text-center text-sm text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المشكلة…' : 'Loading problem…'}</div>;
+  if (!problem || !eligibility) return <div className="max-w-7xl mx-auto px-4 py-16"><div className="card-pixel p-10 text-center"><h1 className="text-xl font-bold text-[#12122B]">{lang === 'ar' ? 'المشكلة غير موجودة' : 'Problem not found'}</h1><p className="text-xs text-[#5B5B7B] mt-2">{detailError || (lang === 'ar' ? 'لا يمكن عرض هذه المشكلة.' : 'This problem could not be loaded.')}</p><Link to="/problems" className="inline-block mt-4 text-xs font-bold text-[#0B2A9E] underline">{lang === 'ar' ? 'العودة إلى المشكلات' : 'Back to problems'}</Link></div></div>;
+  const canViewPrivate = (currentRole === 'company' && problem.companyUserId === currentUser.id) || submissions.some((application) => application.problemId === problem.id && application.status === 'accepted');
+  const myApplication = submissions.find((application) => application.problemId === problem.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
@@ -67,7 +130,7 @@ export const ProblemDetailPage: React.FC = () => {
             <div className="flex items-center justify-between text-xs border-b border-[#EFE4CC] pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#12122B] text-[#FFFBF1] flex items-center justify-center font-bold text-sm shadow-pixel-s">
-                  {problem.companyAvatar}
+                  {lang === 'ar' ? problem.companyAvatar : problem.companyName_en?.trim().slice(0, 1) || problem.companyAvatar}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -75,7 +138,7 @@ export const ProblemDetailPage: React.FC = () => {
                       {lang === 'ar' ? problem.companyName : problem.companyName_en}
                     </span>
                     <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                      COMPANY
+                      {lang === 'ar' ? 'شركة' : 'COMPANY'}
                     </span>
                   </div>
                   <span className="text-[11px] text-[#5B5B7B]">
@@ -112,7 +175,7 @@ export const ProblemDetailPage: React.FC = () => {
 
             <div>
               <h2 className="text-sm font-bold text-[#12122B] mb-3 uppercase tracking-wide">
-                {lang === 'ar' ? 'المخرجات المطلوبة (Deliverables)' : 'Expected Deliverables'}
+                {lang === 'ar' ? 'المخرجات المطلوبة' : 'Expected Deliverables'}
               </h2>
               <div className="flex flex-col gap-2.5">
                 {(lang === 'ar' ? problem.deliverables : problem.deliverables_en).map(
@@ -164,6 +227,8 @@ export const ProblemDetailPage: React.FC = () => {
             </div>
           </div>
 
+          {problem.files?.length ? <div className="card-pixel p-5 flex flex-col gap-2"><h2 className="text-sm font-bold text-[#12122B]">{lang === 'ar' ? 'مرفقات عامة' : 'Public attachments'}</h2>{problem.files.map((file) => <a key={file.id} href={fileUrl(file.id)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B2A9E] underline"><FileText className="w-4 h-4" />{file.originalName}</a>)}</div> : null}
+
           <div className="card-pixel p-6 sm:p-8 flex flex-col gap-6">
             <h2 className="text-lg font-bold text-[#12122B]">
               {lang === 'ar' ? 'النقاش والاستفسارات التقنية' : 'Technical Discussion & Queries'}
@@ -193,7 +258,7 @@ export const ProblemDetailPage: React.FC = () => {
                           </span>
                           {comment.isCompany && (
                             <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                              COMPANY
+                              {lang === 'ar' ? 'شركة' : 'COMPANY'}
                             </span>
                           )}
                         </div>
@@ -223,7 +288,7 @@ export const ProblemDetailPage: React.FC = () => {
                               </span>
                               {reply.isCompany && (
                                 <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                                  COMPANY
+                                  {lang === 'ar' ? 'شركة' : 'COMPANY'}
                                 </span>
                               )}
                             </div>
@@ -241,6 +306,7 @@ export const ProblemDetailPage: React.FC = () => {
               )}
             </div>
 
+            {commentError && <div className="p-3 bg-[#FFE3DC] border border-[#E5432A] rounded-md text-xs font-bold text-[#E5432A]">{commentError}</div>}
             <form onSubmit={handlePostComment} className="flex flex-col gap-3 pt-3 border-t border-[#EFE4CC]">
               <textarea
                 value={commentInput}
@@ -251,15 +317,17 @@ export const ProblemDetailPage: React.FC = () => {
                     : 'Ask a technical question to the company about this problem…'
                 }
                 rows={3}
+                  maxLength={5000}
                 className="w-full input-pixel text-xs"
               />
               <div className="flex justify-end">
                 <button
                   type="submit"
+                  disabled={commentBusy}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md font-bold text-xs btn-pixel-primary cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{lang === 'ar' ? 'إرسال التعليق' : 'Post comment'}</span>
+                  <span>{commentBusy ? (lang === 'ar' ? 'جارٍ الإرسال…' : 'Posting…') : (lang === 'ar' ? 'إرسال التعليق' : 'Post comment')}</span>
                 </button>
               </div>
             </form>
@@ -270,7 +338,7 @@ export const ProblemDetailPage: React.FC = () => {
           <div className="card-pixel p-6 flex flex-col gap-5">
             <div className="p-4 bg-[#FFF1CC] border-2 border-[#12122B] rounded-md shadow-pixel-s">
               <span className="text-[11px] font-bold text-[#5B5B7B] uppercase block mb-1">
-                {lang === 'ar' ? 'مكافأة الحل المعتمد' : 'Accepted Solution Reward'}
+                {lang === 'ar' ? 'ميزانية التحدي المنشورة' : 'Listed Challenge Budget'}
               </span>
               <div className="flex items-center gap-2">
                 <Coins className="w-6 h-6 text-[#12122B]" />
@@ -297,20 +365,27 @@ export const ProblemDetailPage: React.FC = () => {
               </div>
             </div>
 
+            {currentRole !== 'visitor' && <div className="p-3 bg-[#EEF1FF] border border-[#0B2A9E] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadContact()} className="text-xs font-bold text-[#0B2A9E] underline text-start">{lang === 'ar' ? 'عرض بيانات التواصل' : 'Show contact details'}</button>{contact && (contact.contactEmail || contact.contactUrl ? <div className="text-xs flex flex-col gap-1">{contact.contactEmail && <a href={'mailto:' + contact.contactEmail} className="text-[#12122B] underline">{contact.contactEmail}</a>}{contact.contactUrl && <a href={contact.contactUrl} target="_blank" rel="noreferrer" className="text-[#12122B] underline">{contact.contactUrl}</a>}</div> : <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'لم تشارك الشركة بيانات التواصل.' : 'The company has not shared contact details.'}</p>)}</div>}
+            {canViewPrivate && <div className="p-3 bg-[#FFF1CC] border border-[#12122B] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadPrivate()} className="text-xs font-bold text-[#12122B] underline text-start">{lang === 'ar' ? 'عرض الملاحظات والمرفقات الخاصة' : 'Show private notes and files'}</button>{privateDetails && <><p className="text-xs whitespace-pre-line">{lang === 'ar' ? privateDetails.notes : (privateDetails.notesEn || privateDetails.notes)}</p>{privateDetails.files.map((file) => <a key={file.id} href={fileUrl(file.id)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B2A9E] underline"><FileText className="w-4 h-4" />{file.originalName}</a>)}</>}</div>}
+
             <div>
+              {problem.status === 'CLOSED' && <div className="p-4 bg-[#EFE4CC] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#5B5B7B]">{lang === 'ar' ? 'أُغلقت هذه المشكلة ولم تعد تستقبل طلبات جديدة.' : 'This problem is closed and no longer accepts applications.'}</div>}
+              {eligibility.status === 'company' && <div className="p-4 bg-[#EEF1FF] border-2 border-[#0B2A9E] rounded-md text-xs text-[#0B2A9E]">{lang === 'ar' ? 'حسابات الشركات يمكنها مراجعة وإدارة مشكلاتها من لوحة الشركة.' : 'Company accounts can manage and review their problems from the company dashboard.'}{problem.companyUserId === currentUser.id && <Link to="/company/problems" className="block mt-2 font-bold underline">{lang === 'ar' ? 'فتح مشكلاتي' : 'Open My Problems'}</Link>}</div>}
               {eligibility.status === 'submitted' && (
                 <div className="p-4 bg-[#D9F5E5] border-2 border-[#1E9E5A] rounded-md flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#1E9E5A]">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{lang === 'ar' ? 'تم تقديم حلك بنجاح' : 'Solution Submitted'}</span>
+                    <span>{myApplication?.status === 'accepted' ? (lang === 'ar' ? 'تم قبول طلبك' : 'Application accepted') : myApplication?.status === 'rejected' ? (lang === 'ar' ? 'تم رفض طلبك' : 'Application rejected') : (lang === 'ar' ? 'تم تقديم طلبك' : 'Application submitted')}</span>
                   </div>
                   <p className="text-xs text-[#12122B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'مقترحك قيد الدراسة والمراجعة حالياً من طرف الفريق الهندسي للشركة. ستتلقى إشعاراً فور تقييمه.'
-                      : 'Your proposal is currently under technical review by the company engineering team.'}
+                      ? myApplication?.status === 'rejected' ? (myApplication.rejectionReason || 'اطلع على صفحة طلباتك لمتابعة القرار.') : myApplication?.status === 'accepted' ? 'اختارتك الشركة لهذا العمل.' : 'طلبك محفوظ لدى الشركة للمراجعة.'
+                      : myApplication?.status === 'rejected' ? (myApplication.rejectionReasonEn || myApplication.rejectionReason || 'Open My Applications to review the decision.') : myApplication?.status === 'accepted' ? 'The company selected you for this work.' : 'Your application is saved for company review.'}
                   </p>
                   <span className="font-tag text-[10px] font-bold text-[#1E9E5A] uppercase">
-                    STATUS: UNDER REVIEW
+                    {lang === 'ar'
+                      ? myApplication?.status === 'accepted' ? 'الحالة: مقبول' : myApplication?.status === 'rejected' ? 'الحالة: مرفوض' : 'الحالة: قيد المراجعة'
+                      : myApplication?.status === 'accepted' ? 'STATUS: ACCEPTED' : myApplication?.status === 'rejected' ? 'STATUS: REJECTED' : 'STATUS: UNDER REVIEW'}
                   </span>
                 </div>
               )}
@@ -321,21 +396,21 @@ export const ProblemDetailPage: React.FC = () => {
                     <CheckCircle2 className="w-4 h-4 text-[#1E9E5A]" />
                     <span>
                       {lang === 'ar'
-                        ? `تطابق مهاراتك ${eligibility.matchCount} من ${eligibility.totalCount} مهارات!`
-                        : `Your skills match ${eligibility.matchCount} of ${eligibility.totalCount} required tags!`}
+                        ? `تطابق مهاراتك ${eligibility.matchCount} من ${eligibility.totalCount} مهارات (للاسترشاد فقط).`
+                        : `Your skills match ${eligibility.matchCount} of ${eligibility.totalCount} tags (advisory only).`}
                     </span>
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'أنت مؤهل رسمياً لتقديم مقترح حل لهذا التحدي والمنافسة على المكافأة.'
-                      : 'You are eligible to submit a proposal for this industrial challenge.'}
+                      ? 'يمكنك التقديم حتى إن لم تتطابق كل مهاراتك مع القائمة.'
+                      : 'You can apply even when your skills do not match every listed requirement.'}
                   </p>
-                  <Link
+                  {problem.status !== 'CLOSED' && <Link
                     to={`/problems/${problem.id}/submit`}
                     className="w-full py-2.5 text-center rounded-md font-bold text-xs btn-pixel-accent"
                   >
-                    {lang === 'ar' ? 'قدّم حلك الآن' : 'Submit solution'}
-                  </Link>
+                    {lang === 'ar' ? 'قدّم مقترحك الآن' : 'Submit proposal'}
+                  </Link>}
                 </div>
               )}
 
@@ -367,8 +442,8 @@ export const ProblemDetailPage: React.FC = () => {
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'أنت عضو مسجل، ولكن لتقديم حلول والمنافسة على المكافأة تحتاج لإكمال ملف الحلّال وتحديد مهاراتك.'
-                      : 'You are signed in as a member. Complete your solver profile to unlock proposal submissions.'}
+                ? 'أنت عضو مسجل. أكمل ملف المواهب لتقديم مقترحات للتحديات.'
+                      : 'You are signed in as a member. Complete your talent profile to submit proposals.'}
                   </p>
                   <Link
                     to="/profile/solver"
@@ -410,12 +485,18 @@ export const ProblemDetailPage: React.FC = () => {
 
             <p className="text-[11px] text-[#5B5B7B] text-center pt-2 border-t border-[#EFE4CC]">
               {lang === 'ar'
-                ? 'تُحفظ سرية الحلول والبيانات الحساسة بموجب اتفاقية الاستخدام وسياسة الملكية الفكرية.'
-                : 'Proposals are protected under industrial confidentiality and IP guidelines.'}
+                ? 'اتفق مع الشركة على شروط السرية والملكية الفكرية قبل مشاركة بيانات حساسة أو بدء التنفيذ.'
+                : 'Agree with the company on confidentiality and intellectual property terms before sharing sensitive work or starting delivery.'}
             </p>
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+export const ProblemDetailPage: React.FC = () => {
+  const { id = '' } = useParams<{ id: string }>();
+  const { currentUser } = useApp();
+  return <ProblemDetailContent key={`${id}:${currentUser.id}`} />;
 };
