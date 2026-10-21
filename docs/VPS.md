@@ -2,7 +2,15 @@
 
 This guide prepares a manual deployment at `https://rexios.duckdns.org`. It does not install or replace the VPS's existing Docker, Caddy, PostgreSQL, firewall or other applications. Use **only `compose.vps.yml`** for this deployment; the local Compose files serve a different purpose.
 
-Preparation was verified locally: Compose/helper validation, blank-secret rejection, migration/seed/startup with cached images under the VPS runtime limits, web-to-API health, unique shared-network DNS alias, and project-scoped teardown retaining the external network. The 20 API integration checks and frontend build pass; lint retains three existing warnings. Native ARM64 builds and the actual shared-proxy reload remain deployment-time checks.
+Preparation was verified locally: Compose/helper validation, blank-secret rejection, migration/seed/startup with cached images under the VPS runtime limits, web-to-API health, unique shared-network DNS alias, and project-scoped teardown retaining the external network. The 20 API integration checks and frontend build pass; lint retains three existing warnings.
+
+## Deployment verified — 2026-10-21
+
+The app is deployed at `https://rexios.duckdns.org` from `/home/opc/rexiosai`, using native ARM64 images and the existing GitHub SSH identity. Public HTTPS, frontend assets and routes, database health, all three demo account roles, secure session cookies, dashboards, accepted-applicant private notes and logout were checked. The public seed contains four problems and three community questions.
+
+The shared proxy was gracefully reloaded with only the new Rexios hostname, preserving all eight existing hostnames. All 11 existing containers kept their IDs and start times, and existing site status checks matched their baselines. Rexios used about 200 MiB of RAM during the idle check, with no host ports published. Source/live Caddy backups and the pre-change active JSON configuration are in `/home/opc/rexios-proxy-backups/20261021T104209Z`. The route is saved both in the running proxy's Caddyfile and `/home/opc/esi-reviews/deploy/Caddyfile` for future image builds.
+
+The API Dockerfile assigns copied source to its non-root `node` user, so restrictive checkout modes do not prevent migrations, seeding or startup. Private environment values remain only in the ignored `.env.vps` file with mode 0600. Build logs and the deployment inventory are retained in the ignored `.superpowers/vps-deploy/` directory on the VPS.
 
 ## Isolation
 
@@ -36,15 +44,15 @@ free -m
 
 The existing proxy is `esireviews-web-1`, already attached to that edge network. Its configuration also serves ESI Reviews and Fidelgo. Adding the Rexios hostname requires an additive configuration change and graceful reload of this shared proxy; do that separately from starting Rexios. Do not restart or recreate any existing project to deploy this app.
 
-GitHub authentication was unavailable to `opc` during the assessment. Arrange repository read access first, preferably with a repository-scoped read-only deploy key. Keep credentials outside this checkout and out of Git URLs. Use your existing local GitHub credentials to push updates to `main`; the VPS only needs to pull.
+Repository read access is verified through `opc`'s existing GitHub SSH identity. HTTPS credential authentication is not configured, so use the SSH URL below. Keep credentials outside this checkout and out of Git URLs. Use your existing local GitHub credentials to push updates to `main`; the VPS only needs to pull.
 
 ## Checkout and configuration
 
-After repository access is ready:
+For a fresh installation with that SSH access:
 
 ```bash
 cd /home/opc
-git clone --branch main <authenticated-repository-url> rexiosai
+git clone --branch main git@github.com:AzzouzAimen/rexiosai.git rexiosai
 cd /home/opc/rexiosai
 umask 077
 cp .env.vps.example .env.vps
