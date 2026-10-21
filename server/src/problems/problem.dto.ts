@@ -20,6 +20,7 @@ export class ProblemDto {
   @IsOptional() @IsInt() @Min(0) @Max(2147483647) budgetDzd?: number;
   @IsOptional() @IsDateString() deadlineAt?: string | null;
   @IsOptional() @IsString() @Length(0, 20000) privateNotes?: string;
+  @IsOptional() @IsString() @Length(0, 20000) privateNotesEn?: string;
 }
 const list = ({ value }: { value: unknown }) => value === undefined ? undefined : (Array.isArray(value) ? value : [value]).flatMap(v => String(v).split(','));
 export class ListDto {

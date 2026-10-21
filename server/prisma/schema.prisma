@@ -64,8 +64,11 @@ model TalentProfile {
   user User @relation(fields: [userId], references: [id])
   firstName String @default("")
   lastName String @default("")
+  firstNameEn String @default("")
+  lastNameEn String @default("")
   educationLevel String @default("")
   institutionMajor String @default("")
+  institutionMajorEn String @default("")
   experienceLevel String @default("")
   skills String[]
   linkedInUrl String @default("")
@@ -123,6 +126,7 @@ model ProblemPrivateDetails {
   problemId String @id
   problem Problem @relation(fields: [problemId], references: [id])
   notes String @default("")
+  notesEn String @default("")
 }
 
 model Application {
@@ -132,11 +136,13 @@ model Application {
   applicantUserId String
   applicant User @relation(fields: [applicantUserId], references: [id])
   coverMessage String @default("")
+  coverMessageEn String @default("")
   deliveryDays Int @default(10)
   projectUrl String @default("")
   consent Boolean @default(false)
   status ApplicationStatus @default(DRAFT)
   rejectionReason String?
+  rejectionReasonEn String?
   decisionCode String?
   createdAt DateTime @default(now())
   submittedAt DateTime?
@@ -273,5 +279,10 @@ model Notification {
   readAt DateTime?
   @@unique([recipientUserId, eventKey])
   @@index([recipientUserId, readAt, createdAt, id])
+}
+
+model SeedContentRevision {
+  id String @id
+  appliedAt DateTime @default(now())
 }
 

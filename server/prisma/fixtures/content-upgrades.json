@@ -1,0 +1,522 @@
+[
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "description",
+    "before": "تمتلك شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بدرجات حرارة بين 160°C و 220°C. تذبذب الحرارة يؤدي إلى تلف دفعات القماش كاملة وخسائر مادية معتبرة.\n\nالمطلوب تصميم وتنفيذ نموذج قياس حراري صناعي يعتمد على مجسات حرارية مقاومة للحرارة العالية، مع وحدة معالجة ترسل القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند حدوث خلل، دون الحاجة لشراء أنظمة مراقبة أجنبية باهظة.",
+    "after": "تدير شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بين 160°C و220°C. وقد يؤدي تذبذب الحرارة إلى تلف دفعات القماش كاملةً وخسائر مالية كبيرة.\n\nنحتاج إلى تصميم وتنفيذ نموذج مراقبة حرارية صناعي منخفض التكلفة يعتمد على مجس Thermocouple من النوع K. ترسل وحدة المعالجة القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند تجاوز الحد المحدد، لتوفر بديلاً أقل تكلفة عن أنظمة المراقبة التجارية الباهظة."
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "descriptionEn",
+    "before": "Our plant operates a polyester heat-treatment oven between 160°C and 220°C. Temperature drifts result in compromised fabric batches and significant material losses.\n\nThe goal is to design and implement an affordable industrial monitoring prototype using high-temp thermocouples and a local controller sending telemetry to a local display and supervisor alert system without foreign proprietary licenses.",
+    "after": "Our plant operates a polyester heat-treatment oven at 160°C–220°C. Temperature fluctuations can damage entire fabric batches and cause significant financial losses.\n\nWe need an affordable industrial monitoring prototype built around a Type K thermocouple. The controller should send readings over the plant's local network and show an immediate alert when the set threshold is exceeded, providing a lower-cost alternative to expensive commercial monitoring systems."
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "deliverables",
+    "before": [
+      "مخطط التوصيل الكهربائي للمجسات مع العزل الصناعي",
+      "كود المتحكم (ESP32 أو STM32 أو Raspberry Pi)",
+      "واجهة مستخدم ويب بسيطة وخفيفة لعرض المنحنى البياني للحرارة في الوقت الفعلي",
+      "آلية إرسال إنذار صوتي أو عبر الرسائل القصيرة/التلغرام عند تجاوز العتبة"
+    ],
+    "after": [
+      "مخطط التوصيل الكهربائي للمجسات مع العزل الضوئي الصناعي",
+      "برمجيات وحدة التحكم (ESP32 أو STM32 أو Raspberry Pi)",
+      "واجهة مستخدم ويب بسيطة وخفيفة لعرض المنحنى البياني للحرارة في الوقت الفعلي",
+      "آلية إرسال إنذار صوتي أو عبر الرسائل القصيرة/التلغرام عند تجاوز العتبة"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "deliverablesEn",
+    "before": [
+      "Wiring schematic with industrial optical isolation",
+      "Microcontroller firmware (ESP32, STM32, or Raspberry Pi)",
+      "Lightweight local web dashboard displaying real-time temperature curve",
+      "Alert mechanism (audible alarm or SMS/Telegram notifications on threshold overflow)"
+    ],
+    "after": [
+      "Wiring schematic with industrial optical isolation",
+      "Controller software for an ESP32, STM32, or Raspberry Pi",
+      "A lightweight local web dashboard showing a real-time temperature graph",
+      "Alert mechanism (audible alarm or SMS/Telegram notification when a threshold is exceeded)"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "constraints",
+    "before": [
+      "درجة الحرارة القصوى للفرن تصل إلى 250°C",
+      "تكلفة المكونات الإلكترونية للوحدة الواحدة لا تتجاوز 15,000 د.ج",
+      "الاعتماد على مكونات متوفرة محلياً في السوق الجزائري",
+      "تحمّل الغبار والضوضاء الكهرومغناطيسية للمحركات المجاورة"
+    ],
+    "after": [
+      "يجب أن يدعم المجس قياس درجات حرارة الفرن حتى 250°C",
+      "تكلفة المكونات الإلكترونية للوحدة الواحدة لا تتجاوز 15,000 د.ج",
+      "الاعتماد على مكونات متوفرة محلياً في السوق الجزائري",
+      "تحمّل الغبار والضوضاء الكهرومغناطيسية للمحركات المجاورة"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "constraintsEn",
+    "before": [
+      "Oven temperature tolerance up to 250°C",
+      "Component hardware bill under 15,000 DZD per unit",
+      "Use components readily available in Algerian electronics markets",
+      "Immunity to dust and industrial electromagnetic motor interference"
+    ],
+    "after": [
+      "Sensor must support oven temperatures up to 250°C",
+      "Electronic components must cost no more than 15,000 DZD per unit",
+      "Use components readily available in Algerian electronics markets",
+      "Immunity to dust and industrial electromagnetic motor interference"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "summaryEn",
+    "before": "Seeking a responsive web dashboard tracking status for two bottling lines and alerting supervisors upon stoppage without expensive SCADA licensing.",
+    "after": "We need a web dashboard showing the status of two packaging lines and alerting supervisors when either line stops, without an expensive SCADA system."
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "descriptionEn",
+    "before": "Our facility operates two parallel canning lines. We require a system tracking units-per-minute, downtime status, and aggregated shift metrics.",
+    "after": "Our plant packages canned beverages on two parallel packaging lines. We need a system that tracks containers produced per minute, each line's running or stopped status, and total downtime."
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "deliverablesEn",
+    "before": [
+      "Modern web UI compatible with desktop and tablets",
+      "Local database storing production logs and shift stoppage records",
+      "One-click export of daily shift summaries into Excel/PDF"
+    ],
+    "after": [
+      "Modern web interface for desktop computers and tablets",
+      "Local database storing daily production and stoppage logs",
+      "One-click export of daily shift summaries into Excel/PDF"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "criteriaEn",
+    "before": [
+      "Ease of use for floor operators",
+      "24/7 reliability without memory leaks or crashes"
+    ],
+    "after": [
+      "Ease of use for floor operators",
+      "Reliable continuous operation for 24 hours without interruption"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "title",
+    "before": "نموذج تنبؤ بأعطال المحركات الكهربائية من بيانات الاهتزاز",
+    "after": "نموذج تنبؤ بأعطال المحركات الكهربائية الحثية من بيانات الاهتزاز"
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "titleEn",
+    "before": "Predictive maintenance ML model for industrial induction motors from vibration data",
+    "after": "Vibration-based predictive maintenance model for industrial induction motors"
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "summaryEn",
+    "before": "We have 3 months of accelerometer vibration logs across 10 induction motors and need a model forecasting mechanical breakdown days in advance.",
+    "after": "We have three months of vibration logs from 10 motors and want a model that predicts failures several days in advance, with an alert interface and a detailed accuracy report."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "descriptionEn",
+    "before": "High-level AI & signal processing challenge analyzing vibration spectra (FFT) to extract early bearing fault features and rotor imbalance in 75kW induction motors.",
+    "after": "An advanced industrial machine-learning project in signal processing. It analyzes vibration spectra using FFT to extract features associated with bearing faults and rotor imbalance in large induction motors."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "deliverables",
+    "before": [
+      "دفتر عمل Jupyter موثق بالكامل يوضح خطوات تنظيف البيانات والتحويل الترددي",
+      "نموذج تعلم آلي أو تعلم عميق بدقة تشخيص لا تقل عن 90% (F1-Score)",
+      "واجهة API مبسطة لتغذية القراءات الجديدة واستقبال نسبة احتمالية العطل"
+    ],
+    "after": [
+      "دفتر عمل Jupyter موثق بالكامل يوضح خطوات تنظيف البيانات وترشيح الإشارات والتحويل الترددي (FFT)",
+      "نموذج تعلم آلي أو تعلم عميق بدقة تشخيص لا تقل عن 90% (F1-Score)",
+      "واجهة API مبسطة لتغذية القراءات الجديدة واستقبال نسبة احتمالية العطل"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "deliverablesEn",
+    "before": [
+      "Documented Jupyter Notebook detailing signal filtering and FFT pipelines",
+      "Trained Machine Learning/Deep Learning model achieving $\\ge 90\\%$ F1-Score",
+      "Lightweight inference API endpoint accepting batch sensor arrays"
+    ],
+    "after": [
+      "Fully documented Jupyter Notebook covering data cleaning, signal filtering, and FFT",
+      "A machine-learning or deep-learning model that achieves an F1 score of at least 90%",
+      "A simple API that accepts new readings and returns the estimated probability of failure"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "criteriaEn",
+    "before": [
+      "Minimizing costly false positives",
+      "Model interpretability and feature contribution graphs"
+    ],
+    "after": [
+      "Minimizing costly false positives",
+      "Model interpretability"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "summary",
+    "before": "تطبيق المخزون يعمل في ثلاثة فروع ويتعرض لانقطاعات متكررة؛ نريد آلية مزامنة تتحمل الانقطاع دون تضارب في البيانات.",
+    "after": "يعمل تطبيق المخزون في ثلاثة فروع مع انقطاعات متكررة؛ نحتاج إلى آلية واضحة لمزامنة البيانات دون اتصال والتعامل مع تحديثات المخزون المتعارضة."
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "summaryEn",
+    "before": "Inventory app operates in 3 branches facing frequent connectivity cuts; need a robust offline-first synchronization protocol without data collisions.",
+    "after": "Our inventory app runs at three branches with frequent outages. We need a clear process for offline synchronization and handling conflicting stock updates."
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "descriptionEn",
+    "before": "Our regional warehouses suffer frequent fiber outages, halting sales transactions or generating conflicting stock counts upon reconnect.",
+    "after": "Our warehouses in southern provinces face frequent fiber and 4G outages, which can halt sales or leave stock counts inconsistent when service returns."
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "deliverables",
+    "before": [
+      "تصميم هيكلية البيانات للمزامنة الثنائية (Two-way sync)",
+      "خوارزمية حل التضارب التلقائي وفق طوابع زمنية موثوقة (CRDTs or Vector Clocks)",
+      "نموذج عملي تجريبي يثبت عمل المزامنة في بيئة محاكاة الانقطاع"
+    ],
+    "after": [
+      "تصميم هيكلية البيانات للمزامنة الثنائية (Two-way sync)",
+      "آلية لاكتشاف تحديثات المخزون المتعارضة وحلها وفق قواعد محددة، مع سجل تدقيق وإعادة محاولة المزامنة غير المكتملة",
+      "نموذج عملي يختبر العمل دون اتصال ومزامنة البيانات بعد عودة الاتصال"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "deliverablesEn",
+    "before": [
+      "Two-way sync architectural specification",
+      "Conflict-free replication algorithm (CRDTs or deterministic vector clock resolver)",
+      "Working proof-of-concept demonstrating seamless offline-online transition"
+    ],
+    "after": [
+      "Two-way sync architectural specification",
+      "A method for detecting and resolving conflicting stock updates using defined rules, with an audit log and retries for incomplete syncs",
+      "Working prototype that tests offline operation and data synchronization after connectivity returns"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "constraintsEn",
+    "before": [
+      "PostgreSQL / SQLite compatibility",
+      "End-to-end data encryption in transit between nodes"
+    ],
+    "after": [
+      "PostgreSQL / SQLite compatibility",
+      "Encrypt data in transit between branches and the central office"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "criteria",
+    "before": [
+      "عدم فقدان أي حركة بيع أو إدخال مخزني",
+      "السرعة في إتمام المزامنة فور عودة الاتصال"
+    ],
+    "after": [
+      "تقليل احتمال فقدان حركات البيع وتحديثات المخزون أثناء المزامنة",
+      "سرعة المزامنة بعد عودة الاتصال"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "criteriaEn",
+    "before": [
+      "Zero transaction loss guarantee",
+      "Immediate sync resolution upon packet transmission recovery"
+    ],
+    "after": [
+      "Minimize the risk of lost sales and stock updates during synchronization",
+      "Fast synchronization after connectivity is restored"
+    ]
+  },
+  {
+    "entity": "question",
+    "id": "q1",
+    "field": "titleEn",
+    "before": "How do I reduce temperature sensor noise on ESP32 in a production line?",
+    "after": "How can I reduce temperature-reading noise with an ESP32 on a production line?"
+  },
+  {
+    "entity": "question",
+    "id": "q1",
+    "field": "body",
+    "before": "السلام عليكم،\nأعمل على وحدة قياس حرارة لمراقبة درجات حرارة أفران التجفيف في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire بطول كابل حوالي 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات دقيقة بنسبة 0.2 درجة مئوية. لكن فور إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة أو يرجع الحساس رمز خطأ (85°C).\n\nهل الأفضل اعتماد مرشح كالمان برمجياً أم إضافة optocoupler وعزل خط التغذية؟",
+    "after": "السلام عليكم،\nأعمل على وحدة قياس حرارة لصندوق معدات في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire وكابل طوله نحو 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات مستقرة عند القيمة المتوقعة. لكن عند إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة مئوية، أو يعرض الحساس مؤقتاً قراءة بدء التشغيل الافتراضية (85°C).\n\nهل يكفي استخدام مرشح وسيط (median filter) برمجياً، أم ينبغي معالجة مسار الكابل والتدريع والتأريض أولاً؟"
+  },
+  {
+    "entity": "question",
+    "id": "q1",
+    "field": "bodyEn",
+    "before": "Hello,\nI am building a temperature monitoring unit for drying ovens in a plastics plant.\nI used an ESP32 microcontroller with a DS18B20 sensor via OneWire with a cable length of ~3 meters.\n\nWhen adjacent machines are idle, readings are accurate to within 0.2°C. But as soon as the 3-phase suction motor starts, random spikes up to 15°C appear or the sensor returns an error code (85°C).\n\nIs it better to use a Kalman filter in software or add optocouplers and isolated power supplies?",
+    "after": "Hello,\nI am building a temperature-monitoring unit for an equipment enclosure in a plastics plant.\nI use an ESP32 with a DS18B20 sensor over OneWire, with a cable about 3 meters long.\n\nWhen nearby machines are idle, readings remain stable around the expected value. But when the three-phase suction motor starts, random spikes of up to 15°C appear, or the sensor briefly shows its default power-on reading of 85°C.\n\nWould a software median filter be enough, or should I first address cable routing, shielding, and grounding?"
+  },
+  {
+    "entity": "answer",
+    "id": "q1-ans_1",
+    "field": "body",
+    "before": "قبل تعديل التمديدات جرّب أخذ عدة عيّنات في كل دورة واستبعاد القيم الشاذة (median filter) ثم احسب المتوسط. هذا يقلل أثر القفزات اللحظية الناتجة عن تشغيل المحرك.",
+    "after": "يمكن للمرشح الوسيط استبعاد القفزات المنفردة، لكن لا تعتمد عليه وحده؛ فهو يخفف أثر المشكلة ولا يعالج سبب التداخل."
+  },
+  {
+    "entity": "answer",
+    "id": "q1-ans_1",
+    "field": "bodyEn",
+    "before": "Before altering physical wiring, try taking multiple samples per cycle and filtering outliers using a median filter, then averaging. This mitigates instantaneous spikes caused by motor startup.",
+    "after": "A median filter can reject isolated spikes, but do not rely on it alone: it reduces the symptom without fixing the source of the interference."
+  },
+  {
+    "entity": "answer",
+    "id": "q1-ans_2",
+    "field": "body",
+    "before": "تأكد من استخدام كابل مجدول محمي (Shielded Twisted Pair) مع تأريض الشيلد من جهة المتحكم فقط (Ground Loop prevention)، ومقاومة سحب 4.7kΩ قريبة من الحساس.",
+    "after": "استخدم كابلاً مجدولاً محمياً (Shielded Twisted Pair)، وأرضِ الدرع من جهة واحدة لتجنب حلقات التأريض. ابدأ بمقاومة سحب 4.7kΩ قرب المتحكم، ثم اضبط قيمتها وفق طول الكابل وسعته."
+  },
+  {
+    "entity": "answer",
+    "id": "q1-ans_2",
+    "field": "bodyEn",
+    "before": "Ensure you use Shielded Twisted Pair (STP) cable with shield grounded only on the controller side to avoid ground loops, and a 4.7kΩ pull-up resistor mounted close to the sensor.",
+    "after": "Use shielded twisted-pair cable and ground the shield at one end to avoid ground loops. Start with a 4.7kΩ pull-up near the controller, then adjust its value for the cable length and capacitance."
+  },
+  {
+    "entity": "question",
+    "id": "q2",
+    "field": "body",
+    "before": "نظامنا يجمع بيانات مضخات الطاقة الشمسية ويرسلها عبر موديول SIM7600E. المشكلة تكمن في استهلاك الطاقة عند المحاولات المتكررة لإعادة الاتصال أثناء انقطاع التغطية.\n\nهل يفضل الاعتماد على SQLite على بطاقة SD أو EEPROM خارجية؟ وكيف تضبط خوارزمية التراجع الأسي (Exponential Backoff) لحفظ البطارية؟",
+    "after": "يجمع نظامنا بيانات مضخات المياه العاملة بالطاقة الشمسية ويرسلها عبر وحدة SIM7600E. تكمن المشكلة في استهلاك الطاقة عند تكرار محاولات الاتصال أثناء انقطاع التغطية.\n\nهل الأفضل تخزين السجلات في قاعدة SQLite على بطاقة SD، أم في سجل تسلسلي على ذاكرة Flash خارجية؟ وكيف نضبط خوارزمية التراجع الأسي (Exponential Backoff) لترشيد استهلاك البطارية؟"
+  },
+  {
+    "entity": "question",
+    "id": "q2",
+    "field": "bodyEn",
+    "before": "Our system collects solar water pump metrics and pushes data via SIM7600E. The issue is severe battery drain when retrying connections in zero-coverage zones.\n\nIs an SD card SQLite or external SPI Flash better? And how do you calibrate exponential backoff for power conservation?",
+    "after": "Our system collects data from solar-powered water pumps and sends it through a SIM7600E module. Repeated connection attempts during coverage outages drain the battery.\n\nWould SQLite on an SD card or an append-only log on external flash be a better fit? How should we tune exponential backoff to conserve power?"
+  },
+  {
+    "entity": "question",
+    "id": "q3",
+    "field": "titleEn",
+    "before": "Optimizing YOLOv8 for real-time inference on Raspberry Pi 4 on a sorting line",
+    "after": "Optimizing YOLOv8 for real-time inference on a Raspberry Pi 4 sorting line"
+  },
+  {
+    "entity": "question",
+    "id": "q3",
+    "field": "body",
+    "before": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما خط التعبئة يتطلب على الأقل 15 FPS لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral TPU. ما هي تجاربكم مع بيئات الإنتاج الفعلية؟",
+    "after": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما يتطلب خط التعبئة 15 FPS على الأقل لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral USB Accelerator. ما هي تجاربكم في بيئات الإنتاج الفعلية؟"
+  },
+  {
+    "entity": "question",
+    "id": "q3",
+    "field": "bodyEn",
+    "before": "We trained YOLOv8n on 1,500 images of Deglet Nour dates categorized into 3 quality tiers.\nRunning PyTorch yields 3-4 FPS, while the line demands at least 15 FPS to sync with the pneumatic ejector.\n\nWe evaluated ONNX Runtime and are considering NCNN or Coral USB TPU. What works best in actual shop-floor conditions?",
+    "after": "We trained YOLOv8n on 1,500 images of Deglet Nour dates classified into three quality grades.\nRunning the model with standard PyTorch yields 3–4 FPS, while the line needs at least 15 FPS to synchronize with the pneumatic ejector.\n\nWe have tried ONNX Runtime and are considering NCNN or the Coral USB Accelerator. What has worked for you in production environments?"
+  },
+  {
+    "entity": "question",
+    "id": "q1",
+    "field": "body",
+    "before": "السلام عليكم،\nأعمل على وحدة قياس حرارة لصندوق معدات في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire وكابل طوله نحو 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات مستقرة عند القيمة المتوقعة. لكن عند إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة مئوية، أو يعرض الحساس مؤقتاً قراءة بدء التشغيل الافتراضية (85°C).\n\nهل يكفي استخدام مرشح وسيط (median filter) برمجياً، أم ينبغي معالجة مسار الكابل والتدريع والتأريض أولاً؟",
+    "after": "السلام عليكم،\nأعمل على وحدة قياس حرارة لصندوق معدات في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire وكابل طوله نحو 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات مستقرة عند القيمة المتوقعة. لكن عند إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة مئوية، أو يعرض الحساس مؤقتاً قراءة بدء التشغيل الافتراضية (85°C).\n\nهل يكفي استخدام مرشح وسيط برمجياً، أم ينبغي معالجة مسار الكابل والتدريع والتأريض أولاً؟"
+  },
+  {
+    "entity": "answer",
+    "id": "q1-ans_2",
+    "field": "body",
+    "before": "استخدم كابلاً مجدولاً محمياً (Shielded Twisted Pair)، وأرضِ الدرع من جهة واحدة لتجنب حلقات التأريض. ابدأ بمقاومة سحب 4.7kΩ قرب المتحكم، ثم اضبط قيمتها وفق طول الكابل وسعته.",
+    "after": "استخدم كابلاً مجدولاً محمياً، وأرضِ الدرع من جهة واحدة لتجنب حلقات التأريض. ابدأ بمقاومة سحب 4.7kΩ قرب المتحكم، ثم اضبط قيمتها وفق طول الكابل وسعته."
+  },
+  {
+    "entity": "question",
+    "id": "q2",
+    "field": "body",
+    "before": "يجمع نظامنا بيانات مضخات المياه العاملة بالطاقة الشمسية ويرسلها عبر وحدة SIM7600E. تكمن المشكلة في استهلاك الطاقة عند تكرار محاولات الاتصال أثناء انقطاع التغطية.\n\nهل الأفضل تخزين السجلات في قاعدة SQLite على بطاقة SD، أم في سجل تسلسلي على ذاكرة Flash خارجية؟ وكيف نضبط خوارزمية التراجع الأسي (Exponential Backoff) لترشيد استهلاك البطارية؟",
+    "after": "يجمع نظامنا بيانات مضخات المياه العاملة بالطاقة الشمسية ويرسلها عبر وحدة SIM7600E. تكمن المشكلة في استهلاك الطاقة عند تكرار محاولات الاتصال أثناء انقطاع التغطية.\n\nهل الأفضل تخزين السجلات في قاعدة SQLite على بطاقة SD، أم في سجل تسلسلي على ذاكرة Flash خارجية؟ وكيف نضبط خوارزمية التراجع الأسي لترشيد استهلاك البطارية؟"
+  },
+  {
+    "entity": "comment",
+    "id": "p1-c2",
+    "field": "body",
+    "before": "هل تفضلون أن تكون لوحة المراقبة مدمجة في شاشة لمسية على الفرن نفسه (Nextion Display) أم شاشة ويب على حاسوب المشرف؟",
+    "after": "هل تفضلون أن تكون لوحة المراقبة مدمجة في شاشة لمسية على الفرن نفسه (Nextion) أم شاشة ويب على حاسوب المشرف؟"
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "constraints",
+    "before": [
+      "العمل دون الحاجة لاتصال بالإنترنت الخارجي (Local Network only)",
+      "تحديث المؤشرات بزمن استجابة أقل من 1 ثانية (WebSockets)"
+    ],
+    "after": [
+      "العمل دون الحاجة لاتصال بالإنترنت الخارجي",
+      "تحديث المؤشرات بزمن استجابة أقل من 1 ثانية (WebSockets)"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "description",
+    "before": "مشروع ذكاء اصطناعي صناعي متقدم لمعالجة الإشارات وتحليل الترددات (FFT) واستخراج السمات المميزة لأعطال المحامل (Bearing Faults) واختلال التوازن في المحركات الحثية الكبيرة.",
+    "after": "مشروع ذكاء اصطناعي صناعي متقدم لمعالجة الإشارات وتحليل الترددات (FFT) واستخراج السمات المميزة لأعطال المحامل واختلال التوازن في المحركات الحثية الكبيرة."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "constraints",
+    "before": [
+      "زمن المعالجة والاستدلال للدفعة الواحدة أقل من 500ms",
+      "التعامل مع البيانات غير المتوازنة (Unbalanced anomaly detection)"
+    ],
+    "after": [
+      "زمن المعالجة والاستدلال للدفعة الواحدة أقل من 500ms",
+      "التعامل مع البيانات غير المتوازنة"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "criteria",
+    "before": [
+      "تقليل الإنذارات الكاذبة (False Positives)",
+      "قدرة النموذج على التفسير (Explainability)"
+    ],
+    "after": [
+      "تقليل الإنذارات الكاذبة",
+      "قدرة النموذج على التفسير (Explainability)"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p4",
+    "field": "deliverables",
+    "before": [
+      "تصميم هيكلية البيانات للمزامنة الثنائية (Two-way sync)",
+      "آلية لاكتشاف تحديثات المخزون المتعارضة وحلها وفق قواعد محددة، مع سجل تدقيق وإعادة محاولة المزامنة غير المكتملة",
+      "نموذج عملي يختبر العمل دون اتصال ومزامنة البيانات بعد عودة الاتصال"
+    ],
+    "after": [
+      "تصميم هيكلية البيانات للمزامنة الثنائية",
+      "آلية لاكتشاف تحديثات المخزون المتعارضة وحلها وفق قواعد محددة، مع سجل تدقيق وإعادة محاولة المزامنة غير المكتملة",
+      "نموذج عملي يختبر العمل دون اتصال ومزامنة البيانات بعد عودة الاتصال"
+    ]
+  },
+  {
+    "entity": "problem",
+    "id": "p1",
+    "field": "description",
+    "before": "تدير شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بين 160°C و220°C. وقد يؤدي تذبذب الحرارة إلى تلف دفعات القماش كاملةً وخسائر مالية كبيرة.\n\nنحتاج إلى تصميم وتنفيذ نموذج مراقبة حرارية صناعي منخفض التكلفة يعتمد على مجس Thermocouple من النوع K. ترسل وحدة المعالجة القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند تجاوز الحد المحدد، لتوفر بديلاً أقل تكلفة عن أنظمة المراقبة التجارية الباهظة.",
+    "after": "تدير شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بين 160°C و220°C. وقد يؤدي تذبذب الحرارة إلى تلف دفعات القماش كاملةً وخسائر مالية كبيرة.\n\nنحتاج إلى تصميم وتنفيذ نموذج مراقبة حرارية صناعي منخفض التكلفة يعتمد على مزدوج حراري من النوع K. ترسل وحدة المعالجة القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند تجاوز الحد المحدد، لتوفر بديلاً أقل تكلفة عن أنظمة المراقبة التجارية الباهظة."
+  },
+  {
+    "entity": "comment",
+    "id": "p1-c1",
+    "field": "body",
+    "before": "مرحباً بالجميع. نؤكد أن الفرن مزود بمدخل جاهز لتركيب مجس من نوع Thermocouple K، ويمكن للحلول المقترحة استخدام هذا المنفذ مباشرة.",
+    "after": "مرحباً بالجميع. نؤكد أن الفرن مزود بمدخل جاهز لتركيب مزدوج حراري من النوع K، ويمكن للحلول المقترحة استخدام هذا المنفذ مباشرة."
+  },
+  {
+    "entity": "problem",
+    "id": "p2",
+    "field": "description",
+    "before": "ينتج مصنعنا مشروبات معلبة عبر خطين متوازيين. نحتاج إلى نظام لمراقبة عدد العبوات المنتجة في الدقيقة ومؤشر توقف الخط وحساب وقت التوقف الإجمالي (Downtime).",
+    "after": "ينتج مصنعنا مشروبات معلبة عبر خطين متوازيين. نحتاج إلى نظام لمراقبة عدد العبوات المنتجة في الدقيقة ومؤشر توقف الخط وحساب وقت التوقف الإجمالي."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "summary",
+    "before": "لدينا ثلاثة أشهر من سجلات الاهتزاز لعشرة محركات ونريد نموذجًا يتوقع العطل قبل أيام، مع واجهة تنبيه وتقرير دقة مفصّل.",
+    "after": "لدينا ثلاثة أشهر من سجلات الاهتزاز لعشرة محركات ونريد نموذجًا يرصد مؤشرات الأعطال، مع واجهة تنبيه وتقرير دقة مفصّل."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "summaryEn",
+    "before": "We have three months of vibration logs from 10 motors and want a model that predicts failures several days in advance, with an alert interface and a detailed accuracy report.",
+    "after": "We have three months of vibration logs from 10 motors and want a model that detects fault indicators, with an alert interface and a detailed accuracy report."
+  },
+  {
+    "entity": "problem",
+    "id": "p3",
+    "field": "criteria",
+    "before": [
+      "تقليل الإنذارات الكاذبة",
+      "قدرة النموذج على التفسير (Explainability)"
+    ],
+    "after": [
+      "تقليل الإنذارات الكاذبة",
+      "قدرة النموذج على التفسير"
+    ]
+  },
+  {
+    "entity": "question",
+    "id": "q2",
+    "field": "title",
+    "before": "أفضل طريقة للتعامل مع انقطاع شبكة 4G في أجهزة القياس عن بُعد (Telemetry)؟",
+    "after": "أفضل طريقة للتعامل مع انقطاع شبكة 4G في أجهزة القياس عن بُعد؟"
+  },
+  {
+    "entity": "question",
+    "id": "q3",
+    "field": "body",
+    "before": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما يتطلب خط التعبئة 15 FPS على الأقل لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral USB Accelerator. ما هي تجاربكم في بيئات الإنتاج الفعلية؟",
+    "after": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما يتطلب خط الفرز 15 FPS على الأقل لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral USB Accelerator. ما هي تجاربكم في بيئات الإنتاج الفعلية؟"
+  }
+]

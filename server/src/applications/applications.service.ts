@@ -44,7 +44,7 @@ export class ApplicationsService {
       const data = { coverMessage: existing?.coverMessage || '', deliveryDays: existing?.deliveryDays || 10, projectUrl: existing?.projectUrl || '', consent: existing?.consent || false, ...input };
       data.coverMessage = data.coverMessage.trim();
       if (submit && (data.coverMessage.split(/\s+/).filter(Boolean).length < 10 || !data.consent)) throw new BadRequestException('Write at least 10 words and confirm ownership before submitting.');
-      const result = await tx.application.upsert({ where, create: { ...data, problemId: id, applicantUserId: user.id, status: submit ? 'UNDER_REVIEW' : 'DRAFT', submittedAt: submit ? new Date() : null }, update: { ...data, ...(submit ? { status: 'UNDER_REVIEW', submittedAt: new Date() } : {}) }, include: applicationInclude });
+      const result = await tx.application.upsert({ where, create: { ...data, problemId: id, applicantUserId: user.id, status: submit ? 'UNDER_REVIEW' : 'DRAFT', submittedAt: submit ? new Date() : null }, update: { ...data, ...(input.coverMessage !== undefined ? { coverMessageEn: '' } : {}), ...(submit ? { status: 'UNDER_REVIEW', submittedAt: new Date() } : {}) }, include: applicationInclude });
       if (submit) await this.notifications.record(tx, [{ actorUserId: user.id, recipientUserId: p.companyUserId, type: 'APPLICATION_RECEIVED', eventKey: `APPLICATION_RECEIVED:${result.id}`, problemId: p.id }]);
       return presentApplication(result);
     });
@@ -72,13 +72,13 @@ export class ApplicationsService {
       const problem = await tx.problem.findUniqueOrThrow({ where: { id: initial.problemId } });
       const application = await tx.application.findUniqueOrThrow({ where: { id } });
       if (problem.status !== 'OPEN' || application.status !== 'UNDER_REVIEW') throw new ConflictException('This application has already been decided or the problem is closed.');
-      const result = await tx.application.update({ where: { id }, data: { status: input.decision, decidedAt: new Date(), rejectionReason: input.decision === 'REJECTED' ? input.reason?.trim() || null : null, decisionCode: input.decision === 'REJECTED' ? 'MANUAL_REJECTION' : 'SELECTED' }, include: applicationInclude });
+      const result = await tx.application.update({ where: { id }, data: { status: input.decision, decidedAt: new Date(), rejectionReason: input.decision === 'REJECTED' ? input.reason?.trim() || null : null, rejectionReasonEn: null, decisionCode: input.decision === 'REJECTED' ? 'MANUAL_REJECTION' : 'SELECTED' }, include: applicationInclude });
       const affectedApplicants = input.decision === 'ACCEPTED'
         ? await tx.application.findMany({ where: { problemId: problem.id, status: 'UNDER_REVIEW', id: { not: id } }, select: { id: true, applicantUserId: true } })
         : [];
       if (input.decision === 'ACCEPTED') {
         await tx.problem.update({ where: { id: problem.id }, data: { status: 'CLOSED', acceptedApplicationId: id } });
-        await tx.application.updateMany({ where: { problemId: problem.id, status: 'UNDER_REVIEW', id: { not: id } }, data: { status: 'REJECTED', rejectionReason: 'Another applicant was selected for this problem.', decisionCode: 'OTHER_APPLICANT_SELECTED', decidedAt: new Date() } });
+        await tx.application.updateMany({ where: { problemId: problem.id, status: 'UNDER_REVIEW', id: { not: id } }, data: { status: 'REJECTED', rejectionReason: 'اختارت الشركة متقدمًا آخر لهذه المشكلة.', rejectionReasonEn: 'Another applicant was selected for this problem.', decisionCode: 'OTHER_APPLICANT_SELECTED', decidedAt: new Date() } });
       }
       await this.notifications.record(tx, [
         { actorUserId: user.id, recipientUserId: application.applicantUserId, type: 'APPLICATION_DECIDED', eventKey: `APPLICATION_DECIDED:${application.id}`, problemId: problem.id },

@@ -25,29 +25,29 @@
       "title_en": "Low-cost industrial oven temperature monitoring system",
       "summary": "نحتاج حلًّا بسيطًا لقراءة حرارة فرن صناعي بدقة وإرسال إنذار عند تجاوز الحد المسموح، مع لوحة صغيرة لعرض القراءات.",
       "summary_en": "We need a simple solution to accurately read industrial oven temperatures and trigger alerts on threshold breaches, with a compact dashboard.",
-      "description": "تمتلك شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بدرجات حرارة بين 160°C و 220°C. تذبذب الحرارة يؤدي إلى تلف دفعات القماش كاملة وخسائر مادية معتبرة.\n\nالمطلوب تصميم وتنفيذ نموذج قياس حراري صناعي يعتمد على مجسات حرارية مقاومة للحرارة العالية، مع وحدة معالجة ترسل القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند حدوث خلل، دون الحاجة لشراء أنظمة مراقبة أجنبية باهظة.",
-      "description_en": "Our plant operates a polyester heat-treatment oven between 160°C and 220°C. Temperature drifts result in compromised fabric batches and significant material losses.\n\nThe goal is to design and implement an affordable industrial monitoring prototype using high-temp thermocouples and a local controller sending telemetry to a local display and supervisor alert system without foreign proprietary licenses.",
+      "description": "تدير شركتنا فرناً حرارياً لمعالجة ألياف البوليستر يعمل بين 160°C و220°C. وقد يؤدي تذبذب الحرارة إلى تلف دفعات القماش كاملةً وخسائر مالية كبيرة.\n\nنحتاج إلى تصميم وتنفيذ نموذج مراقبة حرارية صناعي منخفض التكلفة يعتمد على مزدوج حراري من النوع K. ترسل وحدة المعالجة القراءات عبر شبكة المصنع المحلية وتعرض تنبيهاً فورياً عند تجاوز الحد المحدد، لتوفر بديلاً أقل تكلفة عن أنظمة المراقبة التجارية الباهظة.",
+      "description_en": "Our plant operates a polyester heat-treatment oven at 160°C–220°C. Temperature fluctuations can damage entire fabric batches and cause significant financial losses.\n\nWe need an affordable industrial monitoring prototype built around a Type K thermocouple. The controller should send readings over the plant's local network and show an immediate alert when the set threshold is exceeded, providing a lower-cost alternative to expensive commercial monitoring systems.",
       "deliverables": [
-        "مخطط التوصيل الكهربائي للمجسات مع العزل الصناعي",
-        "كود المتحكم (ESP32 أو STM32 أو Raspberry Pi)",
+        "مخطط التوصيل الكهربائي للمجسات مع العزل الضوئي الصناعي",
+        "برمجيات وحدة التحكم (ESP32 أو STM32 أو Raspberry Pi)",
         "واجهة مستخدم ويب بسيطة وخفيفة لعرض المنحنى البياني للحرارة في الوقت الفعلي",
         "آلية إرسال إنذار صوتي أو عبر الرسائل القصيرة/التلغرام عند تجاوز العتبة"
       ],
       "deliverables_en": [
         "Wiring schematic with industrial optical isolation",
-        "Microcontroller firmware (ESP32, STM32, or Raspberry Pi)",
-        "Lightweight local web dashboard displaying real-time temperature curve",
-        "Alert mechanism (audible alarm or SMS/Telegram notifications on threshold overflow)"
+        "Controller software for an ESP32, STM32, or Raspberry Pi",
+        "A lightweight local web dashboard showing a real-time temperature graph",
+        "Alert mechanism (audible alarm or SMS/Telegram notification when a threshold is exceeded)"
       ],
       "constraints": [
-        "درجة الحرارة القصوى للفرن تصل إلى 250°C",
+        "يجب أن يدعم المجس قياس درجات حرارة الفرن حتى 250°C",
         "تكلفة المكونات الإلكترونية للوحدة الواحدة لا تتجاوز 15,000 د.ج",
         "الاعتماد على مكونات متوفرة محلياً في السوق الجزائري",
         "تحمّل الغبار والضوضاء الكهرومغناطيسية للمحركات المجاورة"
       ],
       "constraints_en": [
-        "Oven temperature tolerance up to 250°C",
-        "Component hardware bill under 15,000 DZD per unit",
+        "Sensor must support oven temperatures up to 250°C",
+        "Electronic components must cost no more than 15,000 DZD per unit",
         "Use components readily available in Algerian electronics markets",
         "Immunity to dust and industrial electromagnetic motor interference"
       ],
@@ -83,7 +83,7 @@
           "authorAvatar": "ش",
           "createdAt": "منذ يوم",
           "createdAt_en": "1 day ago",
-          "body": "مرحباً بالجميع. نؤكد أن الفرن مزود بمدخل جاهز لتركيب مجس من نوع Thermocouple K، ويمكن للحلول المقترحة استخدام هذا المنفذ مباشرة.",
+          "body": "مرحباً بالجميع. نؤكد أن الفرن مزود بمدخل جاهز لتركيب مزدوج حراري من النوع K، ويمكن للحلول المقترحة استخدام هذا المنفذ مباشرة.",
           "body_en": "Welcome all. We confirm the oven has a pre-machined port for a Type K thermocouple, which proposals can interface directly."
         },
         {
@@ -93,7 +93,7 @@
           "authorAvatar": "أ",
           "createdAt": "منذ 18 ساعة",
           "createdAt_en": "18 hours ago",
-          "body": "هل تفضلون أن تكون لوحة المراقبة مدمجة في شاشة لمسية على الفرن نفسه (Nextion Display) أم شاشة ويب على حاسوب المشرف؟",
+          "body": "هل تفضلون أن تكون لوحة المراقبة مدمجة في شاشة لمسية على الفرن نفسه (Nextion) أم شاشة ويب على حاسوب المشرف؟",
           "body_en": "Do you prefer a physical touchscreen display on the oven itself (e.g. Nextion) or a web interface on the supervisor PC?",
           "replies": [
             {
@@ -121,21 +121,21 @@
       "title": "لوحة مراقبة لخطّي تعبئة مع إنذارات بسيطة",
       "title_en": "Monitoring dashboard for two packaging lines with simple alerts",
       "summary": "نبحث عن لوحة ويب تعرض حالة خطّي التعبئة وتنبّه المشرف عند توقف أحدهما، بدون الحاجة إلى نظام SCADA مكلف.",
-      "summary_en": "Seeking a responsive web dashboard tracking status for two bottling lines and alerting supervisors upon stoppage without expensive SCADA licensing.",
-      "description": "ينتج مصنعنا مشروبات معلبة عبر خطين متوازيين. نحتاج إلى نظام لمراقبة عدد العبوات المنتجة في الدقيقة ومؤشر توقف الخط وحساب وقت التوقف الإجمالي (Downtime).",
-      "description_en": "Our facility operates two parallel canning lines. We require a system tracking units-per-minute, downtime status, and aggregated shift metrics.",
+      "summary_en": "We need a web dashboard showing the status of two packaging lines and alerting supervisors when either line stops, without an expensive SCADA system.",
+      "description": "ينتج مصنعنا مشروبات معلبة عبر خطين متوازيين. نحتاج إلى نظام لمراقبة عدد العبوات المنتجة في الدقيقة ومؤشر توقف الخط وحساب وقت التوقف الإجمالي.",
+      "description_en": "Our plant packages canned beverages on two parallel packaging lines. We need a system that tracks containers produced per minute, each line's running or stopped status, and total downtime.",
       "deliverables": [
         "واجهة ويب عصرية متوافقة مع الحواسيب والأجهزة اللوحية",
         "قاعدة بيانات محلية لتخزين سجلات الإنتاج والأعطال اليومية",
         "تصدير تقارير الإنتاج بتنسيق Excel/PDF بضغطة زر واحدة"
       ],
       "deliverables_en": [
-        "Modern web UI compatible with desktop and tablets",
-        "Local database storing production logs and shift stoppage records",
+        "Modern web interface for desktop computers and tablets",
+        "Local database storing daily production and stoppage logs",
         "One-click export of daily shift summaries into Excel/PDF"
       ],
       "constraints": [
-        "العمل دون الحاجة لاتصال بالإنترنت الخارجي (Local Network only)",
+        "العمل دون الحاجة لاتصال بالإنترنت الخارجي",
         "تحديث المؤشرات بزمن استجابة أقل من 1 ثانية (WebSockets)"
       ],
       "constraints_en": [
@@ -148,7 +148,7 @@
       ],
       "criteria_en": [
         "Ease of use for floor operators",
-        "24/7 reliability without memory leaks or crashes"
+        "Reliable continuous operation for 24 hours without interruption"
       ],
       "tags": [
         "PYTHON",
@@ -173,37 +173,37 @@
       "companyAvatar": "س",
       "postedAt": "منذ أسبوع",
       "postedAt_en": "1 week ago",
-      "title": "نموذج تنبؤ بأعطال المحركات الكهربائية من بيانات الاهتزاز",
-      "title_en": "Predictive maintenance ML model for industrial induction motors from vibration data",
-      "summary": "لدينا ثلاثة أشهر من سجلات الاهتزاز لعشرة محركات ونريد نموذجًا يتوقع العطل قبل أيام، مع واجهة تنبيه وتقرير دقة مفصّل.",
-      "summary_en": "We have 3 months of accelerometer vibration logs across 10 induction motors and need a model forecasting mechanical breakdown days in advance.",
-      "description": "مشروع ذكاء اصطناعي صناعي متقدم لمعالجة الإشارات وتحليل الترددات (FFT) واستخراج السمات المميزة لأعطال المحامل (Bearing Faults) واختلال التوازن في المحركات الحثية الكبيرة.",
-      "description_en": "High-level AI & signal processing challenge analyzing vibration spectra (FFT) to extract early bearing fault features and rotor imbalance in 75kW induction motors.",
+      "title": "نموذج تنبؤ بأعطال المحركات الكهربائية الحثية من بيانات الاهتزاز",
+      "title_en": "Vibration-based predictive maintenance model for industrial induction motors",
+      "summary": "لدينا ثلاثة أشهر من سجلات الاهتزاز لعشرة محركات ونريد نموذجًا يرصد مؤشرات الأعطال، مع واجهة تنبيه وتقرير دقة مفصّل.",
+      "summary_en": "We have three months of vibration logs from 10 motors and want a model that detects fault indicators, with an alert interface and a detailed accuracy report.",
+      "description": "مشروع ذكاء اصطناعي صناعي متقدم لمعالجة الإشارات وتحليل الترددات (FFT) واستخراج السمات المميزة لأعطال المحامل واختلال التوازن في المحركات الحثية الكبيرة.",
+      "description_en": "An advanced industrial machine-learning project in signal processing. It analyzes vibration spectra using FFT to extract features associated with bearing faults and rotor imbalance in large induction motors.",
       "deliverables": [
-        "دفتر عمل Jupyter موثق بالكامل يوضح خطوات تنظيف البيانات والتحويل الترددي",
+        "دفتر عمل Jupyter موثق بالكامل يوضح خطوات تنظيف البيانات وترشيح الإشارات والتحويل الترددي (FFT)",
         "نموذج تعلم آلي أو تعلم عميق بدقة تشخيص لا تقل عن 90% (F1-Score)",
         "واجهة API مبسطة لتغذية القراءات الجديدة واستقبال نسبة احتمالية العطل"
       ],
       "deliverables_en": [
-        "Documented Jupyter Notebook detailing signal filtering and FFT pipelines",
-        "Trained Machine Learning/Deep Learning model achieving $\\ge 90\\%$ F1-Score",
-        "Lightweight inference API endpoint accepting batch sensor arrays"
+        "Fully documented Jupyter Notebook covering data cleaning, signal filtering, and FFT",
+        "A machine-learning or deep-learning model that achieves an F1 score of at least 90%",
+        "A simple API that accepts new readings and returns the estimated probability of failure"
       ],
       "constraints": [
         "زمن المعالجة والاستدلال للدفعة الواحدة أقل من 500ms",
-        "التعامل مع البيانات غير المتوازنة (Unbalanced anomaly detection)"
+        "التعامل مع البيانات غير المتوازنة"
       ],
       "constraints_en": [
         "Inference time per batch under 500ms",
         "Robust performance against heavy anomaly class imbalance"
       ],
       "criteria": [
-        "تقليل الإنذارات الكاذبة (False Positives)",
-        "قدرة النموذج على التفسير (Explainability)"
+        "تقليل الإنذارات الكاذبة",
+        "قدرة النموذج على التفسير"
       ],
       "criteria_en": [
         "Minimizing costly false positives",
-        "Model interpretability and feature contribution graphs"
+        "Model interpretability"
       ],
       "tags": [
         "IOT",
@@ -229,19 +229,19 @@
       "postedAt_en": "2 weeks ago",
       "title": "مزامنة مخزون الفروع عند انقطاع الإنترنت",
       "title_en": "Offline-first multi-branch inventory synchronization protocol",
-      "summary": "تطبيق المخزون يعمل في ثلاثة فروع ويتعرض لانقطاعات متكررة؛ نريد آلية مزامنة تتحمل الانقطاع دون تضارب في البيانات.",
-      "summary_en": "Inventory app operates in 3 branches facing frequent connectivity cuts; need a robust offline-first synchronization protocol without data collisions.",
+      "summary": "يعمل تطبيق المخزون في ثلاثة فروع مع انقطاعات متكررة؛ نحتاج إلى آلية واضحة لمزامنة البيانات دون اتصال والتعامل مع تحديثات المخزون المتعارضة.",
+      "summary_en": "Our inventory app runs at three branches with frequent outages. We need a clear process for offline synchronization and handling conflicting stock updates.",
       "description": "تواجه مخازننا في ولايات الجنوب انقطاعات متكررة لشبكة الألياف والجيل الرابع، مما يؤدي إلى توقف عمليات البيع أو حدوث تضارب في الكميات المتوفرة عند استرجاع الاتصال.",
-      "description_en": "Our regional warehouses suffer frequent fiber outages, halting sales transactions or generating conflicting stock counts upon reconnect.",
+      "description_en": "Our warehouses in southern provinces face frequent fiber and 4G outages, which can halt sales or leave stock counts inconsistent when service returns.",
       "deliverables": [
-        "تصميم هيكلية البيانات للمزامنة الثنائية (Two-way sync)",
-        "خوارزمية حل التضارب التلقائي وفق طوابع زمنية موثوقة (CRDTs or Vector Clocks)",
-        "نموذج عملي تجريبي يثبت عمل المزامنة في بيئة محاكاة الانقطاع"
+        "تصميم هيكلية البيانات للمزامنة الثنائية",
+        "آلية لاكتشاف تحديثات المخزون المتعارضة وحلها وفق قواعد محددة، مع سجل تدقيق وإعادة محاولة المزامنة غير المكتملة",
+        "نموذج عملي يختبر العمل دون اتصال ومزامنة البيانات بعد عودة الاتصال"
       ],
       "deliverables_en": [
         "Two-way sync architectural specification",
-        "Conflict-free replication algorithm (CRDTs or deterministic vector clock resolver)",
-        "Working proof-of-concept demonstrating seamless offline-online transition"
+        "A method for detecting and resolving conflicting stock updates using defined rules, with an audit log and retries for incomplete syncs",
+        "Working prototype that tests offline operation and data synchronization after connectivity returns"
       ],
       "constraints": [
         "التوافق مع قاعدة بيانات PostgreSQL أو SQLite",
@@ -249,15 +249,15 @@
       ],
       "constraints_en": [
         "PostgreSQL / SQLite compatibility",
-        "End-to-end data encryption in transit between nodes"
+        "Encrypt data in transit between branches and the central office"
       ],
       "criteria": [
-        "عدم فقدان أي حركة بيع أو إدخال مخزني",
-        "السرعة في إتمام المزامنة فور عودة الاتصال"
+        "تقليل احتمال فقدان حركات البيع وتحديثات المخزون أثناء المزامنة",
+        "سرعة المزامنة بعد عودة الاتصال"
       ],
       "criteria_en": [
-        "Zero transaction loss guarantee",
-        "Immediate sync resolution upon packet transmission recovery"
+        "Minimize the risk of lost sales and stock updates during synchronization",
+        "Fast synchronization after connectivity is restored"
       ],
       "tags": [
         "REACT",
@@ -279,11 +279,11 @@
     {
       "id": "q1",
       "title": "كيف أقلّل ضجيج قراءات حساس الحرارة على ESP32 داخل خط إنتاج؟",
-      "title_en": "How do I reduce temperature sensor noise on ESP32 in a production line?",
-      "excerpt": "أستخدم حساس DS18B20 لمراقبة حرارة فرن صناعي، لكن القراءات تتذبذب بشدة عند تشغيل محرك قريب. هل يكفي مرشّح برمجي أم أن المشكلة في العزل الكهربائي؟",
-      "excerpt_en": "I am using a DS18B20 sensor to monitor industrial oven temperatures, but readings fluctuate heavily when a nearby motor starts. Is software filtering enough or is it electrical isolation?",
-      "body": "السلام عليكم،\nأعمل على وحدة قياس حرارة لمراقبة درجات حرارة أفران التجفيف في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire بطول كابل حوالي 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات دقيقة بنسبة 0.2 درجة مئوية. لكن فور إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة أو يرجع الحساس رمز خطأ (85°C).\n\nهل الأفضل اعتماد مرشح كالمان برمجياً أم إضافة optocoupler وعزل خط التغذية؟",
-      "body_en": "Hello,\nI am building a temperature monitoring unit for drying ovens in a plastics plant.\nI used an ESP32 microcontroller with a DS18B20 sensor via OneWire with a cable length of ~3 meters.\n\nWhen adjacent machines are idle, readings are accurate to within 0.2°C. But as soon as the 3-phase suction motor starts, random spikes up to 15°C appear or the sensor returns an error code (85°C).\n\nIs it better to use a Kalman filter in software or add optocouplers and isolated power supplies?",
+      "title_en": "How can I reduce temperature-reading noise with an ESP32 on a production line?",
+      "excerpt": "أستخدم حساس DS18B20 لمراقبة حرارة صندوق معدات في خط إنتاج، لكن القراءات تتذبذب عند تشغيل محرك قريب. هل يكفي مرشح برمجي أم ينبغي تحسين التمديدات والتدريع والتأريض؟",
+      "excerpt_en": "I use a DS18B20 to monitor an equipment enclosure on a production line, but readings fluctuate when a nearby motor starts. Is software filtering enough, or should I improve the wiring, shielding, and grounding?",
+      "body": "السلام عليكم،\nأعمل على وحدة قياس حرارة لصندوق معدات في مصنع بلاستيك.\nاستخدمت متحكم ESP32 مع حساس DS18B20 عبر بروتوكول OneWire وكابل طوله نحو 3 أمتار.\n\nعندما تكون الآلات المجاورة متوقفة، تكون القراءات مستقرة عند القيمة المتوقعة. لكن عند إقلاع محرك السحب ثلاثي الأطوار، تظهر قفزات عشوائية تصل إلى 15 درجة مئوية، أو يعرض الحساس مؤقتاً قراءة بدء التشغيل الافتراضية (85°C).\n\nهل يكفي استخدام مرشح وسيط برمجياً، أم ينبغي معالجة مسار الكابل والتدريع والتأريض أولاً؟",
+      "body_en": "Hello,\nI am building a temperature-monitoring unit for an equipment enclosure in a plastics plant.\nI use an ESP32 with a DS18B20 sensor over OneWire, with a cable about 3 meters long.\n\nWhen nearby machines are idle, readings remain stable around the expected value. But when the three-phase suction motor starts, random spikes of up to 15°C appear, or the sensor briefly shows its default power-on reading of 85°C.\n\nWould a software median filter be enough, or should I first address cable routing, shielding, and grounding?",
       "codeSnippet": "// Example reading snippet\nfloat readTemperature() {\n  sensors.requestTemperatures();\n  float tempC = sensors.getTempCByIndex(0);\n  if(tempC == DEVICE_DISCONNECTED_C) {\n    Serial.println(\"Error: Could not read temperature data\");\n    return -127.0;\n  }\n  return tempC;\n}",
       "author": "أمين بن علي",
       "author_en": "Amine Ben Ali",
@@ -309,8 +309,8 @@
           "authorAvatar": "س",
           "createdAt": "منذ ساعة",
           "createdAt_en": "1 hour ago",
-          "body": "قبل تعديل التمديدات جرّب أخذ عدة عيّنات في كل دورة واستبعاد القيم الشاذة (median filter) ثم احسب المتوسط. هذا يقلل أثر القفزات اللحظية الناتجة عن تشغيل المحرك.",
-          "body_en": "Before altering physical wiring, try taking multiple samples per cycle and filtering outliers using a median filter, then averaging. This mitigates instantaneous spikes caused by motor startup.",
+          "body": "يمكن للمرشح الوسيط استبعاد القفزات المنفردة، لكن لا تعتمد عليه وحده؛ فهو يخفف أثر المشكلة ولا يعالج سبب التداخل.",
+          "body_en": "A median filter can reject isolated spikes, but do not rely on it alone: it reduces the symptom without fixing the source of the interference.",
           "helpfulCount": 9,
           "insightCount": 2,
           "isVerified": true
@@ -324,8 +324,8 @@
           "authorAvatar": "ن",
           "createdAt": "منذ 45 دقيقة",
           "createdAt_en": "45 minutes ago",
-          "body": "تأكد من استخدام كابل مجدول محمي (Shielded Twisted Pair) مع تأريض الشيلد من جهة المتحكم فقط (Ground Loop prevention)، ومقاومة سحب 4.7kΩ قريبة من الحساس.",
-          "body_en": "Ensure you use Shielded Twisted Pair (STP) cable with shield grounded only on the controller side to avoid ground loops, and a 4.7kΩ pull-up resistor mounted close to the sensor.",
+          "body": "استخدم كابلاً مجدولاً محمياً، وأرضِ الدرع من جهة واحدة لتجنب حلقات التأريض. ابدأ بمقاومة سحب 4.7kΩ قرب المتحكم، ثم اضبط قيمتها وفق طول الكابل وسعته.",
+          "body_en": "Use shielded twisted-pair cable and ground the shield at one end to avoid ground loops. Start with a 4.7kΩ pull-up near the controller, then adjust its value for the cable length and capacitance.",
           "helpfulCount": 5,
           "insightCount": 1
         }
@@ -333,12 +333,12 @@
     },
     {
       "id": "q2",
-      "title": "أفضل طريقة للتعامل مع انقطاع شبكة 4G في أجهزة القياس عن بُعد (Telemetry)؟",
+      "title": "أفضل طريقة للتعامل مع انقطاع شبكة 4G في أجهزة القياس عن بُعد؟",
       "title_en": "Best approach for handling 4G disconnections in remote telemetry devices?",
       "excerpt": "لدينا أجهزة إرسال في مناطق نائية بالجنوب الجزائري تفقد الاتصال لساعات؛ كيف نضمن تخزين السجلات محلياً وإرسالها دفعات دون استهلاك غير ضروري للبطارية؟",
-      "excerpt_en": "We have telemetry units in remote southern Algerian locations losing connection for hours; how do we ensure local storage and batched transmission without draining battery?",
-      "body": "نظامنا يجمع بيانات مضخات الطاقة الشمسية ويرسلها عبر موديول SIM7600E. المشكلة تكمن في استهلاك الطاقة عند المحاولات المتكررة لإعادة الاتصال أثناء انقطاع التغطية.\n\nهل يفضل الاعتماد على SQLite على بطاقة SD أو EEPROM خارجية؟ وكيف تضبط خوارزمية التراجع الأسي (Exponential Backoff) لحفظ البطارية؟",
-      "body_en": "Our system collects solar water pump metrics and pushes data via SIM7600E. The issue is severe battery drain when retrying connections in zero-coverage zones.\n\nIs an SD card SQLite or external SPI Flash better? And how do you calibrate exponential backoff for power conservation?",
+      "excerpt_en": "We have telemetry units in remote southern Algerian locations that lose connection for hours. How can we store data locally and send it in batches without unnecessary battery drain?",
+      "body": "يجمع نظامنا بيانات مضخات المياه العاملة بالطاقة الشمسية ويرسلها عبر وحدة SIM7600E. تكمن المشكلة في استهلاك الطاقة عند تكرار محاولات الاتصال أثناء انقطاع التغطية.\n\nهل الأفضل تخزين السجلات في قاعدة SQLite على بطاقة SD، أم في سجل تسلسلي على ذاكرة Flash خارجية؟ وكيف نضبط خوارزمية التراجع الأسي لترشيد استهلاك البطارية؟",
+      "body_en": "Our system collects data from solar-powered water pumps and sends it through a SIM7600E module. Repeated connection attempts during coverage outages drain the battery.\n\nWould SQLite on an SD card or an append-only log on external flash be a better fit? How should we tune exponential backoff to conserve power?",
       "author": "طارق حداد",
       "author_en": "Tarek Haddad",
       "authorAvatar": "ط",
@@ -358,11 +358,11 @@
     {
       "id": "q3",
       "title": "تحويل نماذج YOLOv8 للعمل في الوقت الفعلي على Raspberry Pi 4 في خط الفرز",
-      "title_en": "Optimizing YOLOv8 for real-time inference on Raspberry Pi 4 on a sorting line",
+      "title_en": "Optimizing YOLOv8 for real-time inference on a Raspberry Pi 4 sorting line",
       "excerpt": "نريد فرز التمور تلقائياً حسب الحجم والعيوب الظاهرية، لكن معدل الإطارات لا يتجاوز 4 FPS على RPi 4. ما هي أفضل أدوات التكميم (Quantization)؟",
       "excerpt_en": "We want to automatically sort dates by size and surface defects, but frame rates hover at 4 FPS on RPi 4. What are the best quantization tools?",
-      "body": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما خط التعبئة يتطلب على الأقل 15 FPS لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral TPU. ما هي تجاربكم مع بيئات الإنتاج الفعلية؟",
-      "body_en": "We trained YOLOv8n on 1,500 images of Deglet Nour dates categorized into 3 quality tiers.\nRunning PyTorch yields 3-4 FPS, while the line demands at least 15 FPS to sync with the pneumatic ejector.\n\nWe evaluated ONNX Runtime and are considering NCNN or Coral USB TPU. What works best in actual shop-floor conditions?",
+      "body": "قمنا بتدريب نموذج YOLOv8n على 1500 صورة لتمور دقلة نور مصنفة إلى 3 درجات جودة.\nعند تشغيل النموذج بـ PyTorch العادي نحصل على 3-4 إطارات بالثانية، بينما يتطلب خط الفرز 15 FPS على الأقل لمزامنة ذراع الدفع الهوائي.\n\nجربنا ONNX Runtime ونفكر في NCNN أو Coral USB Accelerator. ما هي تجاربكم في بيئات الإنتاج الفعلية؟",
+      "body_en": "We trained YOLOv8n on 1,500 images of Deglet Nour dates classified into three quality grades.\nRunning the model with standard PyTorch yields 3–4 FPS, while the line needs at least 15 FPS to synchronize with the pneumatic ejector.\n\nWe have tried ONNX Runtime and are considering NCNN or the Coral USB Accelerator. What has worked for you in production environments?",
       "author": "يوسف مزيان",
       "author_en": "Youcef Meziane",
       "authorAvatar": "ي",
@@ -409,9 +409,9 @@
       "solverProfile": {
         "firstName": "سارة",
         "lastName": "قاسمي",
-        "educationLevel": "ماستر 2 — ذكاء اصطناعي وتطبيقاته",
-        "institutionMajor": "جامعة باب الزوار USTHB",
-        "experienceLevel": "1–3 سنوات خبرة عملية",
+        "educationLevel": "ماستر 1 / 2",
+        "institutionMajor": "ذكاء اصطناعي — جامعة باب الزوار USTHB",
+        "experienceLevel": "1–3 سنوات خبرة",
         "skills": [
           "IOT",
           "EMBEDDED",
@@ -420,10 +420,11 @@
           "SQL",
           "REACT"
         ],
-        "cvFileName": "CV-Sara-Khasmi-AI.pdf",
-        "linkedInUrl": "https://linkedin.com/in/sarakhasmi",
-        "githubUrl": "https://github.com/sarakhasmi",
-        "completenessPercent": 100
+        "githubUrl": "https://example.com/rexiosai/portfolio",
+        "completenessPercent": 100,
+        "firstNameEn": "Sara",
+        "lastNameEn": "Khasmi",
+        "institutionMajorEn": "Artificial Intelligence — USTHB"
       }
     }
   }

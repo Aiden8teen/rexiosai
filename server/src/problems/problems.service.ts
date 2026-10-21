@@ -14,7 +14,7 @@ export class ProblemsService {
     const problem = await this.db.problem.findFirst({ where: { id, companyUserId: user.id }, include: { privateDetails: true, _count: { select: { applications: { where: { status: { not: 'DRAFT' } } } } }, files: { select: { id: true, originalName: true, purpose: true, byteSize: true } } } });
     if (!problem) throw new NotFoundException('Problem not found.');
     const { privateDetails, _count, ...data } = problem;
-    return { ...data, privateNotes: privateDetails?.notes || '', applicationsCount: _count.applications };
+    return { ...data, privateNotes: privateDetails?.notes || privateDetails?.notesEn || '', privateNotesEn: privateDetails?.notesEn || privateDetails?.notes || '', applicationsCount: _count.applications };
   }
   async publicOne(id: string) {
     const p = await this.db.problem.findFirst({ where: { id, status: { not: 'DRAFT' } }, include: problemInclude });
@@ -37,13 +37,14 @@ export class ProblemsService {
     return { items: rows.map(presentProblem), total, page: query.page, limit: query.limit };
   }
   private data(input: ProblemDto) {
-    const { privateNotes, deadlineAt, ...rest } = input;
-    return { ...rest, ...(deadlineAt !== undefined ? { deadlineAt: deadlineAt ? new Date(deadlineAt) : null } : {}), ...(privateNotes !== undefined ? { privateDetails: { upsert: { create: { notes: privateNotes }, update: { notes: privateNotes } } } } : {}) };
+    const { privateNotes, privateNotesEn, deadlineAt, ...rest } = input;
+    const privateData = { ...(privateNotes !== undefined ? { notes: privateNotes, ...(privateNotesEn === undefined ? { notesEn: '' } : {}) } : {}), ...(privateNotesEn !== undefined ? { notesEn: privateNotesEn } : {}) };
+    return { ...rest, ...(deadlineAt !== undefined ? { deadlineAt: deadlineAt ? new Date(deadlineAt) : null } : {}), ...(privateNotes !== undefined || privateNotesEn !== undefined ? { privateDetails: { upsert: { create: privateData, update: privateData } } } : {}) };
   }
   async create(user: Account, input: ProblemDto) {
     requireRole(user, 'COMPANY');
-    const { privateNotes, deadlineAt, ...rest } = input;
-    const p = await this.db.problem.create({ data: { deliverables: [], deliverablesEn: [], constraints: [], constraintsEn: [], criteria: [], criteriaEn: [], skills: [], ...rest, deadlineAt: deadlineAt ? new Date(deadlineAt) : null, companyUserId: user.id, privateDetails: { create: { notes: privateNotes || '' } } } });
+    const { privateNotes, privateNotesEn, deadlineAt, ...rest } = input;
+    const p = await this.db.problem.create({ data: { deliverables: [], deliverablesEn: [], constraints: [], constraintsEn: [], criteria: [], criteriaEn: [], skills: [], ...rest, deadlineAt: deadlineAt ? new Date(deadlineAt) : null, companyUserId: user.id, privateDetails: { create: { notes: privateNotes || '', notesEn: privateNotesEn || '' } } } });
     return this.owned(user, p.id);
   }
   async update(user: Account, id: string, input: ProblemDto) {
@@ -52,7 +53,7 @@ export class ProblemsService {
       await tx.$queryRaw`SELECT id FROM "Problem" WHERE id = ${id} FOR UPDATE`;
       const lockedProblem = await tx.problem.findUniqueOrThrow({ where: { id } });
       const briefFixed = lockedProblem.status === 'CLOSED' || await tx.application.count({ where: { problemId: id, status: { not: 'DRAFT' } } }) > 0;
-      if (briefFixed && Object.entries(input).some(([key, value]) => value !== undefined && key !== 'privateNotes')) throw new ConflictException('The brief is fixed after applications are submitted or the problem is closed.');
+      if (briefFixed && Object.entries(input).some(([key, value]) => value !== undefined && !['privateNotes','privateNotesEn'].includes(key))) throw new ConflictException('The brief is fixed after applications are submitted or the problem is closed.');
       await tx.problem.update({ where: { id }, data: this.data(input) });
     });
     return this.owned(user, id);
@@ -80,7 +81,7 @@ export class ProblemsService {
       if (p.status !== 'OPEN') throw new ConflictException('Only an open problem can be closed.');
       const affectedApplicants = await tx.application.findMany({ where: { problemId: id, status: 'UNDER_REVIEW' }, select: { id: true, applicantUserId: true } });
       await tx.problem.update({ where: { id }, data: { status: 'CLOSED' } });
-      await tx.application.updateMany({ where: { problemId: id, status: 'UNDER_REVIEW' }, data: { status: 'REJECTED', rejectionReason: 'The company closed this problem.', decisionCode: 'PROBLEM_CLOSED', decidedAt: new Date() } });
+      await tx.application.updateMany({ where: { problemId: id, status: 'UNDER_REVIEW' }, data: { status: 'REJECTED', rejectionReason: 'أغلقت الشركة هذه المشكلة.', rejectionReasonEn: 'The company closed this problem.', decisionCode: 'PROBLEM_CLOSED', decidedAt: new Date() } });
       await this.notifications.record(tx, affectedApplicants.map(application => ({ actorUserId: user.id, recipientUserId: application.applicantUserId, type: 'APPLICATION_DECIDED' as const, eventKey: `APPLICATION_DECIDED:${application.id}`, problemId: id })));
     });
     return this.publicOne(id);
@@ -88,7 +89,7 @@ export class ProblemsService {
   async privateDetails(user: Account, id: string) {
     const p = await this.db.problem.findUnique({ where: { id }, include: { privateDetails: true, acceptedApplication: true, files: { where: { purpose: 'PROBLEM_PRIVATE' }, select: { id: true, originalName: true, byteSize: true } } } });
     if (!p || (p.companyUserId !== user.id && p.acceptedApplication?.applicantUserId !== user.id)) throw new NotFoundException();
-    return { notes: p.privateDetails?.notes || '', files: p.files };
+    return { notes: p.privateDetails?.notes || p.privateDetails?.notesEn || '', notesEn: p.privateDetails?.notesEn || p.privateDetails?.notes || '', files: p.files };
   }
   async contact(id: string) {
     const p = await this.db.problem.findFirst({ where: { id, status: { not: 'DRAFT' } }, include: { company: { include: { company: true } } } });

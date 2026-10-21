@@ -11,7 +11,7 @@ export function presentUser(user: Account, self = true) {
     name: user.displayName, name_en: user.displayNameEn || user.displayName,
     role: user.role === 'COMPANY' ? 'company' : complete === 100 ? 'solver' : 'member',
     avatarChar: user.displayName[0] || 'R', avatarBg: user.role === 'COMPANY' ? '#12122B' : '#0B2A9E',
-    solverProfile: p ? { firstName: p.firstName, lastName: p.lastName, educationLevel: p.educationLevel, institutionMajor: p.institutionMajor, experienceLevel: p.experienceLevel, skills: p.skills, linkedInUrl: p.linkedInUrl, githubUrl: p.githubUrl, cvFileId: p.cvFileId, cvFileName: p.cvFile?.originalName, completenessPercent: complete } : undefined,
+    solverProfile: p ? { firstName: p.firstName, lastName: p.lastName, firstNameEn: p.firstNameEn || p.firstName, lastNameEn: p.lastNameEn || p.lastName, educationLevel: p.educationLevel, institutionMajor: p.institutionMajor, institutionMajorEn: p.institutionMajorEn || p.institutionMajor, experienceLevel: p.experienceLevel, skills: p.skills, linkedInUrl: p.linkedInUrl, githubUrl: p.githubUrl, cvFileId: p.cvFileId, cvFileName: p.cvFile?.originalName, completenessPercent: complete } : undefined,
     ...(self ? { companyProfile: user.company } : {}),
   };
 }

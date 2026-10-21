@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from 'bcryptjs';
+import { demoContacts, draftProposal, privateNotes, proposals, rejection, upgradeDemoContent } from './demo-content';
 
 const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }) });
 const fixtures = JSON.parse(readFileSync(join(__dirname, 'fixtures/demo.json'), 'utf8'));
@@ -14,7 +15,7 @@ async function talent(name: string, nameEn: string, id?: string, profile?: Recor
   const email = id === 'demo-member' ? 'm@demo.test' : id === 'demo-solver' ? 's@demo.test' : `t${profiles.size}@demo.test`;
   await db.user.upsert({ where: { id: key }, update: { email, passwordHash }, create: {
     id: key, email, passwordHash, role: 'TALENT', displayName: name, displayNameEn: nameEn,
-    talent: { create: { firstName: profile?.firstName || '', lastName: profile?.lastName || '', educationLevel: profile?.educationLevel || '', institutionMajor: profile?.institutionMajor || '', experienceLevel: profile?.experienceLevel || '', skills: profile?.skills || [], githubUrl: profile?.githubUrl || '', linkedInUrl: profile?.linkedInUrl || '' } },
+    talent: { create: { firstName: profile?.firstName || '', lastName: profile?.lastName || '', firstNameEn: profile?.firstNameEn || '', lastNameEn: profile?.lastNameEn || '', educationLevel: profile?.educationLevel || '', institutionMajor: profile?.institutionMajor || '', institutionMajorEn: profile?.institutionMajorEn || '', experienceLevel: profile?.experienceLevel || '', skills: profile?.skills || [], githubUrl: profile?.githubUrl || '', linkedInUrl: profile?.linkedInUrl || '' } },
   } });
   profiles.set(nameEn, key);
   return key;
@@ -64,7 +65,7 @@ async function main() {
     const email = i === 0 ? 'c@demo.test' : `c${i + 1}@demo.test`;
     await db.user.upsert({ where: { id: companyId }, update: { email, passwordHash }, create: {
       id: companyId, email, passwordHash, role: 'COMPANY', displayName: source.companyName, displayNameEn: source.companyName_en,
-      company: { create: { name: source.companyName, nameEn: source.companyName_en } },
+      company: { create: { name: source.companyName, nameEn: source.companyName_en, contactEmail: demoContacts[i], shareContact: true } },
     } });
     if (await db.problem.findUnique({ where: { id: source.id } })) continue;
     const createdAt = new Date(Date.now() - (4 - i) * 86400000);
@@ -74,7 +75,7 @@ async function main() {
       deliverables: source.deliverables, deliverablesEn: source.deliverables_en, constraints: source.constraints, constraintsEn: source.constraints_en, criteria: source.criteria, criteriaEn: source.criteria_en,
       skills: source.tags, difficulty: source.difficulty, category: 'CHALLENGE', budgetDzd: source.rewardAmount,
       deadlineAt: new Date(Date.now() + source.deadlineDays * 86400000), createdAt, status: source.id === 'p2' ? 'CLOSED' : 'OPEN',
-      privateDetails: { create: { notes: 'Demo private company notes. Visible only to the company and selected applicant.' } },
+      privateDetails: { create: { notes: privateNotes[source.id].ar, notesEn: privateNotes[source.id].en } },
     } });
     for (const comment of source.discussions) {
       const authorId = comment.isCompany ? companyId : profiles.get(comment.author_en) || await talent(comment.author, comment.author_en);
@@ -86,11 +87,12 @@ async function main() {
     }
     if (['p1', 'p2', 'p3'].includes(source.id)) {
       const status = source.id === 'p1' ? 'UNDER_REVIEW' : source.id === 'p2' ? 'ACCEPTED' : 'REJECTED';
-      const application = await db.application.create({ data: { id: `seed-application-${source.id}`, problemId: source.id, applicantUserId: 'demo-solver', coverMessage: 'I propose a practical documented solution using my embedded systems and software experience.', consent: true, deliveryDays: 10, projectUrl: 'https://github.com/example/rexios-demo', status, submittedAt: createdAt, decidedAt: status === 'UNDER_REVIEW' ? null : createdAt, rejectionReason: status === 'REJECTED' ? 'For this demo, another technical approach was preferred.' : null } });
+      const application = await db.application.create({ data: { id: `seed-application-${source.id}`, problemId: source.id, applicantUserId: 'demo-solver', coverMessage: proposals[source.id].ar, coverMessageEn: proposals[source.id].en, consent: true, deliveryDays: 10, projectUrl: 'https://example.com/rexiosai/portfolio', status, submittedAt: createdAt, decidedAt: status === 'UNDER_REVIEW' ? null : createdAt, rejectionReason: status === 'REJECTED' ? rejection.ar : null, rejectionReasonEn: status === 'REJECTED' ? rejection.en : null } });
       if (status === 'ACCEPTED') await db.problem.update({ where: { id: source.id }, data: { acceptedApplicationId: application.id } });
     }
-    if (source.id === 'p1') await db.application.create({ data: { id: 'seed-draft-p1', problemId: source.id, applicantUserId: 'demo-member', coverMessage: 'An unfinished demo application draft.' } });
+    if (source.id === 'p1') await db.application.create({ data: { id: 'seed-draft-p1', problemId: source.id, applicantUserId: 'demo-member', coverMessage: draftProposal.ar, coverMessageEn: draftProposal.en } });
   }
+  await upgradeDemoContent(db);
   console.log('Demo seed ready. Existing records and decisions were preserved.');
  } finally { await db.$disconnect(); }
 }
