@@ -23,3 +23,5 @@ server/uploads
 npm-debug.log*
 .superpowers
 .playwright-mcp
+key
+**/*.key

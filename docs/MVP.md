@@ -62,6 +62,8 @@ The frontend is available at http://localhost:5173; the API listens on port 3000
 
 ## Packaged demo with Docker Compose
 
+For the shared Oracle VPS and `rexios.duckdns.org`, use the separate [VPS deployment and removal guide](VPS.md). Its standalone Compose file publishes no host ports and keeps the existing local/demo setup separate.
+
 The packaged setup builds the React files with node:24-bookworm-slim, serves them from the cached caddy:2.11.4-alpine image, and uses postgres:18-alpine. Compose publishes the web service on port 8080 by default. The API and database stay private on the Compose network. PostgreSQL data and uploaded files use named volumes. The packaged project is named rexios-demo; development uses rexios, so their databases/uploads stay separate.
 
 Copy .env.example to .env. Replace SESSION_SECRET and POSTGRES_PASSWORD with long random hex values before hosting. One way to generate a value is:
