@@ -129,7 +129,7 @@ const SolverProfileContent: React.FC = () => {
               <MascotRex width={40} height={30} />
             </div>
             <h3 className="text-base font-bold text-[#12122B]">
-              {lang === 'ar' ? 'ماذا يفتح لك ملف الحلّال؟' : 'What does the solver profile unlock?'}
+              {lang === 'ar' ? 'ماذا يتيح لك ملف خبير الحلول؟' : 'What does the solver profile unlock?'}
             </h3>
           </div>
 
@@ -140,7 +140,7 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'تقديم مقترحات للتحديات ذات الميزانيات'
+                  ? 'تقديم عروض تقنية للتحديات الصناعية ذات الميزانيات المعتمدة'
                   : 'Submit proposals to budgeted company challenges'}
               </span>
             </div>
@@ -151,7 +151,7 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'ظهور ملفك أمام الشركات عند تقديم مقترحك'
+                  ? 'إبراز خبراتك وسيرتك التقنية مباشرة أمام المصانع والشركات'
                   : 'Profile visibility to companies upon proposal submission'}
               </span>
             </div>
@@ -162,7 +162,7 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'متابعة حالة مقترحاتك (قيد المراجعة، مقبول، مرفوض)'
+                  ? 'متابعة حالة عروضك (قيد المراجعة الفنية، معتمد، معتذر عنه)'
                   : 'Track proposal status (Under review, Accepted, Rejected)'}
               </span>
             </div>
@@ -173,7 +173,7 @@ const SolverProfileContent: React.FC = () => {
               </div>
               <span className="font-semibold">
                 {lang === 'ar'
-                  ? 'عرض تقريبي لتطابق مهاراتك مع التحديات'
+                  ? 'مؤشر تقريبي لتطابق مهاراتك مع متطلبات التحدي'
                   : 'Advisory skill overlap on challenge pages'}
               </span>
             </div>
@@ -183,18 +183,18 @@ const SolverProfileContent: React.FC = () => {
         <div className="lg:col-span-8 card-pixel p-6 sm:p-8">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-[#12122B] mb-1">
-              {lang === 'ar' ? 'ملف الحلّال' : 'Solver Profile'}
+              {lang === 'ar' ? 'ملف خبير الحلول والمهندس' : 'Solver & Engineer Profile'}
             </h1>
             <p className="text-xs text-[#5B5B7B]">
               {lang === 'ar'
-                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة عند تقديم مقترح.'
+                ? 'الحقول المعلَّمة بـ * إلزامية. تظهر هذه المعلومات للشركة عند تقديم عرضك الفني.'
                 : 'Fields marked with * are required. This information is shown to companies when you submit a proposal.'}
             </p>
           </div>
 
           <div className="mb-8 p-4 bg-[#F8F1E1] border-2 border-[#12122B] rounded-md shadow-pixel-s">
             <div className="flex items-center justify-between text-xs font-bold text-[#12122B] mb-2">
-              <span>{lang === 'ar' ? 'اكتمال ملف الحلّال' : 'Profile completeness'}</span>
+              <span>{lang === 'ar' ? 'نسبة اكتمال الملف الهندسي' : 'Profile completeness'}</span>
               <span>{completeness}%</span>
             </div>
             <div className="w-full h-3 bg-[#EFE4CC] border border-[#12122B] rounded-full overflow-hidden">
@@ -414,7 +414,7 @@ const SolverProfileContent: React.FC = () => {
                 disabled={saving}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-md font-bold text-xs btn-pixel-accent cursor-pointer"
               >
-                {saving ? (lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ ملف الحلّال' : 'Save solver profile')}
+                {saving ? (lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…') : (lang === 'ar' ? 'حفظ الملف المهني' : 'Save profile')}
               </button>
             </div>
           </form>

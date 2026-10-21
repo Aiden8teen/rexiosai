@@ -175,11 +175,11 @@ export const LandingPage: React.FC = () => {
               <Award className="w-6 h-6 stroke-[2.2]" />
             </div>
             <h3 className="text-lg font-bold text-[#12122B]">
-              {lang === 'ar' ? '3 · كن حلّالًا' : '3 · Become a solver'}
+              {lang === 'ar' ? '3 · كن خبير حلول' : '3 · Become a solver'}
             </h3>
             <p className="text-sm text-[#5B5B7B] leading-relaxed">
               {lang === 'ar'
-                  ? 'أكمل ملف المواهب (الخلفية والمهارات ورابط مهني أو سيرة ذاتية) وقدّم مقترحات للتحديات.'
+                  ? 'أكمل ملفك الهندسي والتقني (الخلفية والمهارات ورابط مهني أو سيرة ذاتية) وقدّم مقترحات للتحديات.'
                   : 'Complete your talent profile (background, skills and a professional link or CV) to submit challenge proposals.'}
             </p>
           </div>

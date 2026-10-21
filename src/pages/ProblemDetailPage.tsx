@@ -369,22 +369,54 @@ const ProblemDetailContent: React.FC = () => {
             {canViewPrivate && <div className="p-3 bg-[#FFF1CC] border border-[#12122B] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadPrivate()} className="text-xs font-bold text-[#12122B] underline text-start">{lang === 'ar' ? 'عرض الملاحظات والمرفقات الخاصة' : 'Show private notes and files'}</button>{privateDetails && <><p className="text-xs whitespace-pre-line">{lang === 'ar' ? privateDetails.notes : (privateDetails.notesEn || privateDetails.notes)}</p>{privateDetails.files.map((file) => <a key={file.id} href={fileUrl(file.id)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B2A9E] underline"><FileText className="w-4 h-4" />{file.originalName}</a>)}</>}</div>}
 
             <div>
-              {problem.status === 'CLOSED' && <div className="p-4 bg-[#EFE4CC] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#5B5B7B]">{lang === 'ar' ? 'أُغلقت هذه المشكلة ولم تعد تستقبل طلبات جديدة.' : 'This problem is closed and no longer accepts applications.'}</div>}
-              {eligibility.status === 'company' && <div className="p-4 bg-[#EEF1FF] border-2 border-[#0B2A9E] rounded-md text-xs text-[#0B2A9E]">{lang === 'ar' ? 'حسابات الشركات يمكنها مراجعة وإدارة مشكلاتها من لوحة الشركة.' : 'Company accounts can manage and review their problems from the company dashboard.'}{problem.companyUserId === currentUser.id && <Link to="/company/problems" className="block mt-2 font-bold underline">{lang === 'ar' ? 'فتح مشكلاتي' : 'Open My Problems'}</Link>}</div>}
+              {problem.status === 'CLOSED' && <div className="p-4 bg-[#EFE4CC] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#5B5B7B]">{lang === 'ar' ? 'أُغلق هذا التحدي الصناعي وتم اختيار المهندس المنفّذ.' : 'This challenge is closed and no longer accepts proposals.'}</div>}
+              {eligibility.status === 'company' && (
+                <div className="p-4 bg-[#EEF1FF] border-2 border-[#0B2A9E] rounded-md text-xs text-[#0B2A9E] flex flex-col gap-2">
+                  {problem.companyUserId === currentUser.id ? (
+                    <>
+                      <p className="font-bold">
+                        {lang === 'ar'
+                          ? 'هذا التحدي منشور من طرف شركتك. يمكنك متابعة العروض الهندسية المقدمة واعتماد الحل المناسب من لوحة التحكم.'
+                          : 'This challenge was posted by your company. You can review proposals and choose an engineer.'}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <Link
+                          to={`/company/problems/${problem.id}/applications`}
+                          className="px-3 py-1.5 rounded-md font-bold text-xs btn-pixel-accent text-center"
+                        >
+                          {lang === 'ar' ? 'مراجعة العروض الهندسية' : 'Review Proposals'}
+                        </Link>
+                        <Link
+                          to={`/company/problems/${problem.id}/edit`}
+                          className="px-3 py-1.5 rounded-md font-bold text-xs btn-pixel-secondary text-center"
+                        >
+                          {lang === 'ar' ? 'تعديل التحدي' : 'Edit Challenge'}
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <p>
+                      {lang === 'ar'
+                        ? 'أنت تتصفح بحساب شركة صناعية. تقديم العروض التقنية مخصص للمهندسين وخبراء الحلول.'
+                        : 'You are signed in with a company account. Submitting proposals is reserved for engineers and solvers.'}
+                    </p>
+                  )}
+                </div>
+              )}
               {eligibility.status === 'submitted' && (
                 <div className="p-4 bg-[#D9F5E5] border-2 border-[#1E9E5A] rounded-md flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#1E9E5A]">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{myApplication?.status === 'accepted' ? (lang === 'ar' ? 'تم قبول طلبك' : 'Application accepted') : myApplication?.status === 'rejected' ? (lang === 'ar' ? 'تم رفض طلبك' : 'Application rejected') : (lang === 'ar' ? 'تم تقديم طلبك' : 'Application submitted')}</span>
+                    <span>{myApplication?.status === 'accepted' ? (lang === 'ar' ? 'تم اعتماد عرضك الهندسي بنجاح' : 'Proposal accepted') : myApplication?.status === 'rejected' ? (lang === 'ar' ? 'تم الاعتذار عن العرض' : 'Proposal not selected') : (lang === 'ar' ? 'تم تقديم عرضك الهندسي للشركة' : 'Proposal submitted')}</span>
                   </div>
                   <p className="text-xs text-[#12122B] leading-relaxed">
                     {lang === 'ar'
-                      ? myApplication?.status === 'rejected' ? (myApplication.rejectionReason || 'اطلع على صفحة طلباتك لمتابعة القرار.') : myApplication?.status === 'accepted' ? 'اختارتك الشركة لهذا العمل.' : 'طلبك محفوظ لدى الشركة للمراجعة.'
-                      : myApplication?.status === 'rejected' ? (myApplication.rejectionReasonEn || myApplication.rejectionReason || 'Open My Applications to review the decision.') : myApplication?.status === 'accepted' ? 'The company selected you for this work.' : 'Your application is saved for company review.'}
+                      ? myApplication?.status === 'rejected' ? (myApplication.rejectionReason || 'اطلع على صفحة طلباتك لمتابعة تفاصيل القرار.') : myApplication?.status === 'accepted' ? 'اختارتك الشركة لتنفيذ الحل الهندسي لهذا التحدي.' : 'عرضك محفوظ لدى الشركة وهو قيد المراجعة الفنية.'
+                      : myApplication?.status === 'rejected' ? (myApplication.rejectionReasonEn || myApplication.rejectionReason || 'Open My Applications to review the decision.') : myApplication?.status === 'accepted' ? 'The company selected you for this project.' : 'Your proposal is saved for company technical review.'}
                   </p>
                   <span className="font-tag text-[10px] font-bold text-[#1E9E5A] uppercase">
                     {lang === 'ar'
-                      ? myApplication?.status === 'accepted' ? 'الحالة: مقبول' : myApplication?.status === 'rejected' ? 'الحالة: مرفوض' : 'الحالة: قيد المراجعة'
+                      ? myApplication?.status === 'accepted' ? 'الحالة: معتمد ومقبول' : myApplication?.status === 'rejected' ? 'الحالة: معتذر عنه' : 'الحالة: قيد المراجعة الفنية'
                       : myApplication?.status === 'accepted' ? 'STATUS: ACCEPTED' : myApplication?.status === 'rejected' ? 'STATUS: REJECTED' : 'STATUS: UNDER REVIEW'}
                   </span>
                 </div>
@@ -396,20 +428,20 @@ const ProblemDetailContent: React.FC = () => {
                     <CheckCircle2 className="w-4 h-4 text-[#1E9E5A]" />
                     <span>
                       {lang === 'ar'
-                        ? `تطابق مهاراتك ${eligibility.matchCount} من ${eligibility.totalCount} مهارات (للاسترشاد فقط).`
-                        : `Your skills match ${eligibility.matchCount} of ${eligibility.totalCount} tags (advisory only).`}
+                        ? `تطابق مهاراتك ${eligibility.matchCount} من ${eligibility.totalCount} مهارات مطلوبة.`
+                        : `Your skills match ${eligibility.matchCount} of ${eligibility.totalCount} tags.`}
                     </span>
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'يمكنك التقديم حتى إن لم تتطابق كل مهاراتك مع القائمة.'
+                      ? 'يمكنك التقديم وطرح عرضك الفني وميزانيتك حتى لو لم تتطابق كل المهارات بدقة.'
                       : 'You can apply even when your skills do not match every listed requirement.'}
                   </p>
                   {problem.status !== 'CLOSED' && <Link
                     to={`/problems/${problem.id}/submit`}
                     className="w-full py-2.5 text-center rounded-md font-bold text-xs btn-pixel-accent"
                   >
-                    {lang === 'ar' ? 'قدّم مقترحك الآن' : 'Submit proposal'}
+                    {lang === 'ar' ? 'قدّم عرضك الهندسي الآن' : 'Submit proposal'}
                   </Link>}
                 </div>
               )}
@@ -418,18 +450,18 @@ const ProblemDetailContent: React.FC = () => {
                 <div className="p-4 bg-[#F8F1E1] border-2 border-[#12122B] rounded-md flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#12122B]">
                     <AlertCircle className="w-4 h-4 text-[#FFC53D]" />
-                    <span>{lang === 'ar' ? 'عدم تطابق في المهارات' : 'Skill Mismatch'}</span>
+                    <span>{lang === 'ar' ? 'تفاوت في المهارات التقنية' : 'Skill Mismatch'}</span>
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                      ? 'مهاراتك المسجلة حالياً لا تتطابق مع متطلبات هذه المشكلة، لكن يمكنك مناقشتها مع الشركة في التعليقات أو تعديل ملفك.'
+                      ? 'مهاراتك المسجلة حالياً تختلف جزئياً عن متطلبات التحدي. يمكنك المشاركة في الاستفسارات التقنية مع الشركة أو تحديث ملفك.'
                       : 'Your current skills profile does not match the tags required. You may still participate in discussions.'}
                   </p>
                   <Link
                     to="/profile/solver"
                     className="w-full py-2 text-center rounded-md font-bold text-xs btn-pixel-secondary"
                   >
-                    {lang === 'ar' ? 'تعديل مهارات الحلّال' : 'Update solver skills'}
+                    {lang === 'ar' ? 'تعديل المهارات في ملفك الهندسي' : 'Update solver skills'}
                   </Link>
                 </div>
               )}
@@ -438,18 +470,18 @@ const ProblemDetailContent: React.FC = () => {
                 <div className="p-4 bg-[#FFFBF1] border-2 border-[#0B2A9E] rounded-md shadow-pixel-s flex flex-col gap-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-[#0B2A9E]">
                     <Lock className="w-4 h-4" />
-                    <span>{lang === 'ar' ? 'مطلوب إكمال ملف الحلّال' : 'Solver Profile Required'}</span>
+                    <span>{lang === 'ar' ? 'مطلوب إكمال ملف خبير الحلول' : 'Solver Profile Required'}</span>
                   </div>
                   <p className="text-xs text-[#5B5B7B] leading-relaxed">
                     {lang === 'ar'
-                ? 'أنت عضو مسجل. أكمل ملف المواهب لتقديم مقترحات للتحديات.'
+                ? 'أنت مسجل كعضو. أكمل ملفك الهندسي لتقديم عروض وحلول للتحديات الصناعية.'
                       : 'You are signed in as a member. Complete your talent profile to submit proposals.'}
                   </p>
                   <Link
                     to="/profile/solver"
                     className="w-full py-2.5 text-center rounded-md font-bold text-xs btn-pixel-accent"
                   >
-                    {lang === 'ar' ? 'أكمل ملف الحلّال' : 'Complete solver profile'}
+                    {lang === 'ar' ? 'أكمل ملف خبير الحلول' : 'Complete solver profile'}
                   </Link>
                 </div>
               )}

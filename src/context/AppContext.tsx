@@ -198,7 +198,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       void refreshProblems();
     }
   };
-  const switchRole = (_role: UserRole) => { /* visible demo control; account roles are API-derived */ };
+  const switchRole = async (role: UserRole) => {
+    if (role === currentRole) return;
+    if (role === 'visitor') {
+      await logout();
+      return;
+    }
+    const demoCredentials: Record<'member' | 'solver' | 'company', string> = {
+      member: 'm@demo.test',
+      solver: 's@demo.test',
+      company: 'c@demo.test',
+    };
+    const targetEmail = demoCredentials[role];
+    if (targetEmail) {
+      try {
+        await login(targetEmail, '123');
+      } catch (err) {
+        console.error('Quick role switch failed:', err);
+      }
+    }
+  };
   const updateSolverProfile = async (profile: Partial<SolverProfile>) => {
     const requestedByUserId = currentUserIdRef.current;
     const { completenessPercent: _completenessPercent, cvFileName: _cvFileName, ...editable } = profile;

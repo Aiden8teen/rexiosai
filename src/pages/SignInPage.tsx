@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { AlertCircle } from 'lucide-react';
-import type { UserRole } from '../types';
 import { apiErrorMessage } from '../api/client';
 
 export const SignInPage: React.FC = () => {
@@ -13,9 +12,47 @@ export const SignInPage: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole] = useState<UserRole>('member');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const demoAccounts = [
+    {
+      label: { ar: 'شركة نسيج الشرق', en: 'Company — Textile' },
+      email: 'c@demo.test',
+      type: 'company' as const,
+    },
+    {
+      label: { ar: 'الأوراس للأغذية', en: 'Company — Food packaging' },
+      email: 'c2@demo.test',
+      type: 'company' as const,
+    },
+    {
+      label: { ar: 'سيرتا للحلول الذكية', en: 'Company — Predictive maint.' },
+      email: 'c3@demo.test',
+      type: 'company' as const,
+    },
+    {
+      label: { ar: 'الواحة للتوزيع', en: 'Company — Inventory' },
+      email: 'c4@demo.test',
+      type: 'company' as const,
+    },
+    {
+      label: { ar: 'سارة (خبير حلول مكتمل)', en: 'Talent — Sara (Solver)' },
+      email: 's@demo.test',
+      type: 'solver' as const,
+    },
+    {
+      label: { ar: 'أمين (عضو قيد الإكمال)', en: 'Member — Amine (Incomplete)' },
+      email: 'm@demo.test',
+      type: 'member' as const,
+    },
+  ];
+
+  const handleSelectDemo = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('123');
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,33 +96,56 @@ export const SignInPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-[#061A66] p-3 rounded-md border border-[#C9D3FF]/20 text-[11px]">
-            <p className="font-bold text-[#C6FF3D] mb-1.5">
-              {lang === 'ar' ? 'تجربة سريعة للحسابات:' : 'Quick Demo Profiles:'}
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => undefined}
-                className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer ${
-                  selectedRole === 'member'
-                    ? 'bg-[#FFFBF1] text-[#0B2A9E]'
-                    : 'bg-[#1B3FC4] text-[#FFFBF1]'
-                }`}
-              >
-                {lang === 'ar' ? 'عضو (أمين)' : 'Member (Amine)'}
-              </button>
-              <button
-                type="button"
-                onClick={() => undefined}
-                className={`px-2 py-1 rounded text-[10px] font-bold cursor-pointer ${
-                  selectedRole === 'solver'
-                    ? 'bg-[#C6FF3D] text-[#12122B]'
-                    : 'bg-[#1B3FC4] text-[#FFFBF1]'
-                }`}
-              >
-                {lang === 'ar' ? 'حلّال (سارة)' : 'Solver (Sara)'}
-              </button>
+          <div className="bg-[#061A66] p-3.5 rounded-md border border-[#C9D3FF]/20 text-[11px] flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <p className="font-bold text-[#C6FF3D]">
+                {lang === 'ar' ? 'حسابات التجربة السريعة:' : 'Quick Demo Accounts:'}
+              </p>
+              <span className="text-[10px] text-[#C9D3FF]/70 font-mono">pwd: 123</span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-bold text-[#C9D3FF] uppercase tracking-wider">
+                {lang === 'ar' ? 'الشركات الصناعية' : 'Companies'}
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {demoAccounts.filter((a) => a.type === 'company').map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => handleSelectDemo(acc.email)}
+                    className={`px-2 py-1.5 rounded text-[10px] font-bold text-start truncate transition-all cursor-pointer ${
+                      email === acc.email
+                        ? 'bg-[#C6FF3D] text-[#12122B] shadow-pixel-s'
+                        : 'bg-[#1B3FC4] text-[#FFFBF1] hover:bg-[#1B3FC4]/80'
+                    }`}
+                    title={`${acc.label[lang]} (${acc.email})`}
+                  >
+                    {acc.label[lang]}
+                  </button>
+                ))}
+              </div>
+
+              <span className="text-[10px] font-bold text-[#C9D3FF] uppercase tracking-wider mt-1">
+                {lang === 'ar' ? 'الكفاءات والمهندسون' : 'Talent & Solvers'}
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {demoAccounts.filter((a) => a.type !== 'company').map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    onClick={() => handleSelectDemo(acc.email)}
+                    className={`px-2 py-1.5 rounded text-[10px] font-bold text-start truncate transition-all cursor-pointer ${
+                      email === acc.email
+                        ? 'bg-[#C6FF3D] text-[#12122B] shadow-pixel-s'
+                        : 'bg-[#1B3FC4] text-[#FFFBF1] hover:bg-[#1B3FC4]/80'
+                    }`}
+                    title={`${acc.label[lang]} (${acc.email})`}
+                  >
+                    {acc.label[lang]}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

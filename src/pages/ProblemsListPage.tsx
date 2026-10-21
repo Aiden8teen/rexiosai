@@ -93,35 +93,44 @@ export const ProblemsListPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#12122B] tracking-tight">
-            {lang === 'ar' ? 'المشكلات الصناعية' : 'Industrial Problems'}
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#12122B] tracking-tight">
+            {lang === 'ar' ? 'التحديات والمشكلات الصناعية' : 'Industrial Problems & Challenges'}
           </h1>
-          <p className="text-sm text-[#5B5B7B] mt-1">
+          <p className="text-xs sm:text-sm text-[#5B5B7B] mt-1">
             {lang === 'ar'
-              ? 'تحديات منشورة من شركات ومصانع جزائرية بميزانيات ومتطلبات واضحة.'
-              : 'Challenges posted by Algerian companies with listed budgets and clear requirements.'}
+              ? 'تحديات حقيقية منشورة من شركات ومصانع جزائرية بميزانيات معتمدة ومتطلبات تقنية واضحة.'
+              : 'Real challenges posted by Algerian industrial companies with verified budgets and clear requirements.'}
           </p>
         </div>
-        {currentRole === 'company' && <Link to="/company/problems/new" className="px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-accent">{lang === 'ar' ? 'نشر مشكلة' : 'Post a problem'}</Link>}
+        {currentRole === 'company' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/company/problems" className="px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-secondary">
+              {lang === 'ar' ? 'إدارة تحدياتي' : 'Manage My Challenges'}
+            </Link>
+            <Link to="/company/problems/new" className="px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-accent">
+              {lang === 'ar' ? 'طرح تحدٍّ صناعي جديد +' : 'Post a challenge +'}
+            </Link>
+          </div>
+        )}
       </div>
 
       {(currentRole === 'member' || (currentRole === 'solver' && !currentUser.solverProfile?.skills?.length)) && (
         <div className="p-4 bg-[#FFFBF1] border-2 border-[#12122B] rounded-lg shadow-pixel-s flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#F0FFC4] border border-[#12122B] rounded-full">
+            <div className="p-2 bg-[#F0FFC4] border border-[#12122B] rounded-full shrink-0">
               <AlertCircle className="w-5 h-5 text-[#12122B]" />
             </div>
             <p className="text-xs text-[#12122B] font-semibold leading-relaxed">
               {lang === 'ar'
-                ? 'يمكنك تصفّح المشكلات ومناقشتها الآن. لتقديم مقترح، أكمل ملف المواهب.'
-                : 'You can browse and discuss challenges now. Complete your talent profile to submit proposals.'}
+                ? 'يمكنك تصفّح المشكلات ومناقشتها الآن. لتقديم مقترحات وعروض هندسية، أكمل ملفك التقني.'
+                : 'You can browse and discuss challenges now. Complete your solver profile to submit proposals.'}
             </p>
           </div>
           <Link
             to="/profile/solver"
-            className="px-4 py-2 rounded-md font-bold text-xs btn-pixel-accent shrink-0"
+            className="w-full sm:w-auto text-center px-4 py-2 rounded-md font-bold text-xs btn-pixel-accent shrink-0"
           >
-            {lang === 'ar' ? 'أكمل ملف الحلّال' : 'Complete solver profile'}
+            {lang === 'ar' ? 'أكمل ملف خبير الحلول' : 'Complete solver profile'}
           </Link>
         </div>
       )}
