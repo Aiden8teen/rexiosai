@@ -103,9 +103,11 @@ cat deploy/rexios.caddy >> "$rexios_proxy_backup/candidate.Caddyfile"
 diff -u "$rexios_proxy_backup/live.Caddyfile" "$rexios_proxy_backup/candidate.Caddyfile"
 ```
 
-`diff` returns 1 for the expected added block. Review that it contains only the new Rexios block. Separately add that same block to `/home/opc/esi-reviews/deploy/Caddyfile`, preserving its existing contents; do not overwrite the source blindly with the live candidate. Validate the source with `caddy adapt`/`caddy validate` in the same container before relying on it for a future image rebuild. Then apply the reviewed live candidate:
+`diff` returns 1 for the expected added block. Review that it contains only the new Rexios block. Separately add that same block to `/home/opc/esi-reviews/deploy/Caddyfile`, preserving its existing contents; do not overwrite the source blindly with the live candidate. Copy and validate that source before relying on it for a future image rebuild, then apply the reviewed live candidate:
 
 ```bash
+docker cp /home/opc/esi-reviews/deploy/Caddyfile esireviews-web-1:/tmp/rexios-source.Caddyfile
+docker exec esireviews-web-1 caddy validate --config /tmp/rexios-source.Caddyfile --adapter caddyfile
 docker cp "$rexios_proxy_backup/candidate.Caddyfile" esireviews-web-1:/tmp/rexios-candidate.Caddyfile
 docker exec esireviews-web-1 caddy validate --config /tmp/rexios-candidate.Caddyfile --adapter caddyfile
 # Proceed only after validation succeeds.
