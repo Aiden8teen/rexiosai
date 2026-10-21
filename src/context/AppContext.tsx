@@ -46,6 +46,7 @@ const mapApplication = (application: ApiApplication): SolutionSubmission => ({
   projectUrl: application.projectUrl, fileName: application.files?.[0]?.originalName,
   submittedAt: application.submittedAt || '',
   rejectionReason: application.rejectionReason,
+  rejectionReasonEn: application.rejectionReasonEn,
   status: application.status === 'DRAFT' ? 'draft' : application.status === 'ACCEPTED' ? 'accepted' : application.status === 'REJECTED' ? 'rejected' : 'under_review',
 });
 

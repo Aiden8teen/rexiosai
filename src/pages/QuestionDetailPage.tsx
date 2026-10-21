@@ -116,7 +116,7 @@ export const QuestionDetailPage: React.FC = () => {
       <article className="card-pixel p-6 sm:p-8 flex flex-col gap-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs border-b border-[#EFE4CC] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold text-sm shadow-pixel-s">{question.author.avatarChar}</div>
+            <div className="w-9 h-9 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold text-sm shadow-pixel-s">{lang === 'ar' ? question.author.avatarChar : question.author.nameEn?.trim().slice(0, 1) || question.author.avatarChar}</div>
             <div>
               <p className="font-bold text-[#12122B] text-sm">{lang === 'ar' ? question.author.name : question.author.nameEn}</p>
               <time dateTime={question.createdAt} className="text-[11px] text-[#5B5B7B]">{formatDate(question.createdAt, lang)}</time>
@@ -157,7 +157,7 @@ export const QuestionDetailPage: React.FC = () => {
           <article key={answer.id} className={`card-pixel p-6 flex flex-col gap-4 ${answer.isAccepted ? 'border-[#1E9E5A] bg-[#FFFBF1]' : ''}`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs border-b border-[#EFE4CC] pb-3">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#1E9E5A] text-[#FFFBF1] flex items-center justify-center font-bold text-xs shadow-pixel-s">{answer.author.avatarChar}</div>
+                <div className="w-8 h-8 rounded-full bg-[#1E9E5A] text-[#FFFBF1] flex items-center justify-center font-bold text-xs shadow-pixel-s">{lang === 'ar' ? answer.author.avatarChar : answer.author.nameEn?.trim().slice(0, 1) || answer.author.avatarChar}</div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-[#12122B]">{lang === 'ar' ? answer.author.name : answer.author.nameEn}</p>

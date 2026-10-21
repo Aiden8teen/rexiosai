@@ -35,4 +35,4 @@ export const closeProblem = async (id: string) => {
 export const getProblemContact = (id: string) =>
   apiRequest<{ contactEmail: string; contactUrl: string }>(`/problems/${encodeURIComponent(id)}/contact`);
 export const getProblemPrivate = (id: string) =>
-  apiRequest<{ notes: string; files: ApiProblem['files'] }>(`/problems/${encodeURIComponent(id)}/private`);
+  apiRequest<{ notes: string; notesEn?: string; files: ApiProblem['files'] }>(`/problems/${encodeURIComponent(id)}/private`);

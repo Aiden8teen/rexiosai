@@ -7,10 +7,11 @@ import { Check, Upload, FileText, X, AlertCircle } from 'lucide-react';
 import { useMetadata } from '../hooks/useMetadata';
 import { uploadFile } from '../api/files';
 import { apiErrorMessage } from '../api/client';
+import { EDUCATION_LEVEL_OPTIONS, EXPERIENCE_LEVEL_OPTIONS } from '../utils/localizedLabels';
 
 export const SolverProfilePage: React.FC = () => {
-  const { currentUser } = useApp();
-  return <SolverProfileContent key={currentUser.id} />;
+  const { currentUser, lang } = useApp();
+  return <SolverProfileContent key={`${currentUser.id}:${lang}`} />;
 };
 
 const SolverProfileContent: React.FC = () => {
@@ -20,14 +21,12 @@ const SolverProfileContent: React.FC = () => {
 
   const profile = currentUser.solverProfile;
 
-  const [firstName, setFirstName] = useState(profile?.firstName || '');
-  const [lastName, setLastName] = useState(profile?.lastName || '');
+  const [firstName, setFirstName] = useState(lang === 'ar' ? profile?.firstName || '' : profile?.firstNameEn || profile?.firstName || '');
+  const [lastName, setLastName] = useState(lang === 'ar' ? profile?.lastName || '' : profile?.lastNameEn || profile?.lastName || '');
   const [educationLevel, setEducationLevel] = useState(
     profile?.educationLevel || ''
   );
-  const [institutionMajor, setInstitutionMajor] = useState(
-    profile?.institutionMajor || ''
-  );
+  const [institutionMajor, setInstitutionMajor] = useState(lang === 'ar' ? profile?.institutionMajor || '' : profile?.institutionMajorEn || profile?.institutionMajor || '');
   const [experienceLevel, setExperienceLevel] = useState(
     profile?.experienceLevel || ''
   );
@@ -87,10 +86,8 @@ const SolverProfileContent: React.FC = () => {
     setSaving(true); setApiError('');
     try {
       await updateSolverProfile({
-      firstName,
-      lastName,
+      ...(lang === 'ar' ? { firstName, lastName, institutionMajor } : { firstNameEn: firstName, lastNameEn: lastName, institutionMajorEn: institutionMajor }),
       educationLevel,
-      institutionMajor,
       experienceLevel,
       skills,
       cvFileId: cvFileId || undefined,
@@ -264,12 +261,9 @@ const SolverProfileContent: React.FC = () => {
                   className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !educationLevel ? 'input-pixel-error' : ''}`}
                 >
                   <option value="">{lang === 'ar' ? 'اختر المستوى الدراسي' : 'Select education level'}</option>
-                  <option value="السنة الأولى — ليسانس">السنة الأولى — ليسانس</option>
-                  <option value="السنة الثانية — ليسانس">السنة الثانية — ليسانس</option>
-                  <option value="السنة الثالثة — ليسانس">السنة الثالثة — ليسانس</option>
-                  <option value="ماستر 1 / 2">ماستر 1 / 2</option>
-                  <option value="مهندس دولة">مهندس دولة</option>
-                  <option value="دكتوراه">دكتوراه</option>
+                  {EDUCATION_LEVEL_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option[lang]}</option>
+                  ))}
                 </select>
               </div>
 
@@ -281,7 +275,7 @@ const SolverProfileContent: React.FC = () => {
                   type="text"
                   value={institutionMajor}
                   onChange={(e) => setInstitutionMajor(e.target.value)}
-                  placeholder="e.g. هندسة الحاسوب — USTHB"
+                  placeholder={lang === 'ar' ? 'مثال: هندسة الحاسوب — USTHB' : 'e.g. Computer Engineering — USTHB'}
                   className="w-full input-pixel text-xs"
                   required
                 />
@@ -298,18 +292,9 @@ const SolverProfileContent: React.FC = () => {
                 className={`w-full input-pixel text-xs bg-[#FFFBF1] ${hasErrors && !experienceLevel ? 'input-pixel-error' : ''}`}
               >
                 <option value="">{lang === 'ar' ? 'اختر مستوى الخبرة' : 'Select experience level'}</option>
-                <option value="طالب / خريج جديد">
-                  {lang === 'ar' ? 'طالب / خريج جديد' : 'Student / Recent Graduate'}
-                </option>
-                <option value="1–3 سنوات خبرة">
-                  {lang === 'ar' ? '1–3 سنوات خبرة' : '1–3 years experience'}
-                </option>
-                <option value="3+ سنوات خبرة">
-                  {lang === 'ar' ? '3+ سنوات خبرة' : '3+ years experience'}
-                </option>
-                <option value="خبير معتمد">
-                  {lang === 'ar' ? 'خبير' : 'Expert'}
-                </option>
+                {EXPERIENCE_LEVEL_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option[lang]}</option>
+                ))}
               </select>
             </div>
 
@@ -378,11 +363,11 @@ const SolverProfileContent: React.FC = () => {
                   <Upload className="w-6 h-6 text-[#0B2A9E]" />
                   <p className="text-xs font-bold text-[#12122B]">
                     {lang === 'ar'
-                      ? 'اسحب ملف السيرة الذاتية هنا أو اضغط للاختيار'
-                      : 'Drag & drop your CV here or click to browse'}
+                      ? 'اختر ملف السيرة الذاتية أو أضف رابطًا مهنيًا أدناه'
+                      : 'Choose a CV file or add a professional link below'}
                   </p>
                   <p className="text-[10px] text-[#5B5B7B]">
-                    PDF, DOCX — Max 5MB
+                    {lang === 'ar' ? 'PDF, DOCX — الحد الأقصى 5 ميغابايت' : 'PDF, DOCX — Max 5 MB'}
                   </p>
                   <input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={(event) => void handleCvUpload(event.target.files?.[0])} />
                 </label>
@@ -420,8 +405,8 @@ const SolverProfileContent: React.FC = () => {
             <div className="pt-4 border-t-2 border-[#12122B] flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-xs text-[#5B5B7B]">
                 {lang === 'ar'
-                  ? 'يمكنك تعديل ملفك في أي وقت من الإعدادات.'
-                  : 'You can update your profile at any time in settings.'}
+                  ? 'يمكنك تحديث ملفك من هذه الصفحة في أي وقت.'
+                  : 'You can update your profile on this page at any time.'}
               </span>
 
               <button

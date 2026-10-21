@@ -187,7 +187,7 @@ export const CommunityFeedPage: React.FC = () => {
               <article key={question.id} className="card-pixel p-5 sm:p-6 hover:translate-y-[-2px] transition-transform flex flex-col gap-3">
                 <div className="flex items-center justify-between text-xs text-[#5B5B7B]">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold text-xs">{question.author.avatarChar}</div>
+                    <div className="w-6 h-6 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold text-xs">{lang === 'ar' ? question.author.avatarChar : question.author.nameEn?.trim().slice(0, 1) || question.author.avatarChar}</div>
                     <span className="font-semibold text-[#12122B]">{lang === 'ar' ? question.author.name : question.author.nameEn}</span>
                   </div>
                   <time dateTime={question.createdAt}>{formatDate(question.createdAt, lang)}</time>
@@ -254,10 +254,10 @@ export const CommunityFeedPage: React.FC = () => {
                   {overview.contributors.map(({ author, answerCount, acceptedAnswerCount }, index) => (
                     <div key={author.id} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold">{author.avatarChar}</div>
+                        <div className="w-7 h-7 rounded-full bg-[#0B2A9E] text-[#FFFBF1] flex items-center justify-center font-bold">{lang === 'ar' ? author.avatarChar : author.nameEn?.trim().slice(0, 1) || author.avatarChar}</div>
                         <div><p className="font-bold text-[#12122B]">{lang === 'ar' ? author.name : author.nameEn}</p><p className="text-[10px] text-[#5B5B7B]">{lang === 'ar' ? `${answerCount} إجابة، ${acceptedAnswerCount} مقبولة` : `${answerCount} answers · ${acceptedAnswerCount} accepted`}</p></div>
                       </div>
-                      {index === 0 && <span className="font-tag text-[10px] px-2 py-0.5 bg-[#F0FFC4] border border-[#12122B] rounded-full">TOP</span>}
+                      {index === 0 && <span className="font-tag text-[10px] px-2 py-0.5 bg-[#F0FFC4] border border-[#12122B] rounded-full">{lang === 'ar' ? 'الأعلى مساهمة' : 'TOP'}</span>}
                     </div>
                   ))}
                 </div> : <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'لا توجد مساهمات بعد.' : 'No contributions yet.'}</p>}

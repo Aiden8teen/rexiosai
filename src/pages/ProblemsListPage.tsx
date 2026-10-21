@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { DifficultyMeter } from '../components/DifficultyMeter';
 import { TagChip } from '../components/TagChip';
 import { useMetadata } from '../hooks/useMetadata';
+import { problemCategoryLabel } from '../utils/localizedLabels';
 import type { ProblemDifficulty } from '../types';
 import {
   Search,
@@ -218,14 +219,14 @@ export const ProblemsListPage: React.FC = () => {
                   <div className="flex items-center justify-between text-xs text-[#5B5B7B]">
                     <div className="flex items-center gap-2.5">
                       <div className="w-7 h-7 rounded-full bg-[#12122B] text-[#FFFBF1] flex items-center justify-center font-bold text-xs">
-                        {p.companyAvatar}
+                        {lang === 'ar' ? p.companyAvatar : p.companyName_en?.trim().slice(0, 1) || p.companyAvatar}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-bold text-[#12122B]">
                           {lang === 'ar' ? p.companyName : p.companyName_en}
                         </span>
                         <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                          COMPANY
+                          {lang === 'ar' ? 'شركة' : 'COMPANY'}
                         </span>
                       </div>
                     </div>
@@ -360,7 +361,7 @@ export const ProblemsListPage: React.FC = () => {
 
             <div>
               <p className="text-xs font-bold text-[#12122B] mb-2">{lang === 'ar' ? 'الفئة' : 'Category'}</p>
-              <div className="flex flex-col gap-2 text-xs">{(['BUG', 'ISSUE', 'CHALLENGE'] as const).map((category) => <label key={category} className="flex items-center justify-between p-2 bg-[#F8F1E1] border border-[#12122B] rounded cursor-pointer"><span>{category}</span><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => setSelectedCategories((current) => current.includes(category) ? current.filter((item) => item !== category) : [...current, category])} className="accent-[#0B2A9E]" /></label>)}</div>
+              <div className="flex flex-col gap-2 text-xs">{(['BUG', 'ISSUE', 'CHALLENGE'] as const).map((category) => <label key={category} className="flex items-center justify-between p-2 bg-[#F8F1E1] border border-[#12122B] rounded cursor-pointer"><span>{problemCategoryLabel(category, lang)}</span><input type="checkbox" checked={selectedCategories.includes(category)} onChange={() => setSelectedCategories((current) => current.includes(category) ? current.filter((item) => item !== category) : [...current, category])} className="accent-[#0B2A9E]" /></label>)}</div>
             </div>
 
             <div>
@@ -380,8 +381,8 @@ export const ProblemsListPage: React.FC = () => {
                 className="w-full accent-[#0B2A9E] cursor-pointer"
               />
               <div className="flex items-center justify-between text-[10px] text-[#5B5B7B] mt-1 font-tag">
-                <span>20,000 د.ج</span>
-                <span>200,000 د.ج</span>
+                <span>{lang === 'ar' ? '20,000 د.ج' : '20,000 DZD'}</span>
+                <span>{lang === 'ar' ? '200,000 د.ج' : '200,000 DZD'}</span>
               </div>
             </div>
           </div>

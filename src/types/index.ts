@@ -5,8 +5,11 @@ export type UserRole = 'visitor' | 'member' | 'solver' | 'company';
 export interface SolverProfile {
   firstName: string;
   lastName: string;
+  firstNameEn?: string;
+  lastNameEn?: string;
   educationLevel: string;
   institutionMajor: string;
+  institutionMajorEn?: string;
   experienceLevel: string;
   skills: string[];
   cvFileName?: string;
@@ -147,11 +150,13 @@ export interface Application {
   problemId: string;
   applicantUserId: string;
   coverMessage: string;
+  coverMessageEn?: string;
   deliveryDays: number;
   projectUrl?: string;
   consent: boolean;
   status: 'DRAFT' | 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED';
   rejectionReason?: string;
+  rejectionReasonEn?: string;
   submittedAt?: string;
   problem: { id: string; title: string; titleEn?: string };
   applicant?: User;
@@ -169,4 +174,5 @@ export interface SolutionSubmission {
   submittedAt: string;
   status: 'draft' | 'under_review' | 'accepted' | 'rejected';
   rejectionReason?: string;
+  rejectionReasonEn?: string;
 }

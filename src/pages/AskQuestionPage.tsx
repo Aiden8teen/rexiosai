@@ -107,7 +107,7 @@ const AskQuestionForm: React.FC<{
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder={lang === 'ar' ? 'مثال: كيف أقلّل ضجيج قراءات حساس الحرارة على ESP32 داخل خط إنتاج؟' : 'e.g. How to reduce ADC noise on ESP32 in an industrial plant environment?'}
+                placeholder={lang === 'ar' ? 'مثال: كيف أتعامل مع التداخل الرقمي في قراءات DS18B20 على ESP32 داخل خط إنتاج؟' : 'e.g. How can I reduce digital interference in DS18B20 readings on ESP32 in an industrial environment?'}
                 className="w-full input-pixel text-xs"
                 required
                 minLength={15}
@@ -137,7 +137,7 @@ const AskQuestionForm: React.FC<{
 
             <div>
               <label htmlFor="question-code" className="block text-xs font-bold text-[#12122B] mb-1.5">{lang === 'ar' ? 'شيفرة برمجية / سجلات (اختياري)' : 'Code Snippet / Error Logs (Optional)'}</label>
-              <textarea id="question-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder="// Paste code or serial monitor output here" rows={4} className="w-full input-pixel font-code text-xs leading-relaxed bg-[#12122B] text-[#FFFBF1]" maxLength={20000} />
+              <textarea id="question-code" value={code} onChange={(event) => setCode(event.target.value)} placeholder={lang === 'ar' ? '// ألصق الشيفرة أو مخرجات المراقب التسلسلي هنا' : '// Paste code or serial monitor output here'} rows={4} className="w-full input-pixel font-code text-xs leading-relaxed bg-[#12122B] text-[#FFFBF1]" maxLength={20000} />
             </div>
 
             <div className="pt-4 border-t border-[#EFE4CC] flex items-center justify-end gap-3">

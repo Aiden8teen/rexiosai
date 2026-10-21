@@ -41,7 +41,7 @@ const ProblemDetailContent: React.FC = () => {
   const [commentBusy, setCommentBusy] = useState(false);
   const [commentError, setCommentError] = useState('');
   const [contact, setContact] = useState<{ contactEmail: string; contactUrl: string } | null>(null);
-  const [privateDetails, setPrivateDetails] = useState<{ notes: string; files: { id: string; originalName: string }[] } | null>(null);
+  const [privateDetails, setPrivateDetails] = useState<{ notes: string; notesEn?: string; files: { id: string; originalName: string }[] } | null>(null);
   const contactRequestSequence = useRef(0);
   const privateRequestSequence = useRef(0);
   const [detailLoading, setDetailLoading] = useState(true);
@@ -93,7 +93,7 @@ const ProblemDetailContent: React.FC = () => {
     setPrivateDetails(null);
     try {
       const details = await getProblemPrivate(problem!.id);
-      if (sequence === privateRequestSequence.current) setPrivateDetails({ notes: details.notes || '', files: details.files || [] });
+      if (sequence === privateRequestSequence.current) setPrivateDetails({ notes: details.notes || '', notesEn: details.notesEn || '', files: details.files || [] });
     }
     catch (reason) {
       if (sequence === privateRequestSequence.current) {
@@ -130,7 +130,7 @@ const ProblemDetailContent: React.FC = () => {
             <div className="flex items-center justify-between text-xs border-b border-[#EFE4CC] pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#12122B] text-[#FFFBF1] flex items-center justify-center font-bold text-sm shadow-pixel-s">
-                  {problem.companyAvatar}
+                  {lang === 'ar' ? problem.companyAvatar : problem.companyName_en?.trim().slice(0, 1) || problem.companyAvatar}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ const ProblemDetailContent: React.FC = () => {
                       {lang === 'ar' ? problem.companyName : problem.companyName_en}
                     </span>
                     <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                      COMPANY
+                      {lang === 'ar' ? 'شركة' : 'COMPANY'}
                     </span>
                   </div>
                   <span className="text-[11px] text-[#5B5B7B]">
@@ -175,7 +175,7 @@ const ProblemDetailContent: React.FC = () => {
 
             <div>
               <h2 className="text-sm font-bold text-[#12122B] mb-3 uppercase tracking-wide">
-                {lang === 'ar' ? 'المخرجات المطلوبة (Deliverables)' : 'Expected Deliverables'}
+                {lang === 'ar' ? 'المخرجات المطلوبة' : 'Expected Deliverables'}
               </h2>
               <div className="flex flex-col gap-2.5">
                 {(lang === 'ar' ? problem.deliverables : problem.deliverables_en).map(
@@ -258,7 +258,7 @@ const ProblemDetailContent: React.FC = () => {
                           </span>
                           {comment.isCompany && (
                             <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                              COMPANY
+                              {lang === 'ar' ? 'شركة' : 'COMPANY'}
                             </span>
                           )}
                         </div>
@@ -288,7 +288,7 @@ const ProblemDetailContent: React.FC = () => {
                               </span>
                               {reply.isCompany && (
                                 <span className="font-tag text-[9px] px-1.5 py-0.2 bg-[#0B2A9E] text-[#FFFBF1] rounded-xs font-bold">
-                                  COMPANY
+                                  {lang === 'ar' ? 'شركة' : 'COMPANY'}
                                 </span>
                               )}
                             </div>
@@ -366,7 +366,7 @@ const ProblemDetailContent: React.FC = () => {
             </div>
 
             {currentRole !== 'visitor' && <div className="p-3 bg-[#EEF1FF] border border-[#0B2A9E] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadContact()} className="text-xs font-bold text-[#0B2A9E] underline text-start">{lang === 'ar' ? 'عرض بيانات التواصل' : 'Show contact details'}</button>{contact && (contact.contactEmail || contact.contactUrl ? <div className="text-xs flex flex-col gap-1">{contact.contactEmail && <a href={'mailto:' + contact.contactEmail} className="text-[#12122B] underline">{contact.contactEmail}</a>}{contact.contactUrl && <a href={contact.contactUrl} target="_blank" rel="noreferrer" className="text-[#12122B] underline">{contact.contactUrl}</a>}</div> : <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'لم تشارك الشركة بيانات التواصل.' : 'The company has not shared contact details.'}</p>)}</div>}
-            {canViewPrivate && <div className="p-3 bg-[#FFF1CC] border border-[#12122B] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadPrivate()} className="text-xs font-bold text-[#12122B] underline text-start">{lang === 'ar' ? 'عرض الملاحظات والمرفقات الخاصة' : 'Show private notes and files'}</button>{privateDetails && <><p className="text-xs whitespace-pre-line">{privateDetails.notes}</p>{privateDetails.files.map((file) => <a key={file.id} href={fileUrl(file.id)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B2A9E] underline"><FileText className="w-4 h-4" />{file.originalName}</a>)}</>}</div>}
+            {canViewPrivate && <div className="p-3 bg-[#FFF1CC] border border-[#12122B] rounded-md flex flex-col gap-2"><button type="button" onClick={() => void loadPrivate()} className="text-xs font-bold text-[#12122B] underline text-start">{lang === 'ar' ? 'عرض الملاحظات والمرفقات الخاصة' : 'Show private notes and files'}</button>{privateDetails && <><p className="text-xs whitespace-pre-line">{lang === 'ar' ? privateDetails.notes : (privateDetails.notesEn || privateDetails.notes)}</p>{privateDetails.files.map((file) => <a key={file.id} href={fileUrl(file.id)} className="inline-flex items-center gap-2 text-xs font-semibold text-[#0B2A9E] underline"><FileText className="w-4 h-4" />{file.originalName}</a>)}</>}</div>}
 
             <div>
               {problem.status === 'CLOSED' && <div className="p-4 bg-[#EFE4CC] border-2 border-[#12122B] rounded-md text-xs font-bold text-[#5B5B7B]">{lang === 'ar' ? 'أُغلقت هذه المشكلة ولم تعد تستقبل طلبات جديدة.' : 'This problem is closed and no longer accepts applications.'}</div>}
@@ -380,10 +380,12 @@ const ProblemDetailContent: React.FC = () => {
                   <p className="text-xs text-[#12122B] leading-relaxed">
                     {lang === 'ar'
                       ? myApplication?.status === 'rejected' ? (myApplication.rejectionReason || 'اطلع على صفحة طلباتك لمتابعة القرار.') : myApplication?.status === 'accepted' ? 'اختارتك الشركة لهذا العمل.' : 'طلبك محفوظ لدى الشركة للمراجعة.'
-                      : myApplication?.status === 'rejected' ? (myApplication.rejectionReason || 'Open My Applications to review the decision.') : myApplication?.status === 'accepted' ? 'The company selected you for this work.' : 'Your application is saved for company review.'}
+                      : myApplication?.status === 'rejected' ? (myApplication.rejectionReasonEn || myApplication.rejectionReason || 'Open My Applications to review the decision.') : myApplication?.status === 'accepted' ? 'The company selected you for this work.' : 'Your application is saved for company review.'}
                   </p>
                   <span className="font-tag text-[10px] font-bold text-[#1E9E5A] uppercase">
-                    {myApplication?.status === 'accepted' ? 'STATUS: ACCEPTED' : myApplication?.status === 'rejected' ? 'STATUS: REJECTED' : 'STATUS: UNDER REVIEW'}
+                    {lang === 'ar'
+                      ? myApplication?.status === 'accepted' ? 'الحالة: مقبول' : myApplication?.status === 'rejected' ? 'الحالة: مرفوض' : 'الحالة: قيد المراجعة'
+                      : myApplication?.status === 'accepted' ? 'STATUS: ACCEPTED' : myApplication?.status === 'rejected' ? 'STATUS: REJECTED' : 'STATUS: UNDER REVIEW'}
                   </span>
                 </div>
               )}

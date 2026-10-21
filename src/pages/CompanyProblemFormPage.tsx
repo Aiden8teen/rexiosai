@@ -31,7 +31,7 @@ const CompanyProblemFormContent: React.FC = () => {
     <nav className="flex items-center gap-2 text-xs text-[#5B5B7B]"><Link to="/company/problems" className="hover:underline">{lang === 'ar' ? 'مشكلاتي' : 'My Problems'}</Link><Chevron className="w-3.5 h-3.5" /><span className="font-bold text-[#12122B]">{lang === 'ar' ? (id ? 'تعديل المشكلة' : 'نشر مشكلة') : (id ? 'Edit problem' : 'Post a problem')}</span></nav>
     {loading ? <div className="card-pixel p-10 text-center text-sm text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ تحميل المشكلة…' : 'Loading problem…'}</div>
       : error ? <div className="card-pixel p-8 text-center"><AlertCircle className="w-6 h-6 text-[#E5432A] mx-auto mb-3" /><p className="text-sm font-semibold text-[#E5432A]">{error}</p><Link to="/company/problems" className="inline-block mt-4 text-xs text-[#0B2A9E] underline">{lang === 'ar' ? 'العودة إلى مشكلاتي' : 'Back to My Problems'}</Link></div>
-        : <ProblemForm key={id || 'new'} lang={lang} initial={problem} companyProfile={currentUser.companyProfile} companyName={currentUser.name} />}
+        : <ProblemForm key={id || 'new'} lang={lang} initial={problem} companyProfile={currentUser.companyProfile} companyName={lang === 'ar' ? currentUser.name : (currentUser.name_en || currentUser.name)} />}
   </div>;
 };
 

@@ -40,6 +40,7 @@ export interface ProblemInput {
   budgetDzd: number;
   deadlineAt?: string;
   privateNotes?: string;
+  privateNotesEn?: string;
   contactEmail?: string;
   contactUrl?: string;
   shareContact?: boolean;
@@ -52,7 +53,7 @@ export interface EditableProblem extends ProblemInput {
   files: StoredFile[];
 }
 
-export type ProblemPatch = ProblemInput | Pick<ProblemInput, 'privateNotes'>;
+export type ProblemPatch = ProblemInput | Pick<ProblemInput, 'privateNotes' | 'privateNotesEn'>;
 
 export type ApiProblem = Problem & {
   companyUserId: string;

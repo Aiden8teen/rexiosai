@@ -93,7 +93,7 @@ export const SignInPage: React.FC = () => {
         <div className="md:col-span-7 bg-[#FFFBF1] p-6 sm:p-10 flex flex-col justify-between">
           <div className="flex items-center justify-between mb-6">
             <span className="font-brand text-xs font-bold text-[#5B5B7B] uppercase">
-              Rexios Auth
+              {lang === 'ar' ? 'حساب Rexios' : 'Rexios Account'}
             </span>
             <div className="flex items-center bg-[#EFE4CC] border-2 border-[#12122B] rounded-full p-0.5 text-xs font-bold">
               <button

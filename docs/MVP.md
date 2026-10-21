@@ -4,6 +4,8 @@ The core MVP keeps the existing React/Vite frontend and adds a NestJS API backed
 
 Seeded companies, profiles, discussions, applications and community posts are synthetic demo content. Both the standalone community and discussions attached to problems use the API. Google sign-in and password recovery controls remain visible no-ops.
 
+Seed copy includes Arabic and English proposals, rejection feedback, private notes and talent profile names/background. Education and experience store canonical option values with translated labels. Technical identifiers, code and product names retain their usual spelling. Demo contacts use reserved `.example` addresses; portfolio links are neutral examples, not evidence of real work. See [the content audit](CONTENT-AUDIT.md) for screen coverage and corrections.
+
 ## Screens and data
 
 | Area | Data and behavior |
@@ -48,6 +50,8 @@ Seed the demo accounts and sample records when desired:
     npm run db:seed
 
 Seeding is an explicit operation. It preserves problem edits, deadlines and application decisions. As requested, rerunning the demo seed resets only known fixture accounts to the configured short email/password; ordinary registered accounts are untouched.
+
+After pulling content changes, apply migrations before running the seed. A versioned content upgrade replaces only exact, unchanged seed text and selected original fixture defaults; it preserves edited text, application decisions, reactions and deadlines. A revision record prevents subsequent reseeds from restoring translations deliberately cleared later. Concurrent content upgrades are serialized per revision. User-written content is displayed as entered with a fallback when no translation exists; the app does not automatically translate submissions.
 
 Run the API and frontend in separate terminals:
 

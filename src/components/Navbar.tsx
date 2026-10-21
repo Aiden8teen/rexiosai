@@ -141,7 +141,9 @@ export const Navbar: React.FC = () => {
                     className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-[#FFFBF1]"
                     style={{ backgroundColor: currentUser.avatarBg || '#0B2A9E' }}
                   >
-                    {currentUser.avatarChar}
+                    {lang === 'ar'
+                      ? currentUser.avatarChar
+                      : currentUser.name_en?.trim().slice(0, 1) || currentUser.avatarChar}
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-[#12122B] me-1" />
                 </button>
@@ -153,7 +155,7 @@ export const Navbar: React.FC = () => {
                   >
                     <div className="px-3 py-2 border-b border-[#EFE4CC] mb-1">
                       <p className="font-bold text-xs text-[#12122B]">
-                        {lang === 'ar' ? currentUser.name : currentUser.name_en}
+                        {lang === 'ar' ? currentUser.name : (currentUser.name_en || currentUser.name)}
                       </p>
                       <p className="text-[11px] text-[#5B5B7B] truncate">
                         {currentUser.email}

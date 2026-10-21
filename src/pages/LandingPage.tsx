@@ -30,7 +30,7 @@ export const LandingPage: React.FC = () => {
           <div className="lg:col-span-7 flex flex-col items-start gap-6">
             <span className="inline-flex items-center gap-2 px-3 py-1 bg-[#EEF1FF] border-2 border-[#12122B] rounded-full text-xs font-tag tracking-wider text-[#0B2A9E] font-bold shadow-pixel-s">
               <span className="w-2 h-2 bg-[#0B2A9E] rounded-full animate-pulse" />
-              COMMUNITY · BETA
+              {lang === 'ar' ? 'مجتمع تقني · نسخة تجريبية' : 'COMMUNITY · BETA'}
             </span>
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight text-[#12122B]">
@@ -203,7 +203,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#E4E4EE] border border-[#12122B] rounded-full">
-                  VISITOR
+                  {lang === 'ar' ? 'زائر' : 'VISITOR'}
                 </span>
                 <span className="text-xs font-semibold text-[#5B5B7B]">
                   {lang === 'ar' ? 'بدون حساب' : 'No account'}
@@ -245,7 +245,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#EEF1FF] border border-[#0B2A9E] text-[#0B2A9E] rounded-full">
-                  MEMBER
+                  {lang === 'ar' ? 'عضو' : 'MEMBER'}
                 </span>
                 <span className="text-xs font-semibold text-[#5B5B7B]">
                   {lang === 'ar' ? 'بريد فقط' : 'Email only'}
@@ -287,7 +287,7 @@ export const LandingPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="font-tag text-xs font-bold uppercase tracking-wider px-2 py-0.5 bg-[#C6FF3D] border border-[#12122B] text-[#12122B] rounded-full">
-                  SOLVER
+                  {lang === 'ar' ? 'خبير حلول' : 'SOLVER'}
                 </span>
                 <span className="text-xs font-semibold text-[#12122B] font-bold">
                   {lang === 'ar' ? 'ملف كامل' : 'Complete profile'}
