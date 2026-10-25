@@ -129,6 +129,21 @@ After routing is enabled, verify HTTPS, `/api/health`, guest browsing, company l
 
 ## Update manually
 
+### AI challenge drafting update
+
+AI drafting needs the optional `FEATHERLESS_API_KEY`, `FEATHERLESS_BASE_URL`, `FEATHERLESS_MODEL`, `AI_REQUEST_TIMEOUT_MS`, `AI_MAX_OUTPUT_TOKENS` and `AI_MAX_REPAIR_ATTEMPTS` variables from `.env.vps.example` in the private `.env.vps` file. The key is injected into the API container at runtime. Missing credentials leave manual posting usable. See [AI setup and demo](AI-BRIEF.md).
+
+This feature requires rebuilding **both API and frontend**. It has no database migration or seed change. For this update, after pulling the reviewed commit, build one image at a time and recreate only the two application services:
+
+```bash
+bash deploy/vps.sh config --quiet
+bash deploy/vps.sh build api
+bash deploy/vps.sh build rexios-web
+bash deploy/vps.sh up -d --no-deps --no-build --pull never --wait api rexios-web
+```
+
+Keep the existing DB/uploads volumes, database/session secrets, Caddy route, networks and resource limits. Do not run migrations or seeding just for this feature. Verify `/api/health` and an authenticated AI request after a future deployment.
+
 From `/home/opc/rexiosai`, with a clean checkout:
 
 ```bash

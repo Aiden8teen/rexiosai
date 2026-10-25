@@ -2,7 +2,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import type { BaseMessage } from '@langchain/core/messages';
 
 export const DEFAULT_FEATHERLESS_BASE_URL = 'https://api.featherless.ai/v1';
-export const DEFAULT_FEATHERLESS_MODEL = 'Qwen/Qwen3.6-35B-A3B';
+export const DEFAULT_FEATHERLESS_MODEL = 'google/gemma-4-31B-it';
 const DEFAULT_TIMEOUT_MS = 180000;
 const DEFAULT_MAX_OUTPUT_TOKENS = 12000;
 

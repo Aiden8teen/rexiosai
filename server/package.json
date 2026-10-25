@@ -10,6 +10,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "test:ai": "tsx --test --test-concurrency=1 test/ai-brief*.test.ts",
+    "ai:evaluate": "tsx scripts/evaluate-ai-brief.ts",
     "test:integration": "tsx --test --test-concurrency=1 test/*.test.ts"
   },
   "dependencies": {
