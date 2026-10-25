@@ -37,7 +37,7 @@ const needsContextResponse = JSON.stringify({
   warnings: [],
 });
 
-type InferenceReply = { status?: number; content?: string; delayMs?: number; message?: string };
+type InferenceReply = { status?: number; content?: string; delayMs?: number; message?: string; streamChunks?: string[] };
 
 async function readBody(request: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
@@ -84,6 +84,17 @@ test('challenge brief endpoint enforces session, validates output, and never wri
       response.end(JSON.stringify({ error: { message: reply.message || 'sensitive upstream diagnostic should not leak', type: 'server_error' } }));
       return;
     }
+    if (body.stream) {
+      response.writeHead(200, { 'content-type': 'text/event-stream' });
+      const chunks = reply.streamChunks || [reply.content || ''];
+      for (const content of chunks) {
+        if (response.destroyed) return;
+        response.write(`data: ${JSON.stringify({ id: 'test', object: 'chat.completion.chunk', choices: [{ index: 0, delta: { content }, finish_reason: null }] })}\n\n`);
+        await new Promise(resolve => setTimeout(resolve, 15));
+      }
+      response.end('data: [DONE]\n\n');
+      return;
+    }
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify({
       id: 'chatcmpl-local-test', object: 'chat.completion', created: 1, model: 'test/model',
@@ -122,7 +133,10 @@ test('challenge brief endpoint enforces session, validates output, and never wri
         });
         const setCookie = response.headers.get('set-cookie');
         if (setCookie) cookie = setCookie.split(';')[0];
-        return { status: response.status, data: await response.json() };
+        const data = response.headers.get('content-type')?.includes('text/event-stream')
+          ? (await response.text()).split('\n').filter(line => line.startsWith('data: ')).map(line => JSON.parse(line.slice(6)))
+          : await response.json();
+        return { status: response.status, data };
       };
     };
     const company = client(), talent = client(), visitor = client();
@@ -141,6 +155,33 @@ test('challenge brief endpoint enforces session, validates output, and never wri
     await t.test('requires a session and company account', async () => {
       assert.equal((await visitor(route, 'POST', basicRequest)).status, 401);
       assert.equal((await talent(route, 'POST', basicRequest)).status, 403);
+    });
+
+    await t.test('streams validated provisional fields and a final result on the authenticated POST route', async () => {
+      assert.equal((await visitor(`${route}/stream`, 'POST', basicRequest)).status, 401);
+      assert.equal((await talent(`${route}/stream`, 'POST', basicRequest)).status, 403);
+      assert.equal((await company(`${route}/stream`, 'POST', { ...basicRequest, notes: '' })).status, 400);
+      replies.push({ streamChunks: [draftResponse.slice(0, 90), draftResponse.slice(90, 400), draftResponse.slice(400)] });
+      const response = await company(`${route}/stream`, 'POST', basicRequest);
+      assert.equal(response.status, 200);
+      const events = response.data as any[];
+      assert.ok(events.some(event => event.type === 'preview' && event.draft.titleEn === 'Stitching defect log'));
+      assert.equal(events.at(-1)?.type, 'complete');
+      assert.equal(events.at(-1)?.result.draft.titleEn, 'Stitching defect log');
+      assert.ok(events.findIndex(event => event.type === 'preview') < events.findIndex(event => event.type === 'complete'));
+      assert.ok(!JSON.stringify(events).includes('local-test-only-key'));
+    });
+
+    await t.test('streamed repairs reset provisional attempts and failures use safe terminal events', async () => {
+      replies.push({ content: '{"draft":{"titleEn":"Not final"},bad' }, { content: needsContextResponse });
+      const repaired = await company(`${route}/stream`, 'POST', basicRequest);
+      assert.ok(repaired.data.some((event: any) => event.type === 'phase' && event.phase === 'repairing'));
+      assert.equal(repaired.data.at(-1).result.status, 'needs_context');
+      replies.push({ status: 429 });
+      const failed = await company(`${route}/stream`, 'POST', basicRequest);
+      assert.equal(failed.data.at(-1).type, 'error');
+      assert.equal(failed.data.at(-1).status, 503);
+      assert.ok(!JSON.stringify(failed.data).includes('sensitive upstream'));
     });
 
     await t.test('rejects blank notes before contacting inference', async () => {

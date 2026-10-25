@@ -8,6 +8,7 @@ const DEFAULT_MAX_OUTPUT_TOKENS = 12000;
 
 export interface BriefModel {
   complete(messages: BaseMessage[], signal: AbortSignal): Promise<string>;
+  stream?(messages: BaseMessage[], signal: AbortSignal): AsyncIterable<string>;
 }
 
 export class AiUnavailableError extends Error {
@@ -44,12 +45,11 @@ function finalText(content: unknown): string {
 }
 
 export function createFeatherlessModel(overrides: FeatherlessOverrides = {}): BriefModel {
-  return {
-    async complete(messages, signal) {
+  const configuredModel = () => {
       const apiKey = (overrides.apiKey ?? process.env.FEATHERLESS_API_KEY ?? '').trim();
       if (!apiKey) throw new AiUnavailableError();
 
-      const model = new ChatOpenAI({
+      return new ChatOpenAI({
         model: configuredValue(overrides.model, 'FEATHERLESS_MODEL', DEFAULT_FEATHERLESS_MODEL),
         apiKey,
         configuration: {
@@ -62,8 +62,19 @@ export function createFeatherlessModel(overrides: FeatherlessOverrides = {}): Br
         modelKwargs: { chat_template_kwargs: { enable_thinking: false } },
       });
 
-      const response = await model.invoke(messages, { signal });
+  };
+  return {
+    async complete(messages, signal) {
+      const response = await configuredModel().invoke(messages, { signal });
       return finalText(response.content);
+    },
+    async *stream(messages, signal) {
+      const stream = await configuredModel().stream(messages, { signal });
+      for await (const chunk of stream) {
+        signal.throwIfAborted();
+        const text = finalText(chunk.content);
+        if (text) yield text;
+      }
     },
   };
 }

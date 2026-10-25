@@ -9,8 +9,9 @@ import {
   type BriefResult,
 } from './challenge-brief.schema';
 import type { BriefModel } from './featherless.client';
+import { BriefPreviewParser, type BriefProgress } from './challenge-brief.stream';
 
-export type BriefRunOptions = { signal: AbortSignal; now: Date; maxRepairAttempts: number };
+export type BriefRunOptions = { signal: AbortSignal; now: Date; maxRepairAttempts: number; onProgress?: (event: BriefProgress) => void };
 
 const WorkflowState = Annotation.Root({
   messages: Annotation<BaseMessage[]>(),
@@ -44,12 +45,22 @@ export async function generateChallengeBrief(
     })
     .addNode('generate', async state => {
       options.signal.throwIfAborted();
-      const raw = await model.complete(state.messages, options.signal);
+      options.onProgress?.({ type: 'phase', phase: 'drafting', attempt: state.repairsUsed });
+      let raw = '';
+      if (options.onProgress && model.stream) {
+        const parser = new BriefPreviewParser();
+        for await (const chunk of model.stream(state.messages, options.signal)) {
+          options.signal.throwIfAborted();
+          raw += chunk;
+          for (const draft of parser.push(chunk)) options.onProgress({ type: 'preview', draft, attempt: state.repairsUsed });
+        }
+      } else raw = await model.complete(state.messages, options.signal);
       options.signal.throwIfAborted();
       return { raw };
     })
     .addNode('validate', state => {
       options.signal.throwIfAborted();
+      options.onProgress?.({ type: 'phase', phase: 'checking', attempt: state.repairsUsed });
       try {
         return { result: parseAndValidateBrief(state.raw, context), validationIssues: [] };
       } catch (error) {
@@ -59,6 +70,7 @@ export async function generateChallengeBrief(
     })
     .addNode('repair', state => {
       options.signal.throwIfAborted();
+      options.onProgress?.({ type: 'phase', phase: 'repairing', attempt: state.repairsUsed + 1 });
       return {
         messages: buildRepairMessages(request, state.raw, state.validationIssues, context),
         repairsUsed: state.repairsUsed + 1,

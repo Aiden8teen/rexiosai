@@ -116,6 +116,7 @@ const FEW_SHOT_EXAMPLES = [
 function requestMessage(request: BriefRequest, context: PromptContext): HumanMessage {
   return new HumanMessage(JSON.stringify({
     task: 'Draft or refine the challenge brief using this current request.',
+    outputOrder: `For progressive display, put status first, then draft, then metadata/questions. In draft write the ${request.lang === 'en' ? 'English' : 'Arabic'} title, summary, description and lists first, followed by the other language and remaining fields. Do not change the required field names.`,
     currentDateAndTime: context.now.toISOString(),
     timeZone: context.timeZone,
     request,

@@ -12,6 +12,7 @@ import { requireRole } from '../common/http';
 import { BriefValidationError, parseBriefRequest, type BriefRequest, type BriefResult } from './challenge-brief.schema';
 import { generateChallengeBrief } from './challenge-brief.graph';
 import { AiUnavailableError, createFeatherlessModel } from './featherless.client';
+import type { BriefProgress } from './challenge-brief.stream';
 
 type RequestLanguage = 'ar' | 'en';
 
@@ -70,7 +71,7 @@ function isProviderCapacityError(error: unknown): boolean {
 
 @Injectable()
 export class ChallengeBriefService {
-  async generate(user: Account, value: unknown): Promise<BriefResult> {
+  validateRequest(user: Account, value: unknown): BriefRequest {
     const lang = languageOf(value);
     try {
       requireRole(user, 'COMPANY');
@@ -78,14 +79,17 @@ export class ChallengeBriefService {
       throw new ForbiddenException(messages[lang].forbidden);
     }
 
-    let request: BriefRequest;
     try {
-      request = parseBriefRequest(value);
+      return parseBriefRequest(value);
     } catch (error) {
       if (error instanceof BriefValidationError) throw new BadRequestException(messages[lang].invalid);
       throw error;
     }
+  }
 
+  async generate(user: Account, value: unknown, options?: { onProgress: (event: BriefProgress) => void; signal: AbortSignal }): Promise<BriefResult> {
+    const lang = languageOf(value);
+    const request = this.validateRequest(user, value);
     const controller = new AbortController();
     const timeoutMs = integerSetting('AI_REQUEST_TIMEOUT_MS', 180000, 1, 2147483647);
     const maxRepairAttempts = integerSetting('AI_MAX_REPAIR_ATTEMPTS', 2, 0);
@@ -94,13 +98,15 @@ export class ChallengeBriefService {
       timedOut = true;
       controller.abort(new Error('AI request timed out.'));
     }, timeoutMs);
+    const signal = options ? AbortSignal.any([controller.signal, options.signal]) : controller.signal;
 
     try {
       const model = createFeatherlessModel();
       return await generateChallengeBrief(request, model, {
-        signal: controller.signal,
+        signal,
         now: new Date(),
         maxRepairAttempts,
+        onProgress: options?.onProgress,
       });
     } catch (error) {
       if (timedOut || (controller.signal.aborted && error instanceof Error && error.name === 'AbortError')) {

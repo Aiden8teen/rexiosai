@@ -94,3 +94,10 @@ export type BriefResult = {
   questions: BriefQuestion[];
   warnings: LocalizedText[];
 } & ({ status: 'draft'; draft: BriefDraft } | { status: 'needs_context'; draft: null });
+
+export type BriefProgress =
+  | { type: 'phase'; phase: 'drafting' | 'checking' | 'repairing'; attempt: number }
+  | { type: 'preview'; draft: Partial<BriefDraft>; attempt: number };
+export type BriefStreamEvent = BriefProgress
+  | { type: 'complete'; result: BriefResult }
+  | { type: 'error'; status: number; message: string };
