@@ -86,7 +86,7 @@ export const Navbar: React.FC = () => {
                   : location.pathname.startsWith(link.to);
                 return (
                   <Link
-                    key={link.to}
+                    key={`${link.to}:${link.label.en}`}
                     to={link.to}
                     className={`px-3 py-1.5 rounded-md text-xs xl:text-sm font-semibold whitespace-nowrap transition-all ${
                       isActive

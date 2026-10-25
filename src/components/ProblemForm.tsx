@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CompanyProfile } from '../types';
-import type { EditableProblem, ProblemInput } from '../api/contracts';
+import type { BriefDraft, EditableProblem, ProblemInput } from '../api/contracts';
 import { createProblem, publishProblem, updateProblem } from '../api/problems';
 import { useApp } from '../context/AppContext';
 import { uploadFile } from '../api/files';
@@ -10,15 +10,9 @@ import { AlertCircle, FileText, Upload, X } from 'lucide-react';
 import { TagChip } from './TagChip';
 import { useMetadata } from '../hooks/useMetadata';
 import { problemCategoryLabel } from '../utils/localizedLabels';
+import { applyBriefToFormFields, buildProblemPublicInput, createProblemFormFields, type ProblemFormFields } from '../utils/problemFormDraft';
 
-interface Props { lang: 'ar' | 'en'; initial?: EditableProblem; companyProfile?: CompanyProfile; companyName: string }
-const lines = (value: string | undefined) => (value || '').split('\n').map((line) => line.trim()).filter(Boolean);
-const toLocalDateTimeInput = (value?: string) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value.slice(0, 16);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-};
+interface Props { lang: 'ar' | 'en'; initial?: EditableProblem; companyProfile?: CompanyProfile; companyName: string; companyNameEn?: string; appliedBrief?: { revision: number; draft: BriefDraft } }
 const inputClass = 'w-full input-pixel text-xs';
 const labelClass = 'block text-xs font-bold text-[#12122B] mb-1.5';
 
@@ -40,31 +34,38 @@ const FilePicker: React.FC<{
   </div>
 );
 
-export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, companyName }) => {
+export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, companyName, companyNameEn, appliedBrief }) => {
   const navigate = useNavigate();
   const { updateCompanyProfile } = useApp();
   const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
   const isAr = lang === 'ar';
   const publicLocked = Boolean(initial && (initial.status === 'CLOSED' || initial.applicationsCount > 0));
-  const originalDeadline = initial?.deadlineAt;
-  const initialDeadlineInput = toLocalDateTimeInput(originalDeadline);
-  const pick = (ar: string | undefined, en: string | undefined) => isAr ? (ar || en || '') : (en || ar || '');
-  const [title, setTitle] = useState(pick(initial?.title, initial?.titleEn));
-  const [summary, setSummary] = useState(pick(initial?.summary, initial?.summaryEn));
-  const [description, setDescription] = useState(pick(initial?.description, initial?.descriptionEn));
-  const [deliverables, setDeliverables] = useState((pick(initial?.deliverables?.join('\n'), initial?.deliverablesEn?.join('\n'))));
-  const [constraints, setConstraints] = useState(pick(initial?.constraints?.join('\n'), initial?.constraintsEn?.join('\n')));
-  const [criteria, setCriteria] = useState(pick(initial?.criteria?.join('\n'), initial?.criteriaEn?.join('\n')));
-  const [skills, setSkills] = useState<string[]>(initial?.skills || []);
-  const [difficulty, setDifficulty] = useState<ProblemInput['difficulty']>(initial?.difficulty || 'medium');
-  const [category, setCategory] = useState<ProblemInput['category']>(initial?.category || 'CHALLENGE');
-  const [budget, setBudget] = useState(initial?.budgetDzd ? String(initial.budgetDzd) : '');
-  const [deadline, setDeadline] = useState(initialDeadlineInput);
+  const [fields, setFields] = useState(() => createProblemFormFields(initial));
+  const [appliedRevision, setAppliedRevision] = useState<number>();
+  // Explicit Apply replaces public content once; locale changes only select a buffer.
+  if (appliedBrief && appliedRevision !== appliedBrief.revision && !publicLocked) {
+    setFields(current => applyBriefToFormFields(current, appliedBrief.draft));
+    setAppliedRevision(appliedBrief.revision);
+  }
+  const setField = <K extends keyof ProblemFormFields>(key: K, value: ProblemFormFields[K]) => setFields(current => ({ ...current, [key]: value }));
+  const { skills, difficulty, category, budget, deadline } = fields;
+  const title = isAr ? fields.title : fields.titleEn;
+  const summary = isAr ? fields.summary : fields.summaryEn;
+  const description = isAr ? fields.description : fields.descriptionEn;
+  const deliverables = (isAr ? fields.deliverables : fields.deliverablesEn).join('\n');
+  const constraints = (isAr ? fields.constraints : fields.constraintsEn).join('\n');
+  const criteria = (isAr ? fields.criteria : fields.criteriaEn).join('\n');
+  const setTitle = (value: string) => setField(isAr ? 'title' : 'titleEn', value);
+  const setSummary = (value: string) => setField(isAr ? 'summary' : 'summaryEn', value);
+  const setDescription = (value: string) => setField(isAr ? 'description' : 'descriptionEn', value);
+  const setDeliverables = (value: string) => setField(isAr ? 'deliverables' : 'deliverablesEn', value.split('\n'));
+  const setConstraints = (value: string) => setField(isAr ? 'constraints' : 'constraintsEn', value.split('\n'));
+  const setCriteria = (value: string) => setField(isAr ? 'criteria' : 'criteriaEn', value.split('\n'));
   const [privateNotes, setPrivateNotes] = useState(initial?.privateNotes || '');
   const [privateNotesEn, setPrivateNotesEn] = useState(initial?.privateNotesEn || initial?.privateNotes || '');
   const [privateNotesEnEdited, setPrivateNotesEnEdited] = useState(false);
   const [businessName, setBusinessName] = useState(companyProfile?.name || companyName || '');
-  const [businessNameEn, setBusinessNameEn] = useState(companyProfile?.nameEn || '');
+  const [businessNameEn, setBusinessNameEn] = useState(companyProfile?.nameEn || companyNameEn || companyName || '');
   const [contactEmail, setContactEmail] = useState(companyProfile?.contactEmail || '');
   const [contactUrl, setContactUrl] = useState(companyProfile?.contactUrl || '');
   const [shareContact, setShareContact] = useState(Boolean(companyProfile?.shareContact));
@@ -76,15 +77,7 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
   const existingFiles = initial?.files || [];
 
   const makeInput = (): ProblemInput => ({
-    title: isAr ? title.trim() : (initial?.title || ''), titleEn: isAr ? (initial?.titleEn || '') : title.trim(),
-    summary: isAr ? summary.trim() : (initial?.summary || ''), summaryEn: isAr ? (initial?.summaryEn || '') : summary.trim(),
-    description: isAr ? description.trim() : (initial?.description || ''), descriptionEn: isAr ? (initial?.descriptionEn || '') : description.trim(),
-    deliverables: isAr ? lines(deliverables) : (initial?.deliverables || []), deliverablesEn: isAr ? (initial?.deliverablesEn || []) : lines(deliverables),
-    constraints: isAr ? lines(constraints) : (initial?.constraints || []), constraintsEn: isAr ? (initial?.constraintsEn || []) : lines(constraints),
-    criteria: isAr ? lines(criteria) : (initial?.criteria || []), criteriaEn: isAr ? (initial?.criteriaEn || []) : lines(criteria),
-    skills,
-    difficulty, category, budgetDzd: Number(budget) || 0,
-    deadlineAt: deadline === initialDeadlineInput && originalDeadline ? originalDeadline : deadline ? new Date(deadline).toISOString() : undefined,
+    ...buildProblemPublicInput(fields),
     privateNotes: privateNotes.trim(),
     privateNotesEn: privateNotesEn.trim() || undefined,
   });
@@ -97,15 +90,15 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
     setter((current) => [...current, ...accepted]);
   };
 
-  const toggleSkill = (skill: string) => setSkills((current) => current.includes(skill)
-    ? current.filter((item) => item !== skill)
-    : current.length < 5 ? [...current, skill] : current);
+  const toggleSkill = (skill: string) => setFields(current => ({ ...current, skills: current.skills.includes(skill)
+    ? current.skills.filter(item => item !== skill)
+    : current.skills.length < 5 ? [...current.skills, skill] : current.skills }));
 
   const save = async (publish: boolean) => {
     setBusy(true); setError('');
     try {
       if (publish && !publicLocked) {
-        if (title.trim().length < 10 || title.trim().length > 160 || summary.trim().length < 10 || summary.trim().length > 500 || description.trim().length < 30 || description.trim().length > 20000 || skills.length < 1 || skills.length > 5 || new Set(skills).size !== skills.length || !Number.isInteger(Number(budget)) || Number(budget) <= 0 || !deadline || new Date(deadline).getTime() <= Date.now()) {
+        if ((fields.titleEn || fields.title).trim().length < 10 || (fields.titleEn || fields.title).trim().length > 160 || (fields.summaryEn || fields.summary).trim().length < 10 || (fields.summaryEn || fields.summary).trim().length > 500 || (fields.descriptionEn || fields.description).trim().length < 30 || (fields.descriptionEn || fields.description).trim().length > 20000 || skills.length < 1 || skills.length > 5 || new Set(skills).size !== skills.length || !Number.isInteger(Number(budget)) || Number(budget) <= 0 || !deadline || new Date(deadline).getTime() <= Date.now()) {
           throw new Error(isAr ? 'أكمل العنوان والملخص والوصف والمهارات والميزانية وموعدًا مستقبليًا قبل النشر.' : 'Complete the title, summary, description, skills, positive whole-DZD budget, and a future deadline before publishing.');
         }
       }
@@ -135,13 +128,13 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
 
   return <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
     <div className="lg:col-span-8 card-pixel p-6 sm:p-8 flex flex-col gap-5">
-      <div><h1 className="text-xl sm:text-2xl font-bold text-[#12122B] mb-1">{isAr ? (initial ? 'تعديل التحدي الصناعي' : 'طرح تحدٍّ صناعي جديد') : (initial ? 'Edit challenge' : 'Post an industrial challenge')}</h1><p className="text-xs text-[#5B5B7B]">{isAr ? 'اكتب تفاصيل التحدي بلغة الواجهة الحالية. سيظهر المحتوى كما هو في الواجهة الأخرى عند عدم توفر ترجمة.' : 'Enter content in the current interface language. It will appear as entered in the other language when no translation is available.'}</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-[#12122B] mb-1">{isAr ? (initial ? 'تعديل التحدي الصناعي' : 'طرح تحدٍّ صناعي جديد') : (initial ? 'Edit challenge' : 'Post an industrial challenge')}</h1><p className="text-xs text-[#5B5B7B]">{isAr ? 'بدّل لغة الواجهة لتعديل النسخة العربية أو الإنجليزية؛ تُحفظ كل نسخة بشكل مستقل.' : 'Switch the interface language to edit Arabic or English; each version is saved separately.'}</p></div>
       {error && <div className="p-3 bg-[#FFE3DC] border-2 border-[#E5432A] rounded-md text-xs text-[#E5432A] font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4" />{error}</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-title" className={labelClass}>{isAr ? 'عنوان التحدي الصناعي *' : 'Challenge title *'}</label><input id="problem-title" disabled={publicLocked} value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} /></div><div><label htmlFor="problem-category" className={labelClass}>{isAr ? 'الفئة *' : 'Category *'}</label><select id="problem-category" disabled={publicLocked} value={category} onChange={(e) => setCategory(e.target.value as ProblemInput['category'])} className={inputClass + ' bg-[#FFFBF1]'}>{(['BUG', 'ISSUE', 'CHALLENGE'] as const).map((value) => <option key={value} value={value}>{problemCategoryLabel(value, lang)}</option>)}</select></div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-title" className={labelClass}>{isAr ? 'عنوان التحدي الصناعي *' : 'Challenge title *'}</label><input id="problem-title" disabled={publicLocked} value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} /></div><div><label htmlFor="problem-category" className={labelClass}>{isAr ? 'الفئة *' : 'Category *'}</label><select id="problem-category" disabled={publicLocked} value={category} onChange={(e) => setField('category', e.target.value as ProblemInput['category'])} className={inputClass + ' bg-[#FFFBF1]'}>{(['BUG', 'ISSUE', 'CHALLENGE'] as const).map((value) => <option key={value} value={value}>{problemCategoryLabel(value, lang)}</option>)}</select></div></div>
       <div><label htmlFor="problem-summary" className={labelClass}>{isAr ? 'ملخص قصير *' : 'Short summary *'}</label><textarea id="problem-summary" disabled={publicLocked} value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className={inputClass} /></div>
       <div><label htmlFor="problem-description" className={labelClass}>{isAr ? 'وصف المشكلة بالتفصيل *' : 'Detailed problem description *'}</label><textarea id="problem-description" disabled={publicLocked} value={description} onChange={(e) => setDescription(e.target.value)} rows={7} className={inputClass} /></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className={labelClass}>{isAr ? 'المهارات المطلوبة (اختر من 1 إلى 5) *' : 'Required skills (select 1 to 5) *'}</label><div className="flex flex-wrap gap-1.5">{availableSkills.map((skill) => <button key={skill} type="button" aria-pressed={skills.includes(skill)} disabled={publicLocked || skillsLoading} onClick={() => toggleSkill(skill)} className="rounded-full disabled:opacity-60"><TagChip tag={skill} size="sm" selected={skills.includes(skill)} /></button>)}</div>{skillsLoading && <p className="mt-2 text-[11px] text-[#5B5B7B]">{isAr ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}{skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{isAr ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>}<p className="mt-1 text-[10px] text-[#5B5B7B]">{isAr ? `${skills.length} من 5 مختارة` : `${skills.length} of 5 selected`}</p></div><div><label htmlFor="problem-difficulty" className={labelClass}>{isAr ? 'الصعوبة *' : 'Difficulty *'}</label><select id="problem-difficulty" disabled={publicLocked} value={difficulty} onChange={(e) => setDifficulty(e.target.value as ProblemInput['difficulty'])} className={inputClass + ' bg-[#FFFBF1]'}><option value="small">{isAr ? 'صغير' : 'Small'}</option><option value="medium">{isAr ? 'متوسط' : 'Medium'}</option><option value="expert">{isAr ? 'خبير' : 'Expert'}</option></select></div></div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-budget" className={labelClass}>{isAr ? 'الميزانية بالدينار الجزائري *' : 'Budget in DZD *'}</label><input id="problem-budget" disabled={publicLocked} type="number" min="1" step="1" value={budget} onChange={(e) => setBudget(e.target.value)} className={inputClass + ' font-num'} placeholder="50000" /></div><div><label htmlFor="problem-deadline" className={labelClass}>{isAr ? 'الموعد النهائي *' : 'Deadline *'}</label><input id="problem-deadline" disabled={publicLocked} type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} className={inputClass} /></div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label className={labelClass}>{isAr ? 'المهارات المطلوبة (اختر من 1 إلى 5) *' : 'Required skills (select 1 to 5) *'}</label><div className="flex flex-wrap gap-1.5">{availableSkills.map((skill) => <button key={skill} type="button" aria-pressed={skills.includes(skill)} disabled={publicLocked || skillsLoading} onClick={() => toggleSkill(skill)} className="rounded-full disabled:opacity-60"><TagChip tag={skill} size="sm" selected={skills.includes(skill)} /></button>)}</div>{skillsLoading && <p className="mt-2 text-[11px] text-[#5B5B7B]">{isAr ? 'جارٍ تحميل المهارات…' : 'Loading skills…'}</p>}{skillsError && <div className="mt-2 flex items-center gap-2 text-[11px] text-[#E5432A]"><span>{isAr ? 'تعذر تحميل قائمة المهارات.' : 'Could not load the skills list.'}</span><button type="button" onClick={() => void retrySkills()} className="font-bold text-[#0B2A9E] underline">{isAr ? 'إعادة المحاولة' : 'Retry'}</button></div>}<p className="mt-1 text-[10px] text-[#5B5B7B]">{isAr ? `${skills.length} من 5 مختارة` : `${skills.length} of 5 selected`}</p></div><div><label htmlFor="problem-difficulty" className={labelClass}>{isAr ? 'الصعوبة *' : 'Difficulty *'}</label><select id="problem-difficulty" disabled={publicLocked} value={difficulty} onChange={(e) => setField('difficulty', e.target.value as ProblemInput['difficulty'])} className={inputClass + ' bg-[#FFFBF1]'}><option value="small">{isAr ? 'صغير' : 'Small'}</option><option value="medium">{isAr ? 'متوسط' : 'Medium'}</option><option value="expert">{isAr ? 'خبير' : 'Expert'}</option></select></div></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label htmlFor="problem-budget" className={labelClass}>{isAr ? 'الميزانية بالدينار الجزائري *' : 'Budget in DZD *'}</label><input id="problem-budget" disabled={publicLocked} type="number" min="1" step="1" value={budget} onChange={(e) => setField('budget', e.target.value)} className={inputClass + ' font-num'} placeholder="50000" /></div><div><label htmlFor="problem-deadline" className={labelClass}>{isAr ? 'الموعد النهائي *' : 'Deadline *'}</label><input id="problem-deadline" disabled={publicLocked} type="datetime-local" value={deadline} onChange={(e) => setField('deadline', e.target.value)} className={inputClass} /></div></div>
       <div><label htmlFor="problem-deliverables" className={labelClass}>{isAr ? 'المخرجات المطلوبة (سطر لكل بند)' : 'Deliverables (one per line)'}</label><textarea id="problem-deliverables" disabled={publicLocked} value={deliverables} onChange={(e) => setDeliverables(e.target.value)} rows={4} className={inputClass} /></div>
       <div><label htmlFor="problem-constraints" className={labelClass}>{isAr ? 'القيود الفنية (سطر لكل بند)' : 'Constraints (one per line)'}</label><textarea id="problem-constraints" disabled={publicLocked} value={constraints} onChange={(e) => setConstraints(e.target.value)} rows={4} className={inputClass} /></div>
       <div><label htmlFor="problem-criteria" className={labelClass}>{isAr ? 'معايير التقييم (سطر لكل بند)' : 'Evaluation criteria (one per line)'}</label><textarea id="problem-criteria" disabled={publicLocked} value={criteria} onChange={(e) => setCriteria(e.target.value)} rows={4} className={inputClass} /></div>

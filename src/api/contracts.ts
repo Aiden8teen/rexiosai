@@ -73,3 +73,31 @@ export interface ApplicationInput {
 export type ApiApplication = Application;
 export type UploadPurpose = 'CV' | 'APPLICATION' | 'PROBLEM_PUBLIC' | 'PROBLEM_PRIVATE';
 export interface UploadedFile extends StoredFile { byteSize: number; mimeType: string }
+
+export type LocalizedText = { ar: string; en: string };
+export type BriefDraft = Omit<ProblemInput, 'budgetDzd' | 'deadlineAt' | 'privateNotes' | 'privateNotesEn' | 'contactEmail' | 'contactUrl' | 'shareContact'> & {
+  budgetDzd: number | null;
+  applicationDeadlineDate: string | null;
+};
+export type BriefField = keyof BriefDraft;
+export interface BriefRequest {
+  notes: string;
+  lang: 'ar' | 'en';
+  timeZone?: string;
+  previousDraft?: BriefDraft;
+  answers?: { questionId: string; question: string; answer: string }[];
+  instructions?: string;
+}
+export interface BriefQuestion { id: string; field: BriefField | 'context'; text: LocalizedText }
+export type BriefResult = {
+  fieldSources: Partial<Record<BriefField, 'provided' | 'suggested' | 'missing'>>;
+  questions: BriefQuestion[];
+  warnings: LocalizedText[];
+} & ({ status: 'draft'; draft: BriefDraft } | { status: 'needs_context'; draft: null });
+
+export type BriefProgress =
+  | { type: 'phase'; phase: 'drafting' | 'checking' | 'repairing'; attempt: number }
+  | { type: 'preview'; draft: Partial<BriefDraft>; attempt: number };
+export type BriefStreamEvent = BriefProgress
+  | { type: 'complete'; result: BriefResult }
+  | { type: 'error'; status: number; message: string };
