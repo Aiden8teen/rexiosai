@@ -4,9 +4,9 @@ import { BriefPreviewParser } from '../src/ai/challenge-brief.stream';
 import { generateChallengeBrief } from '../src/ai/challenge-brief.graph';
 import type { BriefModel } from '../src/ai/featherless.client';
 
-test('preview emits only completed draft fields across escaped strings, Arabic, arrays and fences', () => {
+test('preview streams text before closing quotes across escaped strings, Arabic, arrays and fences', () => {
   const parser = new BriefPreviewParser();
-  assert.deepEqual(parser.push('```json\n{"status":"draft","draft":{"title":"مشكلة '), []);
+  assert.equal(parser.push('```json\n{"status":"draft","draft":{"title":"مشكلة ').at(-1)?.title, 'مشكلة ');
   const first = parser.push('صناعية"');
   assert.equal(first.at(-1)?.title, 'مشكلة صناعية');
   assert.equal(first.at(-1)?.descriptionEn, undefined);
@@ -14,7 +14,18 @@ test('preview emits only completed draft fields across escaped strings, Arabic, 
   assert.equal(snapshots.at(-1)?.descriptionEn, 'Keep {braces}, "quotes" and newlines\nintact.');
   assert.deepEqual(snapshots.at(-1)?.skills, ['PYTHON']);
   assert.equal(snapshots.at(-1)?.budgetDzd, 120000);
-  assert.deepEqual(parser.push('"titleEn":"unfinished'), []);
+  assert.equal(parser.push('"titleEn":"unfinished').at(-1)?.titleEn, 'unfinished');
+});
+
+test('preview holds incomplete escapes and surrogate pairs and streams individual list items', () => {
+  const parser = new BriefPreviewParser();
+  assert.equal(parser.push('{"draft":{"descriptionEn":"Hello \\u00').at(-1)?.descriptionEn, 'Hello ');
+  assert.equal(parser.push('e9 \\uD83D').at(-1)?.descriptionEn, 'Hello é ');
+  assert.equal(parser.push('\\uDE80 and \\').at(-1)?.descriptionEn, 'Hello é 🚀 and ');
+  assert.equal(parser.push('"quoted\\" text", "deliverablesEn":["First item", "Second ').at(-1)?.deliverablesEn?.[1], 'Second ');
+  const next = parser.push('item');
+  assert.deepEqual(next.at(-1)?.deliverablesEn, ['First item', 'Second item']);
+  assert.deepEqual(parser.push('"]}}'), []); // The prefix already equals the final value.
 });
 
 test('preview refuses unsupported or invalid fields and distinguishes null from incomplete numbers', () => {
