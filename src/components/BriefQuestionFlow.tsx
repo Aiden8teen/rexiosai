@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, MessageCircle } from 'lucide-react';
 import type { BriefQuestion } from '../api/contracts';
 import type { Language } from '../types';
+import BorderGlow from './reactbits/BorderGlow';
 
 interface Props {
   questions: BriefQuestion[]; lang: Language; disabled?: boolean;
@@ -24,7 +25,7 @@ export function BriefQuestionFlow({ questions, lang, disabled = false, answerFor
   }, [index]);
   if (!questions.length) return null;
 
-  return <section className="space-y-4" aria-label={ar ? 'توضيح التفاصيل' : 'Clarify the details'}>
+  return <BorderGlow animated backgroundColor="#FFFBF1" borderRadius={6} glowColor="227 75 55" glowRadius={14} glowIntensity={0.35} colors={['#0B2A9E', '#7895E8', '#C9D3FF']} fillOpacity={0.04} className="ai-clarification-glow" style={{ border: '2px solid #C9D2F1', boxShadow: 'none' }}><section className="space-y-4 p-4" aria-label={ar ? 'توضيح التفاصيل' : 'Clarify the details'}>
     <div className="flex flex-wrap items-center justify-between gap-2">
       <h2 className="text-sm font-bold inline-flex items-center gap-2"><MessageCircle className="w-4 h-4 text-[#0B2A9E]" aria-hidden="true" />{ar ? 'لنوضح بعض التفاصيل' : 'Let’s clarify a few details'}</h2>
       <span className="font-num text-[11px] text-[#5B5B7B]">{question ? (ar ? `سؤال ${index + 1} من ${questions.length}` : `Question ${index + 1} of ${questions.length}`) : (ar ? `${answered} إجابات` : `${answered} answered`)}</span>
@@ -43,5 +44,5 @@ export function BriefQuestionFlow({ questions, lang, disabled = false, answerFor
     </div> : <div className="ai-question bg-[#E9F5D5] border-2 border-[#C4D9A3] rounded-md p-4 text-sm space-y-2"><p className="font-semibold inline-flex items-center gap-2"><Check className="w-4 h-4" aria-hidden="true" />{ar ? 'جاهز لتحديث المسودة' : 'Ready to update your brief'}</p><p className="text-xs">{ar ? 'استخدم زر التحديث أدناه لإدراج إجاباتك، أو راجعها قبل المتابعة.' : 'Use the update button below to include your answers, or review them first.'}</p><button type="button" disabled={disabled} onClick={() => go(Math.max(0, questions.length - 1))} className="text-xs font-bold underline cursor-pointer">{ar ? 'العودة للأسئلة' : 'Back to questions'}</button></div>}
     <button type="button" onClick={() => setShowAll(value => !value)} aria-expanded={showAll} className="text-xs font-semibold text-[#0B2A9E] underline underline-offset-4 py-1 cursor-pointer">{showAll ? (ar ? 'إخفاء قائمة الأسئلة' : 'Hide question list') : (ar ? 'عرض جميع الأسئلة والإجابات' : 'View all questions & answers')}</button>
     {showAll && <ol className="space-y-2 text-xs">{questions.map((item, itemIndex) => <li key={`${item.id}:${item.text.en}`}><button type="button" disabled={disabled} onClick={() => go(itemIndex)} className="w-full text-start border border-[#C9D2F1] rounded-md p-3 hover:bg-[#EEF1FF] cursor-pointer"><span className="flex gap-2 items-start"><span className="font-num text-[#0B2A9E]">{itemIndex + 1}.</span><span className="space-y-1"><span className="block font-semibold">{item.text[lang]}</span><span className="block text-[#5B5B7B] whitespace-pre-wrap break-words">{answerFor(item) || (ar ? 'لم تُضف إجابة بعد' : 'Not answered yet')}</span></span></span></button></li>)}</ol>}
-  </section>;
+  </section></BorderGlow>;
 }

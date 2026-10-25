@@ -4,6 +4,8 @@ import type { BriefDraft, BriefField, BriefProgress, BriefResult } from '../api/
 import type { Language } from '../types';
 import { TagChip } from './TagChip';
 import { problemCategoryLabel } from '../utils/localizedLabels';
+import ShinyText from './reactbits/ShinyText';
+import { SmoothText } from './SmoothText';
 
 type Props = {
   result?: BriefResult | null; lang: Language; partial?: Partial<BriefDraft> | null; streaming?: boolean;
@@ -41,6 +43,7 @@ export function ChallengeBriefPreview({ result, lang, partial, streaming = false
     ? !!result?.draft && !!partial && Object.hasOwn(partial, field) && JSON.stringify(result.draft[field]) !== JSON.stringify(partial[field])
     : changedFields.includes(field);
   const field = <T extends 'title' | 'summary' | 'description' | 'deliverables' | 'constraints' | 'criteria'>(name: T) => ar ? name : `${name}En` as `${T}En`;
+  const text = (value: string, key: BriefField) => <SmoothText key={`${lang}:${key}`} text={value} streaming={streaming && !!partial && Object.hasOwn(partial, key)} />;
   if (!draft) return <div className="card-pixel p-6 sm:p-8 bg-[#EEF1FF] space-y-3 ai-section">
     <FileText className="w-8 h-8 text-[#0B2A9E]" aria-hidden="true" />
     <h2 className="font-bold text-xl">{ar ? 'نحتاج إلى سياق أكثر قليلًا' : 'A little more context will help'}</h2>
@@ -54,27 +57,27 @@ export function ChallengeBriefPreview({ result, lang, partial, streaming = false
   const difficulty = { ar: { small: 'صغير', medium: 'متوسط', expert: 'خبير' }, en: { small: 'Small', medium: 'Medium', expert: 'Expert' } };
   return <article className="card-pixel p-6 sm:p-8 space-y-5" dir={ar ? 'rtl' : 'ltr'} aria-busy={streaming} aria-label={ar ? 'معاينة مسودة التحدي' : 'Challenge draft preview'}>
     <header className="space-y-3">
-      <div className="flex flex-wrap justify-between gap-2 items-center"><span className="inline-flex items-center gap-2 text-[11px] font-bold text-[#0B2A9E]">{streaming && <LoaderCircle className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />}{streaming ? phaseLabels[lang][phase] : ar ? 'مسودة للمراجعة' : 'DRAFT FOR REVIEW'}</span><SourceLabel source={source(field('title'))} lang={lang} /></div>
-      <div key={draft[field('title')] || 'pending-title'} className={`ai-section ${changed(field('title')) ? 'ai-section-updated' : ''}`}>{draft[field('title')] ? <h2 className="text-xl sm:text-2xl font-bold leading-snug break-words">{draft[field('title')]}</h2> : <BriefSkeleton />}</div>
-      <div key={draft[field('summary')] || 'pending-summary'} className="ai-section">{draft[field('summary')] ? <p className="text-sm text-[#5B5B7B] leading-relaxed break-words">{draft[field('summary')]}</p> : <BriefSkeleton />}</div>
+      <div className="flex flex-wrap justify-between gap-2 items-center"><span className="inline-flex items-center gap-2 text-[11px] font-bold text-[#0B2A9E]">{streaming && <LoaderCircle className="w-3.5 h-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />}{streaming ? <ShinyText text={phaseLabels[lang][phase]} color="#0B2A9E" shineColor="#7794E8" speed={2.6} delay={0.4} shineWidth={30} direction={ar ? 'left' : 'right'} className="ai-drafting-shine" /> : ar ? 'مسودة للمراجعة' : 'DRAFT FOR REVIEW'}</span><SourceLabel source={source(field('title'))} lang={lang} /></div>
+      <div className={`ai-section ${changed(field('title')) ? 'ai-section-updated' : ''}`}>{draft[field('title')] ? <h2 className="text-xl sm:text-2xl font-bold leading-snug break-words">{text(draft[field('title')]!, field('title'))}</h2> : <BriefSkeleton />}</div>
+      <div className="ai-section">{draft[field('summary')] ? <p className="text-sm text-[#5B5B7B] leading-relaxed break-words">{text(draft[field('summary')]!, field('summary'))}</p> : <BriefSkeleton />}</div>
       {(draft.category || draft.difficulty) && <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#5B5B7B]">{draft.category && <span>{problemCategoryLabel(draft.category, lang)}</span>}{draft.difficulty && <span>{difficulty[lang][draft.difficulty]}</span>}</div>}
     </header>
-    <BriefSection key={`description:${draft[field('description')]}`} title={ar ? 'المشكلة والهدف' : 'Problem & objective'} source={source(field('description'))} lang={lang} pending={draft[field('description')] === undefined} changed={changed(field('description'))}>{draft[field('description')]}</BriefSection>
+    <BriefSection title={ar ? 'المشكلة والهدف' : 'Problem & objective'} source={source(field('description'))} lang={lang} pending={draft[field('description')] === undefined} changed={changed(field('description'))}>{text(draft[field('description')] || '', field('description'))}</BriefSection>
     {listSections.map(section => {
       const key = field(section.field);
       const items = draft[key];
-      return <BriefSection key={`${section.field}:${JSON.stringify(items)}`} title={section.title} source={source(key, !items?.length)} lang={lang} pending={items === undefined} changed={changed(key)}>
-        {items?.length ? <ul className="list-disc ps-5 space-y-1.5">{items.map((item, index) => <li key={index}>{item}</li>)}</ul> : <span className="text-xs text-[#5B5B7B]">{ar ? 'يمكنك إضافة التفاصيل في النموذج.' : 'You can add details in the form.'}</span>}
+      return <BriefSection key={section.field} title={section.title} source={source(key, !items?.length)} lang={lang} pending={items === undefined} changed={changed(key)}>
+        {items?.length ? <ul className="list-disc ps-5 space-y-1.5">{items.map((item, index) => <li key={index}>{text(item, key)}</li>)}</ul> : <span className="text-xs text-[#5B5B7B]">{ar ? 'يمكنك إضافة التفاصيل في النموذج.' : 'You can add details in the form.'}</span>}
       </BriefSection>;
     })}
-    <BriefSection key={`skills:${JSON.stringify(draft.skills)}`} title={ar ? 'المهارات المقترحة' : 'Skills'} source={source('skills', !draft.skills?.length)} lang={lang} pending={draft.skills === undefined} changed={changed('skills')}>
+    <BriefSection title={ar ? 'المهارات المقترحة' : 'Skills'} source={source('skills', !draft.skills?.length)} lang={lang} pending={draft.skills === undefined} changed={changed('skills')}>
       <div className="flex flex-wrap gap-2">{draft.skills?.length ? draft.skills.map(skill => <TagChip key={skill} tag={skill} size="sm" />) : <span className="text-xs">{ar ? 'اختر مهارة مدعومة قبل النشر.' : 'Choose a supported skill before publishing.'}</span>}</div>
     </BriefSection>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <BriefSection key={`budget:${draft.budgetDzd}`} title={ar ? 'الميزانية' : 'Budget'} source={source('budgetDzd', draft.budgetDzd === null)} lang={lang} pending={draft.budgetDzd === undefined} changed={changed('budgetDzd')}>
+      <BriefSection title={ar ? 'الميزانية' : 'Budget'} source={source('budgetDzd', draft.budgetDzd === null)} lang={lang} pending={draft.budgetDzd === undefined} changed={changed('budgetDzd')}>
         <span className="font-num">{draft.budgetDzd == null ? (ar ? 'غير محددة' : 'Not specified') : `${new Intl.NumberFormat(ar ? 'ar-DZ' : 'en-GB').format(draft.budgetDzd)} ${ar ? 'دج' : 'DZD'}`}</span>
       </BriefSection>
-      <BriefSection key={`date:${draft.applicationDeadlineDate}`} title={ar ? 'آخر أجل للتقديم' : 'Applications close'} source={source('applicationDeadlineDate', !draft.applicationDeadlineDate)} lang={lang} pending={draft.applicationDeadlineDate === undefined} changed={changed('applicationDeadlineDate')}>
+      <BriefSection title={ar ? 'آخر أجل للتقديم' : 'Applications close'} source={source('applicationDeadlineDate', !draft.applicationDeadlineDate)} lang={lang} pending={draft.applicationDeadlineDate === undefined} changed={changed('applicationDeadlineDate')}>
         <span className="font-num">{draft.applicationDeadlineDate ? new Intl.DateTimeFormat(ar ? 'ar-DZ' : 'en-GB', { dateStyle: 'medium' }).format(new Date(`${draft.applicationDeadlineDate}T12:00:00`)) : (ar ? 'غير محدد' : 'Not specified')}</span>
       </BriefSection>
     </div>

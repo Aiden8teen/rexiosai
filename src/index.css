@@ -19,8 +19,11 @@
   background-size: 250% 100%;
   animation: ai-shimmer 1800ms ease-in-out infinite;
 }
+.ai-clarification-glow:focus-within { outline: 1px solid #7895E8; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .ai-section, .ai-question, .ai-section-updated, .ai-skeleton { animation: none; }
+  .ai-drafting-shine { background-image: none !important; -webkit-text-fill-color: #0B2A9E; }
+  .ai-clarification-glow > [aria-hidden="true"] { opacity: 0 !important; transition: none !important; }
 }
 
 @layer base {
