@@ -1,5 +1,7 @@
 # Streaming brief and guided questions
 
+Status: implemented and verified locally. Transport commit `e0204be`, UI commit `977220e`; actual test/browser evidence is in [AI-BRIEF.md](../../AI-BRIEF.md). No subagents, downloads, push or deployment were used for this update.
+
 Approved direction: user requested implementation of the proposed guided brief builder on 25 October 2026, without subagents. Work in existing feature branch; preserve theme, public-only application, generous output settings and manual posting. No push/deploy.
 
 1. Add completed-field provisional extraction and a LangChain streaming adapter. Test arbitrary chunk boundaries, escaped strings/Arabic, invalid values, repair resets and cancellation. Final Zod validation remains the only route to an applicable draft.
