@@ -12,7 +12,7 @@ import { useMetadata } from '../hooks/useMetadata';
 import { problemCategoryLabel } from '../utils/localizedLabels';
 import { applyBriefToFormFields, buildProblemPublicInput, createProblemFormFields, type ProblemFormFields } from '../utils/problemFormDraft';
 
-interface Props { lang: 'ar' | 'en'; initial?: EditableProblem; companyProfile?: CompanyProfile; companyName: string; appliedBrief?: { revision: number; draft: BriefDraft } }
+interface Props { lang: 'ar' | 'en'; initial?: EditableProblem; companyProfile?: CompanyProfile; companyName: string; companyNameEn?: string; appliedBrief?: { revision: number; draft: BriefDraft } }
 const inputClass = 'w-full input-pixel text-xs';
 const labelClass = 'block text-xs font-bold text-[#12122B] mb-1.5';
 
@@ -34,7 +34,7 @@ const FilePicker: React.FC<{
   </div>
 );
 
-export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, companyName, appliedBrief }) => {
+export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, companyName, companyNameEn, appliedBrief }) => {
   const navigate = useNavigate();
   const { updateCompanyProfile } = useApp();
   const { skills: availableSkills, loading: skillsLoading, error: skillsError, retry: retrySkills } = useMetadata();
@@ -65,7 +65,7 @@ export const ProblemForm: React.FC<Props> = ({ lang, initial, companyProfile, co
   const [privateNotesEn, setPrivateNotesEn] = useState(initial?.privateNotesEn || initial?.privateNotes || '');
   const [privateNotesEnEdited, setPrivateNotesEnEdited] = useState(false);
   const [businessName, setBusinessName] = useState(companyProfile?.name || companyName || '');
-  const [businessNameEn, setBusinessNameEn] = useState(companyProfile?.nameEn || '');
+  const [businessNameEn, setBusinessNameEn] = useState(companyProfile?.nameEn || companyNameEn || companyName || '');
   const [contactEmail, setContactEmail] = useState(companyProfile?.contactEmail || '');
   const [contactUrl, setContactUrl] = useState(companyProfile?.contactUrl || '');
   const [shareContact, setShareContact] = useState(Boolean(companyProfile?.shareContact));

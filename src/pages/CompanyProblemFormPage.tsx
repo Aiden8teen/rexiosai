@@ -42,7 +42,7 @@ const CompanyProblemFormContent: React.FC = () => {
             setAppliedBrief(current => ({ revision: (current?.revision || 0) + 1, draft }));
             setMode('manual');
           }} /></div>}
-          <div hidden={!id && mode !== 'manual'}><ProblemForm key={id || 'new'} lang={lang} initial={problem} companyProfile={currentUser.companyProfile} companyName={currentUser.name} appliedBrief={appliedBrief} /></div>
+          <div hidden={!id && mode !== 'manual'}><ProblemForm key={id || 'new'} lang={lang} initial={problem} companyProfile={currentUser.companyProfile} companyName={currentUser.name} companyNameEn={currentUser.name_en || currentUser.name} appliedBrief={appliedBrief} /></div>
         </>}
   </div>;
 };
