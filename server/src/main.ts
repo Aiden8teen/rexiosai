@@ -24,18 +24,24 @@ import { NotificationsController } from './notifications/notifications.controlle
 import { NotificationsService } from './notifications/notifications.service';
 import { PublicController } from './public/public.controller';
 import { PublicService } from './public/public.service';
+import { loadAiEnvironment } from './ai/ai.environment';
+import { ChallengeBriefController } from './ai/challenge-brief.controller';
+import { ChallengeBriefService } from './ai/challenge-brief.service';
 
 @Controller('health')
 class HealthController {
   constructor(private readonly db: PrismaService) {}
   @Get() async health() { await this.db.$queryRaw`SELECT 1`; return { status: 'ok' }; }
 }
-@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController, FilesController, CommunityController, MetaController, NotificationsController, PublicController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService, FilesService, CommunityService, NotificationsService, PublicService] })
+@Module({ imports: [DatabaseModule], controllers: [HealthController, AuthController, ProfilesController, ProblemsController, CompanyProblemsController, ApplicationsController, CommentsController, FilesController, CommunityController, MetaController, NotificationsController, PublicController, ChallengeBriefController], providers: [AuthService, SessionGuard, ProblemsService, ApplicationsService, FilesService, CommunityService, NotificationsService, PublicService, ChallengeBriefService] })
 class AppModule {}
 
 export async function bootstrap(port = Number(process.env.PORT || 3000)) {
+  loadAiEnvironment();
   if (!process.env.SESSION_SECRET || !process.env.DATABASE_URL) throw new Error('DATABASE_URL and SESSION_SECRET are required.');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['error', 'warn'] });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['error', 'warn'], bodyParser: false });
+  app.useBodyParser('json', { limit: '1mb' });
+  app.useBodyParser('urlencoded', { extended: true });
   if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
   const allowedOrigins = (process.env.APP_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173').split(',').map(v => v.trim());
   app.use((req: any, res: any, next: () => void) => {
