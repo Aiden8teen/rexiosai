@@ -251,6 +251,19 @@ test('challenge brief endpoint enforces session, validates output, and never wri
       assert.ok(!JSON.stringify(response.data).includes('Temporary capacity'));
     });
 
+    await t.test('honors six configured repair attempts before returning a valid draft', async () => {
+      process.env.AI_MAX_REPAIR_ATTEMPTS = '6';
+      const callsBefore = received.length;
+      replies.push(...Array.from({ length: 6 }, (_, index) => ({ content: `malformed response ${index + 1}` })), { content: draftResponse });
+      const response = await (async () => {
+        try { return await company(route, 'POST', basicRequest); }
+        finally { process.env.AI_MAX_REPAIR_ATTEMPTS = '2'; }
+      })();
+      assert.equal(response.status, 200, JSON.stringify(response.data));
+      assert.equal(response.data.status, 'draft');
+      assert.equal(received.length - callsBefore, 7);
+    });
+
     await t.test('sends only the configured local inference key to the local stub', async () => {
       assert.ok(received.length > 0);
       assert.ok(received.every(request => request.path?.endsWith('/chat/completions')));

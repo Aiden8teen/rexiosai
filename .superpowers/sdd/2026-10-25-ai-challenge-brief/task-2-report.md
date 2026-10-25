@@ -2,7 +2,7 @@
 
 ## Scope delivered
 
-- Added `prepare_context → generate → validate`, with conditional schema repair in LangGraph. Two repairs are the default; configured repairs are constrained to 0–5. Repair prompts retain the original request and validation feedback, and transport errors bypass schema repair.
+- Added `prepare_context → generate → validate`, with conditional schema repair in LangGraph. Two repairs are the default; configuration accepts any safe nonnegative repair count. Repair prompts retain the original request and validation feedback, and transport errors bypass schema repair.
 - Added the session-protected `POST /api/ai/challenge-brief` endpoint, company-role and Zod request checks, abort timeout, and localized 400/422/502/503/504 responses. Provider details and keys are not returned.
 - Registered the controller and service. Reconfigured Nest's shared JSON parser to accept 1 MiB while retaining URL-encoded parsing.
 - Added a startup-time root `.env` fallback for the allowlisted `FEATHERLESS_*` and `AI_*` settings. Existing nonblank process/server values take precedence; no key is required to start the API.
@@ -16,9 +16,10 @@
 ## GREEN evidence
 
 - `npm run build` — passed after implementation.
-- `npm run test:ai` — passed 46/46. The suite covered graph generation, bounded repairs, aborts, needs-context, refinement context, HTTP auth/validation/status mapping, a bilingual JSON payload above 100 KiB and below 1 MiB, local inference traffic, and no-write assertions.
+- `npm run test:ai` — passed 47/47. The suite covered graph generation, bounded repairs, aborts, needs-context, refinement context, HTTP auth/validation/status mapping, a bilingual JSON payload above 100 KiB and below 1 MiB, local inference traffic, and no-write assertions.
 - The API test restarts the compiled backend against the test database and verifies `/api/health` returns 200.
 - The final added assertion also checks a temporary-capacity response in Arabic and received a localized retryable 503.
+- Pre-review fix: a focused HTTP test first failed with HTTP 422 when six repairs were configured, exposing the artificial cap. The cap was removed; the same case now passes with HTTP 200 after six repairs and a valid seventh inference response. Rebuilt backend and reran `npm run test:ai` — 47/47 passed.
 
 ## Concerns and limits
 

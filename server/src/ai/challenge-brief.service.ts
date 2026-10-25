@@ -40,7 +40,7 @@ function languageOf(value: unknown): RequestLanguage {
   return typeof value === 'object' && value !== null && 'lang' in value && value.lang === 'ar' ? 'ar' : 'en';
 }
 
-function integerSetting(name: string, fallback: number, minimum: number, maximum: number): number {
+function integerSetting(name: string, fallback: number, minimum: number, maximum = Number.MAX_SAFE_INTEGER): number {
   const value = process.env[name]?.trim();
   if (!value || !/^\d+$/.test(value)) return fallback;
   const parsed = Number(value);
@@ -88,7 +88,7 @@ export class ChallengeBriefService {
 
     const controller = new AbortController();
     const timeoutMs = integerSetting('AI_REQUEST_TIMEOUT_MS', 180000, 1, 2147483647);
-    const maxRepairAttempts = integerSetting('AI_MAX_REPAIR_ATTEMPTS', 2, 0, 5);
+    const maxRepairAttempts = integerSetting('AI_MAX_REPAIR_ATTEMPTS', 2, 0);
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
