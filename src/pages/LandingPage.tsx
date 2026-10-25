@@ -1,12 +1,24 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { MascotRex } from '../components/MascotRex';
 import { TagChip } from '../components/TagChip';
 import { Eye, UserCheck, Award, Check, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { lang, dir, currentRole } = useApp();
+  const { lang, dir, currentRole, currentUser } = useApp();
+
+  const isAuthenticated = currentUser && currentUser.role !== 'visitor' && currentUser.id !== 'visitor';
+
+  if (isAuthenticated) {
+    if (currentUser.role === 'company' || currentRole === 'company') {
+      return <Navigate to="/company/problems" replace />;
+    }
+    if (currentUser.role === 'solver' || currentRole === 'solver') {
+      return <Navigate to="/problems" replace />;
+    }
+    return <Navigate to="/community" replace />;
+  }
   const ArrowIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const primaryTo = currentRole === 'visitor' ? '/signup' : currentRole === 'company' ? '/company/problems' : currentRole === 'solver' ? '/problems' : '/profile/solver';
   const primaryLabel = currentRole === 'visitor'

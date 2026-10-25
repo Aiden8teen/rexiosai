@@ -137,19 +137,19 @@ export const ProblemsListPage: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card-pixel p-5 text-center">
-          <p className="font-tag text-2xl font-bold text-[#0B2A9E]">{new Set(problems.map((p) => p.companyUserId || p.companyName_en)).size}</p>
+          <p className="font-num text-2xl font-bold text-[#0B2A9E]">{new Set(problems.map((p) => p.companyUserId || p.companyName_en)).size}</p>
           <p className="text-xs font-semibold text-[#5B5B7B] mt-1">
             {lang === 'ar' ? 'شركات ضمن النتائج' : 'Companies in results'}
           </p>
         </div>
         <div className="card-pixel p-5 text-center bg-[#F0FFC4]">
-          <p className="font-tag text-2xl font-bold text-[#12122B]">{problems.reduce((sum, p) => sum + p.rewardAmount, 0).toLocaleString(lang === 'ar' ? 'fr-DZ' : 'en-US')} {lang === 'ar' ? 'د.ج' : 'DZD'}</p>
+          <p className="font-num text-2xl font-bold text-[#12122B]">{problems.reduce((sum, p) => sum + p.rewardAmount, 0).toLocaleString(lang === 'ar' ? 'fr-DZ' : 'en-US')} {lang === 'ar' ? 'د.ج' : 'DZD'}</p>
           <p className="text-xs font-bold text-[#12122B] mt-1">
             {lang === 'ar' ? 'مجموع ميزانيات هذه الصفحة' : 'Budget total on this page'}
           </p>
         </div>
         <div className="card-pixel p-5 text-center">
-          <p className="font-tag text-2xl font-bold text-[#1E9E5A]">{total}</p>
+          <p className="font-num text-2xl font-bold text-[#1E9E5A]">{total}</p>
           <p className="text-xs font-semibold text-[#5B5B7B] mt-1">
             {lang === 'ar' ? 'إجمالي النتائج' : 'Total results'}
           </p>
@@ -159,7 +159,7 @@ export const ProblemsListPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 flex flex-col gap-6">
           <div className="relative">
-            <Search className="w-4 h-4 text-[#5B5B7B] absolute top-3.5 start-3.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#5B5B7B] absolute top-3.5 start-3.5 pointer-events-none z-10" />
             <input
               type="text"
               value={searchQuery}
@@ -169,7 +169,7 @@ export const ProblemsListPage: React.FC = () => {
                   ? 'ابحث عن مشكلة أو شركة أو مهارة مطلوبة…'
                   : 'Search by challenge, company, or required skill…'
               }
-              className="w-full input-pixel ps-10 text-xs"
+              className="w-full input-pixel input-pixel-search text-xs"
             />
           </div>
 
@@ -274,7 +274,7 @@ export const ProblemsListPage: React.FC = () => {
                       <div className="p-1.5 bg-[#FFF1CC] border border-[#12122B] rounded shadow-pixel-s">
                         <Coins className="w-4 h-4 text-[#12122B]" />
                       </div>
-                      <span className="font-tag text-base font-bold text-[#12122B]">
+                      <span className="font-num text-base font-bold text-[#12122B]">
                         {lang === 'ar' ? p.rewardFormatted : p.rewardFormatted_en}
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export const ProblemsListPage: React.FC = () => {
             <div>
               <div className="flex items-center justify-between text-xs font-bold text-[#12122B] mb-2">
                 <span>{lang === 'ar' ? 'الحد الأقصى للميزانية' : 'Maximum Budget'}</span>
-                <span className="font-tag text-[#0B2A9E]">
+                <span className="font-num text-[#0B2A9E]">
                   {maxReward.toLocaleString()} {lang === 'ar' ? 'د.ج' : 'DZD'}
                 </span>
               </div>
@@ -389,7 +389,7 @@ export const ProblemsListPage: React.FC = () => {
                 onChange={(e) => setMaxReward(Number(e.target.value))}
                 className="w-full accent-[#0B2A9E] cursor-pointer"
               />
-              <div className="flex items-center justify-between text-[10px] text-[#5B5B7B] mt-1 font-tag">
+              <div className="flex items-center justify-between text-[10px] text-[#5B5B7B] mt-1 font-num">
                 <span>{lang === 'ar' ? '20,000 د.ج' : '20,000 DZD'}</span>
                 <span>{lang === 'ar' ? '200,000 د.ج' : '200,000 DZD'}</span>
               </div>

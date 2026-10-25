@@ -128,13 +128,13 @@ export const CommunityFeedPage: React.FC = () => {
           </div>
 
           <div className="relative">
-            <Search className="w-4 h-4 text-[#5B5B7B] absolute top-3.5 start-3.5 pointer-events-none" />
+            <Search className="w-4 h-4 text-[#5B5B7B] absolute top-3.5 start-3.5 pointer-events-none z-10" />
             <input
               type="search"
               value={searchInput}
               onChange={(event) => setSearchDraft({ sourceQuery: urlQuery, value: event.target.value })}
               placeholder={lang === 'ar' ? 'ابحث عن سؤال أو مشكلة أو وسم…' : 'Search questions, topics, or tags…'}
-              className="w-full input-pixel ps-10 text-xs"
+              className="w-full input-pixel input-pixel-search text-xs"
             />
           </div>
 
@@ -245,7 +245,31 @@ export const CommunityFeedPage: React.FC = () => {
           )}
         </div>
 
-        <aside className="lg:col-span-4 flex flex-col gap-6">
+        <aside className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24 self-start">
+          <section className="card-pixel p-5 bg-[#EEF1FF] border-2 border-[#12122B] flex flex-col gap-3 shadow-pixel-m">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-[#FFFBF1] border border-[#12122B] rounded">
+                <PlusCircle className="w-4 h-4 text-[#0B2A9E]" />
+              </div>
+              <h2 className="text-sm font-bold text-[#12122B]">
+                {lang === 'ar' ? 'هل لديك سؤال أو استفسار تقني؟' : 'Have a technical question?'}
+              </h2>
+            </div>
+            <p className="text-xs text-[#5B5B7B] leading-relaxed">
+              {lang === 'ar'
+                ? 'اطرح سؤالك على مجتمع المهندسين والخبراء واحصل على مساعدة وحلول برمجية وصناعية عملية.'
+                : 'Share your question with engineers and specialists to get practical technical solutions.'}
+            </p>
+            <button
+              type="button"
+              onClick={handleAskQuestionClick}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-bold text-xs btn-pixel-primary cursor-pointer shadow-pixel-s mt-1"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{lang === 'ar' ? 'اطرح سؤالًا جديدًا' : 'Ask a Question'}</span>
+            </button>
+          </section>
+
           <section className="card-pixel p-5 flex flex-col gap-4">
             <h2 className="text-sm font-bold text-[#12122B] border-b border-[#EFE4CC] pb-2">{lang === 'ar' ? 'مساهمون نشطون' : 'Active Contributors'}</h2>
             {overviewLoading && !overview ? <p className="text-xs text-[#5B5B7B]">{lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…'}</p>

@@ -342,7 +342,7 @@ const ProblemDetailContent: React.FC = () => {
               </span>
               <div className="flex items-center gap-2">
                 <Coins className="w-6 h-6 text-[#12122B]" />
-                <span className="font-tag text-2xl font-bold text-[#12122B]">
+                <span className="font-num text-2xl font-bold text-[#12122B]">
                   {lang === 'ar' ? problem.rewardFormatted : problem.rewardFormatted_en}
                 </span>
               </div>
