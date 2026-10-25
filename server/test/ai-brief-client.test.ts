@@ -4,7 +4,7 @@ import { createServer, type IncomingMessage } from 'node:http';
 import { once } from 'node:events';
 import { buildBriefMessages, buildRepairMessages } from '../src/ai/challenge-brief.prompt';
 import { AiUnavailableError, createFeatherlessModel } from '../src/ai/featherless.client';
-import { parseBriefRequest } from '../src/ai/challenge-brief.schema';
+import { parseAndValidateBrief, parseBriefRequest } from '../src/ai/challenge-brief.schema';
 
 const context = { now: new Date('2026-10-25T10:00:00.000Z'), timeZone: 'Africa/Algiers' };
 const request = parseBriefRequest({
@@ -17,6 +17,19 @@ async function readBody(request: IncomingMessage): Promise<string> {
   for await (const chunk of request) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks).toString('utf8');
 }
+
+test('both prompt languages include valid positive and rejection examples, including repairs', () => {
+  for (const lang of ['ar', 'en'] as const) {
+    const input = { ...request, lang };
+    for (const messages of [buildBriefMessages(input, context), buildRepairMessages(input, 'bad JSON', ['Invalid JSON'], context)]) {
+      const examples = messages.filter(message => message.type === 'ai').map(message => parseAndValidateBrief(String(message.content), context));
+      assert.ok(examples.some(example => example.status === 'draft'));
+      const rejections = examples.filter(example => example.status === 'needs_context');
+      assert.ok(rejections.length >= 2, 'Show both unrelated and instruction-override rejection cases');
+      assert.ok(rejections.every(example => example.draft === null && example.questions.length > 0));
+    }
+  }
+});
 
 test('sends LangChain few-shot messages to Chat Completions and returns only final content', async t => {
   const finalContent = '{"status":"draft","draft":null}';
@@ -64,7 +77,7 @@ test('sends LangChain few-shot messages to Chat Completions and returns only fin
   assert.equal(Object.hasOwn(body, 'response_format'), false);
   assert.equal(Object.hasOwn(body, 'tools'), false);
   const sentMessages = body.messages as Array<{ role: string; content: string }>;
-  assert.ok(sentMessages.length >= 8, 'system prompt, three examples, and the current request are sent');
+  assert.ok(sentMessages.length >= 8, 'system prompt, examples, and the current request are sent');
   assert.ok(sentMessages.every(message => message.content.trim().length > 0));
   assert.ok(sentMessages.some(message => message.content.includes('four weeks')));
   assert.ok(sentMessages.some(message => message.content.includes('لا نعرف الميزانية')));
