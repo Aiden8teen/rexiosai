@@ -1,6 +1,6 @@
 # AI-assisted challenge drafting
 
-Status: proposed design accompanying the requested implementation plan; product implementation is not authorized by the planning request.
+Status: implemented locally after user authorization on 25 October 2026. [Actual model choice and verification](../../AI-BRIEF.md) supersede the initial model shortlist below; no push/deployment was performed.
 
 ## Intent and scope
 

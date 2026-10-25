@@ -63,7 +63,11 @@ Generation latency includes complete bilingual output and provider queuing. For 
 - Frontend build passed; lint has zero errors and four unchanged warnings in `Navbar.tsx:29`, `useNotifications.ts:106`, `usePublicStats.ts:22`, and `AppContext.tsx:323`. Vite retains the existing large-chunk advisory.
 - Both Compose configurations validated with placeholder secrets. The real key remains in ignored local environment files and is passed only to the API at runtime.
 - A live company login → Vite proxy → AI endpoint → Featherless → public-form-adapter check passed with the selected default in 43 seconds. Both languages, 120000 DZD and the known application date were retained; no problem was saved or published. The default-model evaluation command also passed a needs-context smoke scenario.
-- Browser interaction, responsive layout and visual RTL acceptance remain **unverified** because browser use was not authorized for this task. HTTP/build/unit checks do not prove layout quality.
+- After browser authorization, Playwright verified a real English textile generation → answers → refinement → apply → bilingual manual edits → save → reopen flow. The changed 180000 DZD budget, known date, both titles, private notes and selected public/private PDFs were retained. A real Arabic maintenance generation and English/Arabic previews also passed.
+- Desktop and 390 px mobile RTL screenshots were inspected; there was no horizontal overflow. Example replacement confirmation, provider-error recovery, cancellation with a late response, page reload and switching to a second company account preserved or cleared work as intended. The failure/cancel edge cases used explicitly temporary browser interception; success paths called the real provider. Full screen-reader acceptance was not tested.
+- Browser testing found a pre-existing duplicate Navbar key for company Home/My Challenges. A stable route-plus-label key fixes stale mixed-language links without changing navigation design. After a full reload, locale switching produced no duplicate-key console errors. Unauthenticated session checks still produce expected 401 network entries, and the simulated failure deliberately produces 503.
+
+One minor display limitation remains from the existing save contract: an unspecified budget is stored as the legacy zero sentinel in a saved draft, and the company list can show `0 DZD`. The AI preview and reopened form show it as unspecified/blank; publishing still requires a positive budget. No database migration was added.
 
 ## Demo segment (30–45 seconds)
 

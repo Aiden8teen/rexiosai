@@ -1,5 +1,7 @@
 # AI-assisted Challenge Drafting Implementation Plan
 
+Implementation completed locally on `feat/ai-challenge-brief` on 25 October 2026. See [AI feature setup, actual evaluation and verification](../../AI-BRIEF.md). The steps below retain the original implementation checklist; the linked guide records the completed evidence and remaining minor limitation. Deployment/push is a separate action.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Convert rough company notes into a bilingual, validated challenge draft, optionally refine it, and populate the existing posting form.
