@@ -144,6 +144,8 @@ bash deploy/vps.sh up -d --no-deps --no-build --pull never --wait api rexios-web
 
 Keep the existing DB/uploads volumes, database/session secrets, Caddy route, networks and resource limits. Do not run migrations or seeding just for this feature. Verify `/api/health` and an authenticated AI request after a future deployment.
 
+The drafting UI now uses authenticated POST SSE at `/api/ai/challenge-brief/stream`. Verify progressive sections arrive before the final event through both Caddy layers, and cancelling does not leave the UI stuck. The API sends `text/event-stream` and `Cache-Control: no-cache, no-transform`; Caddy normally flushes SSE immediately. Do not change the shared proxy globally to troubleshoot an application stream. Check direct Rexios API, Rexios web proxy, then public hostname separately. The original non-stream JSON endpoint remains available for diagnosis.
+
 From `/home/opc/rexiosai`, with a clean checkout:
 
 ```bash

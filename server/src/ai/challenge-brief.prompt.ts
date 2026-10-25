@@ -113,10 +113,18 @@ const FEW_SHOT_EXAMPLES = [
   },
 ] as const;
 
+const arabicFields = ['title', 'summary', 'description', 'deliverables', 'constraints', 'criteria'];
+const englishFields = arabicFields.map(field => `${field}En`);
+
+function outputOrder(lang: 'ar' | 'en') {
+  const fields = lang === 'en' ? [...englishFields, ...arabicFields] : [...arabicFields, ...englishFields];
+  return `Put status first, then draft with fields in this order: ${fields.join(', ')}, skills, category, difficulty, budgetDzd, applicationDeadlineDate. Put fieldSources, questions and warnings after draft. Field names without En ALWAYS contain Arabic; fields ending in En ALWAYS contain English. Changing output order never changes this language mapping.`;
+}
+
 function requestMessage(request: BriefRequest, context: PromptContext): HumanMessage {
   return new HumanMessage(JSON.stringify({
     task: 'Draft or refine the challenge brief using this current request.',
-    outputOrder: `For progressive display, put status first, then draft, then metadata/questions. In draft write the ${request.lang === 'en' ? 'English' : 'Arabic'} title, summary, description and lists first, followed by the other language and remaining fields. Do not change the required field names.`,
+    outputOrder: outputOrder(request.lang),
     currentDateAndTime: context.now.toISOString(),
     timeZone: context.timeZone,
     request,
@@ -126,7 +134,10 @@ function requestMessage(request: BriefRequest, context: PromptContext): HumanMes
 export function buildBriefMessages(request: BriefRequest, context: PromptContext): BaseMessage[] {
   const messages: BaseMessage[] = [new SystemMessage(SYSTEM_PROMPT)];
   for (const example of FEW_SHOT_EXAMPLES) {
-    messages.push(new HumanMessage(example.input), new AIMessage(JSON.stringify(example.output)));
+    const keys = request.lang === 'en' ? [...englishFields, ...arabicFields] : [...arabicFields, ...englishFields];
+    const draft = example.output.draft;
+    const ordered = { ...Object.fromEntries(keys.map(key => [key, draft[key as keyof typeof draft]])), ...draft };
+    messages.push(new HumanMessage(example.input), new AIMessage(JSON.stringify({ ...example.output, draft: ordered })));
   }
   messages.push(requestMessage(request, context));
   return messages;
@@ -145,6 +156,7 @@ export function buildRepairMessages(
     currentDateAndTime: context.now.toISOString(),
     timeZone: context.timeZone,
     originalRequest: request,
+    outputOrder: outputOrder(request.lang),
     previousModelOutput: raw,
     validationIssues: issues,
   }));

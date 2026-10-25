@@ -23,7 +23,17 @@ Start the cached local database with `npm run db:up`, then use `npm run api:dev`
 
 ## How it works
 
-The authenticated company endpoint is `POST /api/ai/challenge-brief`. LangGraph runs `prepare_context → generate → validate`; invalid JSON/schema content can pass through `repair → validate` up to the configured number of corrections. LangChain handles the OpenAI-compatible Featherless request. Ordinary chat output plus local Zod parsing is the baseline; native JSON-schema parameters and tool-call formatting are not required.
+The UI uses the authenticated company endpoint `POST /api/ai/challenge-brief/stream`. The original JSON endpoint `POST /api/ai/challenge-brief` remains available. LangGraph runs `prepare_context → generate → validate`; invalid JSON/schema content can pass through `repair → validate` up to the configured number of corrections. LangChain handles the OpenAI-compatible Featherless request. Ordinary chat output plus local Zod parsing is the baseline; native JSON-schema parameters and tool-call formatting are not required.
+
+### Progressive preview and guided questions
+
+Featherless text chunks are read through LangChain. A small incremental JSON reader extracts completed, individually validated public fields and sends provisional snapshots over SSE. It handles chunk splits, escaped strings, arrays, Arabic and optional JSON fences. The frontend consumes the POST response with fetch; it needs no WebSocket, EventSource connection or extra service. No raw JSON or reasoning is shown.
+
+The preview starts with skeleton sections and fills as fields arrive. A refinement keeps the last valid brief visible and highlights changed sections. Real graph phases drive Drafting/Checking/Adjusting labels. An automatic repair starts a new provisional attempt. Only the fully validated final result enables **Use this draft**; cancellation, errors or a truncated connection discard provisional content and retain the last good brief. Disconnecting also aborts the API's provider request. SSE heartbeat comments keep an otherwise idle connection active.
+
+Follow-up questions appear one at a time with **Next**, **Skip for now**, **Back**, and **View all questions & answers**. These actions navigate locally, preserving answers without waiting for another AI call. **Update with answers & changes** includes the collected answers in a real refinement. Answers and the current question survive interface-language and AI/manual mode changes. A successful new result starts its new question sequence while preserving answer history.
+
+Short reveals, skeleton shimmer and changed-section highlights use the current theme and plain CSS. Reduced-motion preferences disable those effects. The preview never forces automatic scrolling.
 
 Both languages are generated together. Locale changes only select which version is shown. Provided/Suggested/Needs input labels explain the model's assessment; they are not factual verification. A missing budget or application deadline stays empty, and a delivery duration is kept separate from the application deadline. The company reviews suggestions before publishing.
 
@@ -59,7 +69,9 @@ Generation latency includes complete bilingual output and provider queuing. For 
 
 ### Verification
 
-- Backend CommonJS build/start and health passed; the full suite passed **67/67** against the separate local test database, including existing auth/posting/private-file/application flows. Existing PostgreSQL concurrent-query deprecation warnings remain.
+Streaming update: the full suite passed **74/74** (including SSE transport, provisional parsing, repair and frontend decoding). Backend/frontend builds passed; lint retains the same four existing warnings. A real browser run showed the first completed title at **10.2 seconds**, with final validation at **53.1 seconds**. This is one observed full bilingual request, not a latency guarantee. Playwright verified disabled Apply during generation, one-question navigation and answer review, language preservation, live budget/deadline refinement, changed-section indicators, public-form application, private state preservation, cancellation and safe streamed error recovery. At 390 px, the document width stayed within the viewport; reduced-motion emulation disabled the new section animation. Intercepted error frames were explicit QA fixtures, not product responses.
+
+- Before the streaming update, backend CommonJS build/start and health and the original **67/67** checks passed against the separate local test database, including existing auth/posting/private-file/application flows. Existing PostgreSQL concurrent-query deprecation warnings remain.
 - Frontend build passed; lint has zero errors and four unchanged warnings in `Navbar.tsx:29`, `useNotifications.ts:106`, `usePublicStats.ts:22`, and `AppContext.tsx:323`. Vite retains the existing large-chunk advisory.
 - Both Compose configurations validated with placeholder secrets. The real key remains in ignored local environment files and is passed only to the API at runtime.
 - A live company login → Vite proxy → AI endpoint → Featherless → public-form-adapter check passed with the selected default in 43 seconds. Both languages, 120000 DZD and the known application date were retained; no problem was saved or published. The default-model evaluation command also passed a needs-context smoke scenario.
@@ -88,8 +100,10 @@ Use real results and keep a backup recording of a successful run for the video p
 - Loading an example over nonempty notes requires an explicit replace action.
 - Account switching clears unsaved AI/form state.
 - Existing editing/public locks/private-file behavior remains functional.
-- RTL, mobile stacking and keyboard interaction require a browser review when authorized.
+- RTL/mobile stacking and question focus/navigation were reviewed with Playwright; full screen-reader acceptance remains untested.
 
 ## Future VPS update
 
 Add the AI variables to the VPS's ignored `.env.vps`, then rebuild **api and rexios-web** and recreate only those Rexios services. See [VPS deployment](VPS.md). There is no migration, reseeding, new port, new service, or proxy change for this feature. Optional AI config is passed to the API container at runtime, never baked into frontend assets or image build arguments.
+
+Streaming has been tested through local Vite → API → Featherless. Caddy documents immediate flushing for `Content-Type: text/event-stream`, so no global proxy change is planned ([Caddy streaming](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#streaming)). Verify that fields arrive before the final result through both existing VPS proxy layers during the next authorized deployment; hosted streaming has not been tested in this task.
